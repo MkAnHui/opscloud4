@@ -10,7 +10,7 @@ import org.springframework.aop.support.AopUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.Map;
 
 /**
@@ -18,6 +18,7 @@ import java.util.Map;
  * @Date 2021/7/6 5:40 下午
  * @Since 1.0
  */
+@SuppressWarnings("rawtypes")
 @Aspect
 @Component
 public class EnablePullChildAspect {
@@ -38,4 +39,5 @@ public class EnablePullChildAspect {
         });
         return result;
     }
+
 }

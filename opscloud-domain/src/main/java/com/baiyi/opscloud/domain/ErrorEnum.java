@@ -3,8 +3,16 @@ package com.baiyi.opscloud.domain;
 import lombok.Getter;
 
 
+/**
+ * @author liangjian
+ */
+
 @Getter
 public enum ErrorEnum {
+
+    /**
+     * 错误
+     */
     OK(0, "成功"),
     // ----------------------- RBAC -----------------------
     AUTH_GROUP_HAS_USED(11005, "资源组正在使用！"),
@@ -27,7 +35,6 @@ public enum ErrorEnum {
     TAG_ADD_ERROR(12004, "新增标签错误，请确认Key是否唯一！"),
     TAG_UPDATE_ERROR(12004, "新增标签错误，请确认Key是否唯一！"),
 
-
     SINGLE_TASK_RUNNING(13000, "后台任务执行中！"),
 
     SSH_SERVER_AUTHENTICATION_FAILURE(20001, "SSH服务器鉴权失败！"),
@@ -43,20 +50,28 @@ public enum ErrorEnum {
     APPLICATION_NOT_EXIST(10001, "应用不存在！"),
     APPLICATION_ALREADY_EXIST(10001, "应用已存在！"),
     APPLICATION_RES_ALREADY_EXIST(10001, "应用资源已存在！"),
+    APPLICATION_RES_NOT_EXIST(10001, "应用资源不存在！"),
     APPLICATION_RES_IS_NOT_EMPTY(10001, "应用资源不为空！"),
+
+    // ----------------------- 项目 -----------------------
+    PROJECT_NOT_EXIST(10001, "项目不存在！"),
+    PROJECT_KEY_CANNOT_BE_EMPTY(10001, "项目Key不能为空！"),
+    PROJECT_ALREADY_EXIST(10001, "项目已存在！"),
+    PROJECT_RES_ALREADY_EXIST(10001, "项目资源已存在！"),
+    PROJECT_RES_IS_NOT_EMPTY(10001, "项目资源不为空！"),
+    PROJECT_RES_NOT_EXIST(10001, "项目资源不存在！"),
+    PROJECT_IS_NOT_EMPTY(10001, "项目资源不为空！"),
 
     // ----------------------- 资产 -----------------------
     ASSET_NOT_EXIST(10001, "资产不存在！"),
 
-
     // 权限
     AUTHENTICATION_FAILURE(20001, "鉴权失败！"),
-    AUTHENTICATION_API_FAILURE(401, "Api鉴权失败！"),
+    AUTHENTICATION_API_FAILURE(401, "API鉴权失败！"),
     AUTHENTICATION_RESOURCE_NOT_EXIST(20002, "资源路径不存在！"),
     AUTHENTICATION_REQUEST_NO_TOKEN(20003, "请求中未携带有效令牌！"),
     AUTHENTICATION_TOKEN_INVALID(401, "令牌无效！"),
-    AUTHENTICATION_API_TOKEN_INVALID(401, "Api令牌无效！"),
-
+    AUTHENTICATION_API_TOKEN_INVALID(401, "API令牌无效！"),
 
     // auth
     AUTH_ROLE_NOT_EXIST(11002, "用户角色配置不存在！"),
@@ -89,11 +104,9 @@ public enum ErrorEnum {
     // UserPermission
     USER_PERMISSION_EXIST(12003, "用户授权已存在!"),
 
-
     // userGroup
     USERGROUP_NAME_ALREADY_EXIST(12001, "用户组名称已存在！"),
     USERGROUP_NAME_NON_COMPLIANCE_WITH_RULES(12002, "用户组名称不合规！"),
-
 
     USER_GRANT_USERGROUP_ERROR(12002, "用户授权用户组错误！"),
     USER_REVOKE_USERGROUP_ERROR(12002, "用户撤销用户组授权错误！"),
@@ -103,8 +116,8 @@ public enum ErrorEnum {
     SERVER_NAME_NON_COMPLIANCE_WITH_RULES(12002, "服务器名称不合规！"),
     SERVER_GROUP_NOT_SELECTED(12003, "服务器组未选择！"),
     SERVER_GROUP_QUERY_FAILED(12003, "服务器组查询失败！"),
-    SERVER_PRIVATE_IP_IS_NAME(12002, "服务器私有Ip不能为空！"),
-    SERVER_PRIVATE_IP_CONFLICT(12002, "服务器私有Ip冲突！"),
+    SERVER_PRIVATE_IP_IS_NAME(12002, "服务器私有IP不能为空！"),
+    SERVER_PRIVATE_IP_CONFLICT(12002, "服务器私有IP冲突！"),
     SERVER_NOT_EXIST(12002, "服务器不存在"),
 
     // server task
@@ -113,7 +126,7 @@ public enum ErrorEnum {
     SERVER_TASK_MEMBER_NOT_EXIST(11007, "服务器子任务不存在！"),
     SERVER_TASK_HAS_FINALIIZED_AND_CANNOT_BE_MODIFIED(11007, "任务已经结束！"),
     SERVER_TASK_TIMEOUT(11007, "任务超时！"),
-    // serverGrooup
+    // serverGroup
     SERVERGROUP_NAME_ALREADY_EXIST(12001, "服务器组名称已存在！"),
     SERVERGROUP_NAME_NON_COMPLIANCE_WITH_RULES(12002, "服务器组名称不合规！"),
     SERVERGROUP_NOT_EXIST(12003, "服务器组不存在！"),
@@ -132,13 +145,12 @@ public enum ErrorEnum {
     ENV_HAS_USED(12004, "环境类型正在使用！"),
     ENV_IS_DEFAULT(12005, "不能删除默认环境类型！"),
 
-
     // cloud
     CLOUD_TYPE_IS_NULL(30002, "未指定云类型！"),
 
     // cloudInstanceTemplate
-    CLOUD_INSTANCE_TEMPLATE_NOT_EXIST(30002, "云实例模版不存在！"),
-    CLOUD_INSTANCE_TEMPLATE_NAME_NON_COMPLIANCE_WITH_RULES(12002, "云实例模版名称不合规！"),
+    CLOUD_INSTANCE_TEMPLATE_NOT_EXIST(30002, "云实例模板不存在！"),
+    CLOUD_INSTANCE_TEMPLATE_NAME_NON_COMPLIANCE_WITH_RULES(12002, "云实例模板名称不合规！"),
 
     // cloudServer
     CLOUD_SERVER_POWER_MGMT_FAILED(30001, "云主机启停失败"),
@@ -147,7 +159,7 @@ public enum ErrorEnum {
     // cloudDB
     CLOUD_DB_NOT_EXIST(30002, "云数据库实例不存在！"),
 
-    // cloudDBDatbase
+    // cloudDBDatabase
     CLOUD_DB_DATABASE_NOT_EXIST(30002, "云数据库不存在！"),
 
     // cloudImage
@@ -169,10 +181,6 @@ public enum ErrorEnum {
     ALIYUN_RDS_MYSQL_REVOKE_ACCOUNT_PRIVILEGE_ERROR(30002, "云数据库账户撤销授权错误！"),
     ALIYUN_RDS_MYSQL_DELETE_ACCOUNT_ERROR(30002, "云数据库账户删除错误！"),
 
-    // jumpserver
-    JUMPSERVER_ASSETS_NODE_ROOT_NOT_EXIST(40002, "资产根节点不存在(表：assets_node,字段：key = 1)！"),
-    JUMPSERVER_ADMINISTRATOR_AUTHORIZATION_CANNOT_BE_REVOKED(40002, "不能撤销Administrator账户管理员授权"),
-
     // Executor
     EXECUTOR_PARAM_TYPE_ERROR(50001, "执行参数类型错误"),
 
@@ -193,14 +201,15 @@ public enum ErrorEnum {
     ORG_DEPARTMENT_USER_NOT_IN_THE_DEPT(0, "你未加入部门"),
     ORG_DEPARTMENT_USER_NO_APPROVAL_REATIONSHIP_FOUND(60001, "用户没有建立上级审批关系"),
 
-    // Workorder
+    // WorkOrder
     WORKORDER_TICKET_PHASE_ERROR(70001, "工单阶段不正确"),
     WORKORDER_TICKET_NOT_THE_CURRENT_APPROVER(70001, "不是当前审批人"),
     WORKORDER_TICKET_ENTRIES_EXISTS(70001, "工单条目未填写"),
+    WORKORDER_INVALID_TOKEN(70001, "Work order approval failed: invalid token!"),
 
-    KEYBOX_PUBLIC_KEY_IS_EMPTY(60001, "公钥不能为空！"),
-    KEYBOX_PRIVATE_KEY_IS_EMPTY(60001, "私钥不能为空！"),
-    KEYBOX_PASSPHRASE_IS_EMPTY(60001, "密码不能为空！"),
+//    KEYBOX_PUBLIC_KEY_IS_EMPTY(60001, "公钥不能为空！"),
+//    KEYBOX_PRIVATE_KEY_IS_EMPTY(60001, "私钥不能为空！"),
+//    KEYBOX_PASSPHRASE_IS_EMPTY(60001, "密码不能为空！"),
 
     SERVER_CHANGE_TASK_RUNNING(60001, "当前服务器变更任务执行中！"),
     SERVER_CHANGE_TASK_RESUBMISSION(60001, "当前服务器变更任务重复提交！"),
@@ -213,14 +222,13 @@ public enum ErrorEnum {
     KUBERNETES_CREATE_SERVICE_ERROR(70001, "Kubernetes创建Service错误！"),
     KUBERNETES_DELETE_SERVICE_ERROR(70001, "Kubernetes删除Service错误！"),
 
-
     GITLAB_BRANCH_COMMIT_ERROR(80001, "查询代码仓库commit错误！"),
     GITLAB_INSTANCE_NOT_EXIST(80001, "GITLAB实例不存在！"),
     GITLAB_USER_NOT_EXIST(80001, "GITLAB用户不存在！"),
     GITLAB_API_ERROR(80001, "GITLAB接口错误！"),
-    JENKINS_JOB_TPL_READ_ERROR(80001, "读取任务模版错误！"),
-    JENKINS_JOB_TPL_HOST_PATTERN_IS_NOT_CONFIGURED(80001, "任务模版参数hostPattern未配置！"),
-    JENKINS_JOB_TPL_WRITE_ERROR(80001, "写入任务模版错误！"),
+    JENKINS_JOB_TPL_READ_ERROR(80001, "读取任务模板错误！"),
+    JENKINS_JOB_TPL_HOST_PATTERN_IS_NOT_CONFIGURED(80001, "任务模板参数hostPattern未配置！"),
+    JENKINS_JOB_TPL_WRITE_ERROR(80001, "写入任务模板错误！"),
     JENKINS_JOB_ENGINE_NOT_CONFIGURED(80001, "任务工作引擎未配置！"),
     JENKINS_JOB_NO_ENGINES_AVAILABLE(80001, "没有可用的工作引擎！"),
     JENKINS_JOB_EXISTS(80001, "任务已存在！"),
@@ -260,8 +268,8 @@ public enum ErrorEnum {
     ROLE_MENU_SAVE_FAIL(999, "保存角色菜单失败"),
     ;
 
-    private int code;
-    private String message;
+    private final int code;
+    private final String message;
 
     ErrorEnum(int code, String message) {
         this.code = code;

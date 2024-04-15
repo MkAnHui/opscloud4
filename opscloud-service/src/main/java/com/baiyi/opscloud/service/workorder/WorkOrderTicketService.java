@@ -18,16 +18,20 @@ public interface WorkOrderTicketService {
 
     List<WorkOrderReportVO.Report> queryReportByName();
 
-    List<WorkOrderReportVO.Report> queryReportByMonth(Integer workorderId);
+    List<WorkOrderReportVO.Report> statByMonth(Integer workorderId);
 
     void add(WorkOrderTicket workOrderTicket);
 
     void update(WorkOrderTicket workOrderTicket);
+
+    void updateByPrimaryKeySelective(WorkOrderTicket workOrderTicket);
 
     WorkOrderTicket getById(int id);
 
     WorkOrderTicket getNewTicketByUser(String workOrderKey, String username);
 
     void deleteById(int id);
+
+    List<WorkOrderTicket> queryByParam(int workOrderId, String phase);
 
 }

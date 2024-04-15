@@ -1,21 +1,22 @@
 package com.baiyi.opscloud.service.user.impl;
 
+import com.baiyi.opscloud.common.annotation.ArkIntercept;
 import com.baiyi.opscloud.common.annotation.EventPublisher;
 import com.baiyi.opscloud.common.util.BeanCopierUtil;
 import com.baiyi.opscloud.domain.DataTable;
 import com.baiyi.opscloud.domain.annotation.BusinessType;
 import com.baiyi.opscloud.domain.annotation.Encrypt;
-import com.baiyi.opscloud.domain.generator.opscloud.User;
-import com.baiyi.opscloud.domain.param.user.UserBusinessPermissionParam;
-import com.baiyi.opscloud.domain.param.user.UserParam;
 import com.baiyi.opscloud.domain.constants.BusinessTypeEnum;
 import com.baiyi.opscloud.domain.constants.DsAssetTypeConstants;
 import com.baiyi.opscloud.domain.constants.EventActionTypeEnum;
+import com.baiyi.opscloud.domain.generator.opscloud.User;
+import com.baiyi.opscloud.domain.param.user.UserBusinessPermissionParam;
+import com.baiyi.opscloud.domain.param.user.UserParam;
 import com.baiyi.opscloud.domain.vo.business.BusinessAssetRelationVO;
 import com.baiyi.opscloud.domain.vo.datasource.DsAssetVO;
 import com.baiyi.opscloud.domain.vo.user.UserVO;
 import com.baiyi.opscloud.factory.business.base.AbstractBusinessService;
-import com.baiyi.opscloud.mapper.opscloud.UserMapper;
+import com.baiyi.opscloud.mapper.UserMapper;
 import com.baiyi.opscloud.service.user.UserService;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -33,6 +34,7 @@ import java.util.List;
  * @Date 2021/5/14 10:27 上午
  * @Version 1.0
  */
+@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @Slf4j
 @BusinessType(BusinessTypeEnum.USER)
 @Service
@@ -43,19 +45,20 @@ public class UserServiceImpl extends AbstractBusinessService<User> implements Us
 
     @Override
     public DataTable<User> queryPageByParam(UserParam.UserPageQuery pageQuery) {
-        Page page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
+        Page<?> page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
         List<User> data = userMapper.queryPageByParam(pageQuery);
         return new DataTable<>(data, page.getTotal());
     }
 
     @Override
     public DataTable<User> queryPageByParam(UserBusinessPermissionParam.BusinessPermissionUserPageQuery pageQuery) {
-        Page page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
+        Page<?> page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
         List<User> data = userMapper.queryBusinessPermissionUserPageByParam(pageQuery);
         return new DataTable<>(data, page.getTotal());
     }
 
     @Override
+    @ArkIntercept
     public User getById(Integer id) {
         return userMapper.selectByPrimaryKey(id);
     }
@@ -65,27 +68,25 @@ public class UserServiceImpl extends AbstractBusinessService<User> implements Us
         // 处理Dingtalk
         if (asset.getAssetType().equals(DsAssetTypeConstants.DINGTALK_USER.name())) {
             if (asset.getProperties().containsKey("username")) {
-                log.info("同步钉钉，查询本地用户: name = {} , username = {}", asset.getName(), asset.getProperties().get(
-                        "username"));
+                log.info("同步钉钉查询本地用户: name={}, username={}", asset.getName(), asset.getProperties().get("username"));
                 User user = getByKey(asset.getProperties().get("username"));
                 if (user != null) {
-                    return toVO(user);
+                    return toUserVO(user);
                 }
                 if (asset.getProperties().containsKey("mobile")) {
                     List<User> users = listByPhone(asset.getProperties().get("mobile"));
                     if (!CollectionUtils.isEmpty(users) && users.size() == 1) {
-                        log.info("同步钉钉，查询本地用户: name = {} , mobile = {}", asset.getName(), asset.getProperties().get(
-                                "mobile"));
-                        return toVO(users.get(0));
+                        log.info("同步钉钉查询本地用户: name={}, mobile={}", asset.getName(), asset.getProperties().get("mobile"));
+                        return toUserVO(users.getFirst());
                     }
                 }
             }
             return null;
         }
-        return toVO(getByKey(asset.getAssetKey()));
+        return toUserVO(getByKey(asset.getAssetKey()));
     }
 
-    private UserVO.User toVO(User user) {
+    private UserVO.User toUserVO(User user) {
         return BeanCopierUtil.copyProperties(user, UserVO.User.class);
     }
 
@@ -95,6 +96,7 @@ public class UserServiceImpl extends AbstractBusinessService<User> implements Us
     }
 
     @Override
+    @ArkIntercept
     public User getByUsername(String username) {
         Example example = new Example(User.class);
         Example.Criteria criteria = example.createCriteria();
@@ -124,7 +126,6 @@ public class UserServiceImpl extends AbstractBusinessService<User> implements Us
     @Override
     public void updateLogin(User user) {
         userMapper.updateByPrimaryKeySelective(user);
-       // userMapper.updateByPrimaryKey(user);
     }
 
     @Override
@@ -174,7 +175,8 @@ public class UserServiceImpl extends AbstractBusinessService<User> implements Us
     public List<User> listByPhone(String phone) {
         Example example = new Example(User.class);
         Example.Criteria criteria = example.createCriteria();
-        criteria.andEqualTo("phone", phone);
+        criteria.andEqualTo("phone", phone)
+                .andEqualTo("isActive", true);
         return userMapper.selectByExample(example);
     }
 
@@ -184,8 +186,8 @@ public class UserServiceImpl extends AbstractBusinessService<User> implements Us
     }
 
     @Override
-    public DataTable<User> queryPageByParam(UserParam.EmployeeResignPageQuery pageQuery){
-        Page page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
+    public DataTable<User> queryPageByParam(UserParam.EmployeeResignPageQuery pageQuery) {
+        Page<?> page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
         List<User> data = userMapper.queryEmployeeResignPageByParam(pageQuery);
         return new DataTable<>(data, page.getTotal());
     }

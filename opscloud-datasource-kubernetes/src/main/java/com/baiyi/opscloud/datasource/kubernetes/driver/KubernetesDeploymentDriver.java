@@ -1,158 +1,244 @@
 package com.baiyi.opscloud.datasource.kubernetes.driver;
 
 import com.baiyi.opscloud.common.datasource.KubernetesConfig;
-import com.baiyi.opscloud.datasource.kubernetes.client.KubeClient;
-import com.baiyi.opscloud.datasource.kubernetes.util.KubernetesUtil;
-import io.fabric8.kubernetes.api.model.HasMetadata;
+import com.baiyi.opscloud.datasource.kubernetes.client.MyKubernetesClientBuilder;
+import com.baiyi.opscloud.datasource.kubernetes.exception.KubernetesDeploymentException;
+import com.google.common.collect.Maps;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentList;
+import io.fabric8.kubernetes.api.model.apps.DeploymentSpec;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * @Author baiyi
- * @Date 2021/6/25 3:49 下午
+ * @Date 2023/3/30 11:21
  * @Version 1.0
  */
+@Slf4j
 public class KubernetesDeploymentDriver {
 
-    public static List<Deployment> listDeployment(KubernetesConfig.Kubernetes kubernetes) {
-        DeploymentList deploymenList = KubeClient.build(kubernetes)
-                .apps().deployments().list();
-        return deploymenList.getItems();
-    }
-
-    public static List<Deployment> listDeployment(KubernetesConfig.Kubernetes kubernetes, String namespace) {
-        DeploymentList deploymenList = KubeClient.build(kubernetes)
-                .apps()
-                .deployments()
-                .inNamespace(namespace)
-                .list();
-        if (CollectionUtils.isEmpty(deploymenList.getItems()))
-            return Collections.emptyList();
-        return deploymenList.getItems();
-    }
+    public static final String REDEPLOY_TIMESTAMP = "redeploy-timestamp";
 
     /**
-     * @param kubernetes
-     * @param namespace
-     * @param name       podName
-     * @return
-     */
-    public static Deployment getDeployment(KubernetesConfig.Kubernetes kubernetes, String namespace, String name) {
-        return KubeClient.build(kubernetes)
-                .apps()
-                .deployments()
-                .inNamespace(namespace)
-                .withName(name)
-                .get();
-    }
-
-    /**
-     * 创建无状态
+     * 重启容器
      *
      * @param kubernetes
-     * @param namespace
-     * @param content
-     * @return
-     */
-    public static Deployment createDeployment(KubernetesConfig.Kubernetes kubernetes, String namespace, String content) {
-        KubernetesClient kuberClient = KubeClient.build(kubernetes);
-        Deployment deployment = toDeployment(kuberClient, content);
-        return kuberClient.apps()
-                .deployments()
-                .inNamespace(namespace)
-                .create(deployment);
-    }
-
-    /**
-     * 创建无状态
-     * @param kubernetes
-     * @param content
-     * @return
-     */
-    public static Deployment createDeployment(KubernetesConfig.Kubernetes kubernetes, String content) {
-        KubernetesClient kuberClient = KubeClient.build(kubernetes);
-        Deployment deployment = toDeployment(kuberClient, content);
-        return kuberClient.apps()
-                .deployments()
-                .create(deployment);
-    }
-
-    /**
-     * 创建或更新无状态
-     *
-     * @param kubernetes
-     * @param namespace
-     * @param content
-     * @return
-     */
-    public static Deployment createOrReplaceDeployment(KubernetesConfig.Kubernetes kubernetes, String namespace, String content) {
-        KubernetesClient kuberClient = KubeClient.build(kubernetes);
-        Deployment deployment = toDeployment(kuberClient, content);
-        return createOrReplaceDeployment(kubernetes, namespace, deployment);
-    }
-
-    /**
-     * 创建或更新无状态
-     * @param kubernetes
-     * @param content
-     * @return
-     */
-    public static Deployment createOrReplaceDeployment(KubernetesConfig.Kubernetes kubernetes, String content) {
-        KubernetesClient kuberClient = KubeClient.build(kubernetes);
-        Deployment deployment = toDeployment(kuberClient, content);
-        return createOrReplaceDeployment(kubernetes, deployment);
-    }
-
-
-
-    /**
-     * 创建或更新无状态
-     *
-     * @param kubernetes
-     * @param namespace
      * @param deployment
-     * @return
      */
-    public static Deployment createOrReplaceDeployment(KubernetesConfig.Kubernetes kubernetes, String namespace, Deployment deployment) {
-        return KubeClient.build(kubernetes)
-                .apps()
-                .deployments()
-                .inNamespace(namespace)
-                .createOrReplace(deployment);
+    public static void redeploy(KubernetesConfig.Kubernetes kubernetes, Deployment deployment) {
+        if (deployment == null) {
+            return;
+        }
+        Optional<Map<String, String>> optionalAnnotations = Optional.of(deployment)
+                .map(Deployment::getSpec)
+                .map(DeploymentSpec::getTemplate)
+                .map(PodTemplateSpec::getMetadata)
+                .map(ObjectMeta::getAnnotations);
+        if (optionalAnnotations.isPresent()) {
+            deployment.getSpec().getTemplate().getMetadata().getAnnotations()
+                    .put(REDEPLOY_TIMESTAMP, String.valueOf(System.currentTimeMillis()));
+        } else {
+            Map<String, String> annotations = Maps.newHashMap();
+            annotations.put(REDEPLOY_TIMESTAMP, String.valueOf(System.currentTimeMillis()));
+            deployment.getSpec().getTemplate().getMetadata().setAnnotations(annotations);
+        }
+        update(kubernetes, deployment);
     }
 
-    public static Deployment createOrReplaceDeployment(KubernetesConfig.Kubernetes kubernetes, Deployment deployment) {
-        return KubeClient.build(kubernetes).apps()
-                .deployments()
-                .inNamespace(deployment.getMetadata().getNamespace())
-                .createOrReplace(deployment);
+    public static Deployment create(KubernetesConfig.Kubernetes kubernetes, String content) {
+        try (KubernetesClient kc = MyKubernetesClientBuilder.build(kubernetes)) {
+            Deployment deployment = toDeployment(kc, content);
+            // 删除资源版本
+            deployment.getMetadata().setResourceVersion(null);
+            return create(kubernetes, deployment);
+        } catch (Exception e) {
+            log.warn(e.getMessage());
+            throw e;
+        }
     }
 
-    public static Deployment replaceDeployment(KubernetesConfig.Kubernetes kubernetes, Deployment deployment) {
-        return KubeClient.build(kubernetes).apps()
-                .deployments()
-                .inNamespace(deployment.getMetadata().getNamespace())
-                .replace(deployment);
+    public static Deployment create(KubernetesConfig.Kubernetes kubernetes, String namespace, Deployment deployment) {
+        // 删除资源版本
+        deployment.getMetadata().setResourceVersion(null);
+        try (KubernetesClient kc = MyKubernetesClientBuilder.build(kubernetes)) {
+            return kc.apps()
+                    .deployments()
+                    .inNamespace(namespace)
+                    .resource(deployment)
+                    .create();
+        } catch (Exception e) {
+            log.warn(e.getMessage());
+            throw e;
+        }
+    }
+
+    public static Deployment update(KubernetesConfig.Kubernetes kubernetes, String namespace, Deployment deployment) {
+        try (KubernetesClient kc = MyKubernetesClientBuilder.build(kubernetes)) {
+            return kc.apps()
+                    .deployments()
+                    .inNamespace(namespace)
+                    .resource(deployment)
+                    .update();
+        } catch (Exception e) {
+            log.warn(e.getMessage());
+            throw e;
+        }
     }
 
     /**
-     * 配置文件转换为无状态资源
+     * 扩容
      *
-     * @param kuberClient
-     * @param content     YAML
-     * @return
-     * @throws RuntimeException
+     * @param kubernetes
+     * @param namespace
+     * @param name
+     * @param replicas
+     * @throws KubernetesDeploymentException
      */
-    public static Deployment toDeployment(KubernetesClient kuberClient, String content) throws RuntimeException {
-        HasMetadata resource =  KubernetesUtil.toResource(kuberClient,content);
-        if (resource instanceof io.fabric8.kubernetes.api.model.apps.Deployment)
-            return (Deployment) resource;
-        throw new RuntimeException("Deployment配置文件类型不匹配!");
+    public static void scale(KubernetesConfig.Kubernetes kubernetes, String namespace, String name, int replicas) throws KubernetesDeploymentException {
+        Deployment deployment = get(kubernetes, namespace, name);
+        final Integer nowReplicas = Optional.ofNullable(deployment)
+                .map(Deployment::getSpec)
+                .map(DeploymentSpec::getReplicas)
+                .orElseThrow(() -> new KubernetesDeploymentException("扩容失败: 读取副本数量错误！"));
+        // 更新副本数
+        if (nowReplicas >= replicas) {
+            throw new KubernetesDeploymentException("只能扩容 nowReplicas={}, newReplicas={} ！", nowReplicas, replicas);
+        }
+        try (KubernetesClient kc = MyKubernetesClientBuilder.build(kubernetes)) {
+            kc.apps()
+                    .deployments()
+                    .inNamespace(namespace)
+                    .withName(name)
+                    .scale(replicas);
+        } catch (Exception e) {
+            log.warn(e.getMessage());
+            throw e;
+        }
+    }
+
+    /**
+     * 缩容
+     *
+     * @param kubernetes
+     * @param namespace
+     * @param name
+     * @param replicas
+     * @throws KubernetesDeploymentException
+     */
+    public static void reduce(KubernetesConfig.Kubernetes kubernetes, String namespace, String name, int replicas) throws KubernetesDeploymentException {
+        Deployment deployment = get(kubernetes, namespace, name);
+        final Integer nowReplicas = Optional.ofNullable(deployment)
+                .map(Deployment::getSpec)
+                .map(DeploymentSpec::getReplicas)
+                .orElseThrow(() -> new KubernetesDeploymentException("缩容失败: 读取副本数量错误！"));
+        // 更新副本数
+        if (replicas < 1) {
+            throw new KubernetesDeploymentException("指定副本数不能少于1, replicas={} ！", replicas);
+        }
+        if (replicas >= nowReplicas) {
+            throw new KubernetesDeploymentException("只能缩容 nowReplicas={}, newReplicas={} ！", nowReplicas, replicas);
+        }
+        try (KubernetesClient kc = MyKubernetesClientBuilder.build(kubernetes)) {
+            kc.apps()
+                    .deployments()
+                    .inNamespace(namespace)
+                    .withName(name)
+                    .scale(replicas);
+        } catch (Exception e) {
+            log.warn(e.getMessage());
+            throw e;
+        }
+    }
+
+    public static Deployment update(KubernetesConfig.Kubernetes kubernetes, Deployment deployment) {
+        try (KubernetesClient kc = MyKubernetesClientBuilder.build(kubernetes)) {
+            return kc.apps()
+                    .deployments()
+                    .inNamespace(deployment.getMetadata().getNamespace())
+                    .resource(deployment)
+                    .update();
+        } catch (Exception e) {
+            log.warn(e.getMessage());
+            throw e;
+        }
+    }
+
+    public static List<Deployment> list(KubernetesConfig.Kubernetes kubernetes, String namespace) {
+        try (KubernetesClient kc = MyKubernetesClientBuilder.build(kubernetes)) {
+            DeploymentList deploymentList = kc
+                    .apps()
+                    .deployments()
+                    .inNamespace(namespace)
+                    .list();
+            if (CollectionUtils.isEmpty(deploymentList.getItems())) {
+                return Collections.emptyList();
+            }
+            return deploymentList.getItems();
+        } catch (Exception e) {
+            log.warn(e.getMessage());
+            throw e;
+        }
+    }
+
+    private static Deployment create(KubernetesConfig.Kubernetes kubernetes, Deployment deployment) {
+        // 删除资源版本
+        deployment.getMetadata().setResourceVersion(null);
+        try (KubernetesClient kc = MyKubernetesClientBuilder.build(kubernetes)) {
+            return kc.apps()
+                    .deployments()
+                    .inNamespace(deployment.getMetadata().getNamespace())
+                    .resource(deployment)
+                    .create();
+        } catch (Exception e) {
+            log.warn(e.getMessage());
+            throw e;
+        }
+    }
+
+    public static Deployment get(KubernetesConfig.Kubernetes kubernetes, String namespace, String name) {
+        try (KubernetesClient kc = MyKubernetesClientBuilder.build(kubernetes)) {
+            return kc.apps()
+                    .deployments()
+                    .inNamespace(namespace)
+                    .withName(name)
+                    .get();
+        } catch (Exception e) {
+            log.warn(e.getMessage());
+            throw e;
+        }
+    }
+
+    public static void delete(KubernetesConfig.Kubernetes kubernetes, Deployment deployment) {
+        try (KubernetesClient kc = MyKubernetesClientBuilder.build(kubernetes)) {
+            kc.apps()
+                    .deployments()
+                    .inNamespace(deployment.getMetadata().getNamespace())
+                    .resource(deployment)
+                    .delete();
+        } catch (Exception e) {
+            log.warn(e.getMessage());
+            throw e;
+        }
+    }
+
+    private static Deployment toDeployment(KubernetesClient kubernetesClient, String content) {
+        InputStream is = new ByteArrayInputStream(content.getBytes());
+        return kubernetesClient
+                .apps()
+                .deployments()
+                .load(is)
+                .item();
     }
 
 }

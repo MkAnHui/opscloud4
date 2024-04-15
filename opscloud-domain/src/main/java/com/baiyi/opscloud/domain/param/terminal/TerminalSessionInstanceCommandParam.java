@@ -2,13 +2,12 @@ package com.baiyi.opscloud.domain.param.terminal;
 
 import com.baiyi.opscloud.domain.param.IExtend;
 import com.baiyi.opscloud.domain.param.PageParam;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import javax.validation.Valid;
 
 /**
  * @Author baiyi
@@ -20,17 +19,19 @@ public class TerminalSessionInstanceCommandParam {
     @Data
     @EqualsAndHashCode(callSuper = true)
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class InstanceCommandPageQuery extends PageParam implements IExtend {
 
-        @ApiModelProperty(value = "会话实例id")
-        @Valid
+        @Schema(description = "会话实例ID")
+        @Min(value = 1,message = "必需指定会话实例ID")
+        @NotNull
         private Integer terminalSessionInstanceId;
 
-        @ApiModelProperty(value = "查询参数")
+        @Schema(description = "查询参数")
         private String queryName;
 
         private Boolean extend;
 
     }
+
 }

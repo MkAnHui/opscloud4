@@ -12,6 +12,15 @@ public class Document {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    private String name;
+
+    @Column(name = "mount_zone")
+    private String mountZone;
+
+    private String icon;
+
+    private Integer seq;
+
     @Column(name = "document_key")
     private String documentKey;
 
@@ -20,6 +29,9 @@ public class Document {
      */
     @Column(name = "document_type")
     private Integer documentType;
+
+    @Column(name = "is_active")
+    private Boolean isActive;
 
     private String comment;
 

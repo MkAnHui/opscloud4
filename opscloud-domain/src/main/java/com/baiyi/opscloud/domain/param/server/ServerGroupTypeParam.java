@@ -2,8 +2,8 @@ package com.baiyi.opscloud.domain.param.server;
 
 import com.baiyi.opscloud.domain.param.IExtend;
 import com.baiyi.opscloud.domain.param.PageParam;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -16,15 +16,48 @@ import lombok.NoArgsConstructor;
 public class ServerGroupTypeParam {
 
     @Data
+    @NoArgsConstructor
+    @Schema
+    public static class AddServerGroupType  {
+
+        private Integer id;
+
+        @NotNull(message = "组类型名称不能为空")
+        private String name;
+
+        private String color;
+
+        private String comment;
+
+    }
+
+    @Data
+    @NoArgsConstructor
+    @Schema
+    public static class UpdateServerGroupType  {
+
+        private Integer id;
+
+        @NotNull(message = "组类型名称不能为空")
+        private String name;
+
+        private String color;
+
+        private String comment;
+
+    }
+
+    @Data
     @EqualsAndHashCode(callSuper = true)
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class ServerGroupTypePageQuery extends PageParam implements IExtend {
 
-        @ApiModelProperty(value = "名称")
+        @Schema(description = "名称")
         private String name;
 
         private Boolean extend;
 
     }
+
 }

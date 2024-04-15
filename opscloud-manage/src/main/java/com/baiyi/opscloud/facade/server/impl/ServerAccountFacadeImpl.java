@@ -1,20 +1,20 @@
 package com.baiyi.opscloud.facade.server.impl;
 
+import com.baiyi.opscloud.common.exception.common.OCException;
 import com.baiyi.opscloud.common.util.BeanCopierUtil;
 import com.baiyi.opscloud.domain.DataTable;
-import com.baiyi.opscloud.domain.generator.opscloud.Credential;
 import com.baiyi.opscloud.domain.generator.opscloud.ServerAccount;
 import com.baiyi.opscloud.domain.generator.opscloud.ServerAccountPermission;
 import com.baiyi.opscloud.domain.param.server.ServerAccountParam;
 import com.baiyi.opscloud.domain.vo.server.ServerAccountVO;
 import com.baiyi.opscloud.facade.server.ServerAccountFacade;
+import com.baiyi.opscloud.facade.server.converter.ServerAccountConverter;
 import com.baiyi.opscloud.packer.server.ServerAccountPacker;
 import com.baiyi.opscloud.service.server.ServerAccountPermissionService;
 import com.baiyi.opscloud.service.server.ServerAccountService;
-import com.baiyi.opscloud.service.sys.CredentialService;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Iterator;
 import java.util.List;
@@ -35,7 +35,7 @@ public class ServerAccountFacadeImpl implements ServerAccountFacade {
 
     private final ServerAccountPacker accountPacker;
 
-    private final CredentialService credentialService;
+    private final ServerAccountConverter serverAccountConverter;
 
     @Override
     public DataTable<ServerAccountVO.Account> queryServerAccountPage(ServerAccountParam.ServerAccountPageQuery pageQuery) {
@@ -46,43 +46,44 @@ public class ServerAccountFacadeImpl implements ServerAccountFacade {
     }
 
     @Override
-    public void addServerAccount(ServerAccountVO.Account account) {
-        ServerAccount serverAccount = toServerAccount(account);
-        accountService.add(serverAccount);
+    public void addServerAccount(ServerAccountParam.ServerAccount account) {
+        ServerAccount serverAccount = serverAccountConverter.to(account);
+        try {
+            accountService.add(serverAccount);
+        } catch (Exception e) {
+            throw new OCException("新增服务器账户错误: 请确认账户名称和类型是否重复！");
+        }
     }
 
     @Override
-    public void updateServerAccount(ServerAccountVO.Account account) {
-        ServerAccount serverAccount = toServerAccount(account);
+    public void updateServerAccount(ServerAccountParam.ServerAccount account) {
+        ServerAccount serverAccount = serverAccountConverter.to(account);
         accountService.update(serverAccount);
     }
 
-    private ServerAccount toServerAccount(ServerAccountVO.Account account) {
-        ServerAccount serverAccount = BeanCopierUtil.copyProperties(account, ServerAccount.class);
-        if (StringUtils.isEmpty(serverAccount.getUsername())) {
-            Credential credential = credentialService.getById(serverAccount.getCredentialId());
-            serverAccount.setUsername(credential.getUsername());
-        }
-        return serverAccount;
-    }
-
+    /**
+     * 更新服务器账户授权
+     * @param updatePermission
+     */
     @Override
+    @Transactional(rollbackFor = {Exception.class})
     public void updateServerAccountPermission(ServerAccountParam.UpdateServerAccountPermission updatePermission) {
         List<ServerAccountPermission> permissions = accountPermissionService.queryByServerId(updatePermission.getServerId());
-        updatePermission.getAccountIds().forEach(id -> {
-            if (!isAuthorized(permissions, id)) {
+        for (Integer id : updatePermission.getAccountIds()) {
+            if (!hasAuthorized(permissions, id)) {
                 ServerAccountPermission permission = ServerAccountPermission.builder()
                         .serverAccountId(id)
                         .serverId(updatePermission.getServerId())
                         .build();
                 accountPermissionService.add(permission);
             }
-
-        });
-        permissions.forEach(e -> accountPermissionService.deleteById(e.getId()));
+        }
+        for (ServerAccountPermission e : permissions) {
+            accountPermissionService.deleteById(e.getId());
+        }
     }
 
-    private boolean isAuthorized(List<ServerAccountPermission> permissions, Integer accountId) {
+    private boolean hasAuthorized(List<ServerAccountPermission> permissions, Integer accountId) {
         Iterator<ServerAccountPermission> iter = permissions.iterator();
         while (iter.hasNext()) {
             ServerAccountPermission permission = iter.next();
@@ -92,6 +93,14 @@ public class ServerAccountFacadeImpl implements ServerAccountFacade {
             }
         }
         return false;
+    }
+
+    @Override
+    public void deleteServerAccountById(Integer id) {
+        if (accountPermissionService.countByServerAccountId(id) != 0) {
+            throw new OCException("删除服务器账户错误: 账户使用中！");
+        }
+        accountService.deleteById(id);
     }
 
 }

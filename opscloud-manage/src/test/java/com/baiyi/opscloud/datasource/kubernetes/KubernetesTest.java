@@ -2,12 +2,12 @@ package com.baiyi.opscloud.datasource.kubernetes;
 
 import com.baiyi.opscloud.BaseUnit;
 import com.baiyi.opscloud.common.datasource.KubernetesConfig;
-import com.baiyi.opscloud.common.datasource.base.BaseConfig;
+import com.baiyi.opscloud.common.datasource.base.BaseDsConfig;
 import com.baiyi.opscloud.domain.constants.DsAssetTypeConstants;
 import com.baiyi.opscloud.common.constants.enums.DsTypeEnum;
 import com.baiyi.opscloud.core.factory.AssetProviderFactory;
-import com.baiyi.opscloud.core.factory.DsConfigHelper;
-import com.baiyi.opscloud.datasource.kubernetes.client.KubeClient;
+import com.baiyi.opscloud.core.factory.DsConfigManager;
+import com.baiyi.opscloud.datasource.kubernetes.client.MyKubernetesClientBuilder;
 import com.baiyi.opscloud.datasource.kubernetes.event.KubernetesPodWatch;
 import com.baiyi.opscloud.datasource.kubernetes.event.KubernetesWatchEvent;
 import com.baiyi.opscloud.datasource.kubernetes.driver.KubernetesNamespaceDriver;
@@ -23,7 +23,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.LogWatch;
 import org.junit.jupiter.api.Test;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.io.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -39,7 +39,7 @@ public class KubernetesTest extends BaseUnit {
     private DsConfigService dsConfigService;
 
     @Resource
-    private DsConfigHelper dsFactory;
+    private DsConfigManager dsFactory;
 
     @Test
     void pullNamespaceTest() {
@@ -67,7 +67,7 @@ public class KubernetesTest extends BaseUnit {
         KubernetesConfig kubernetesDsInstanceConfig = (KubernetesConfig) getConfig();
         // KubernetesClient kubernetesClient = KubeClient.build(kubernetesDsInstanceConfig.getKubernetes());
 
-        List<Namespace> namespaces = KubernetesNamespaceDriver.listNamespace(kubernetesDsInstanceConfig.getKubernetes());
+        List<Namespace> namespaces = KubernetesNamespaceDriver.list(kubernetesDsInstanceConfig.getKubernetes());
 
         //  NamespaceList namespaceList = kubernetesClient.namespaces().list();
         for (Namespace item : namespaces) {
@@ -78,7 +78,7 @@ public class KubernetesTest extends BaseUnit {
     @Test
     void podTest() {
         KubernetesConfig kubernetesDsInstanceConfig = (KubernetesConfig) getConfig();
-        KubernetesClient kubernetesClient = KubeClient.build(kubernetesDsInstanceConfig.getKubernetes());
+        KubernetesClient kubernetesClient = MyKubernetesClientBuilder.build(kubernetesDsInstanceConfig.getKubernetes());
         PodList podList = kubernetesClient.pods().inNamespace("dev").list();
 
         List<Pod> pods = podList.getItems().stream().filter(e -> e.getStatus().getPhase().equals("Running")).collect(Collectors.toList());
@@ -110,7 +110,7 @@ public class KubernetesTest extends BaseUnit {
         //  System.err.print(JSON.toJSONString(matchLabels));
 
         KubernetesConfig kubernetesDsInstanceConfig = (KubernetesConfig) getConfig();
-        List<Pod> pods = KubernetesPodDriver.listPod(kubernetesDsInstanceConfig.getKubernetes(), "dev", "coms-dev-deployment");
+        List<Pod> pods = KubernetesPodDriver.list(kubernetesDsInstanceConfig.getKubernetes(), "dev", "coms-dev-deployment");
         for (Pod item : pods) {
             System.err.print(item.getSpec());
         }
@@ -182,7 +182,7 @@ public class KubernetesTest extends BaseUnit {
     }
 
     @Test
-    BaseConfig getConfig() {
+    BaseDsConfig getConfig() {
         DatasourceConfig datasourceConfig = dsConfigService.getById(5);
         return dsFactory.build(datasourceConfig, KubernetesConfig.class);
     }

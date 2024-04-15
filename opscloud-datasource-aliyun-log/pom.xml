@@ -19,12 +19,6 @@
         </dependency>
 
         <dependency>
-            <groupId>com.aliyun.openservices</groupId>
-            <artifactId>aliyun-log</artifactId>
-            <version>0.6.6</version>
-        </dependency>
-
-        <dependency>
             <groupId>com.baiyi</groupId>
             <artifactId>opscloud-datasource-core</artifactId>
         </dependency>

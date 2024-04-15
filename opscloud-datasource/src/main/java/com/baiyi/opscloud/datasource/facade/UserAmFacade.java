@@ -1,7 +1,7 @@
 package com.baiyi.opscloud.datasource.facade;
 
-import com.baiyi.opscloud.common.exception.common.CommonRuntimeException;
-import com.baiyi.opscloud.datasource.facade.am.base.IXamProcessor;
+import com.baiyi.opscloud.common.exception.common.OCException;
+import com.baiyi.opscloud.datasource.facade.am.base.IAccessManagementProcessor;
 import com.baiyi.opscloud.domain.generator.opscloud.DatasourceInstance;
 import com.baiyi.opscloud.domain.param.user.UserAmParam;
 import com.baiyi.opscloud.service.datasource.DsInstanceService;
@@ -24,45 +24,52 @@ public class UserAmFacade {
 
     private final DsInstanceService dsInstanceService;
 
-    private static final Map<String, IXamProcessor> context = new ConcurrentHashMap<>();
+    private static final Map<String, IAccessManagementProcessor> CONTEXT = new ConcurrentHashMap<>();
 
-    public static void register(IXamProcessor bean) {
-        context.put(bean.getDsType(), bean);
-        log.info("AM Processor注册: dsType = {} , beanName = {}  ", bean.getDsType(), bean.getClass().getSimpleName());
+    public static void register(IAccessManagementProcessor bean) {
+        CONTEXT.put(bean.getDsType(), bean);
+        log.debug("AM Processor Registered: dsType={}, beanName={}", bean.getDsType(), bean.getClass().getSimpleName());
     }
 
     /**
      * 授权策略
+     *
      * @param grantPolicy
      */
     public void grantPolicy(UserAmParam.GrantPolicy grantPolicy) {
-        IXamProcessor xamProcessor = getAmProcessorByInstanceUuid(grantPolicy.getInstanceUuid());
+        IAccessManagementProcessor xamProcessor = getAmProcessorByInstanceUuid(grantPolicy.getInstanceUuid());
         xamProcessor.grantPolicy(grantPolicy);
     }
 
     /**
      * 撤销已授权策略
+     *
      * @param revokePolicy
      */
     public void revokePolicy(UserAmParam.RevokePolicy revokePolicy) {
-        IXamProcessor xamProcessor = getAmProcessorByInstanceUuid(revokePolicy.getInstanceUuid());
+        IAccessManagementProcessor xamProcessor = getAmProcessorByInstanceUuid(revokePolicy.getInstanceUuid());
         xamProcessor.revokePolicy(revokePolicy);
     }
 
     public void createUser(UserAmParam.CreateUser createUser) {
-        IXamProcessor xamProcessor = getAmProcessorByInstanceUuid(createUser.getInstanceUuid());
+        IAccessManagementProcessor xamProcessor = getAmProcessorByInstanceUuid(createUser.getInstanceUuid());
         xamProcessor.createUser(createUser);
     }
 
-    private IXamProcessor getAmProcessorByInstanceUuid(String uuid) {
+    private IAccessManagementProcessor getAmProcessorByInstanceUuid(String uuid) {
         DatasourceInstance instance = dsInstanceService.getByUuid(uuid);
         if (instance == null) {
-            throw new CommonRuntimeException("数据源实例不存在！");
+            throw new OCException("数据源实例不存在！");
         }
-        if (!context.containsKey(instance.getInstanceType())) {
-            throw new CommonRuntimeException("数据源实例类型不正确！");
+        if (!CONTEXT.containsKey(instance.getInstanceType())) {
+            throw new OCException("数据源实例类型不正确！");
         }
-        return context.get(instance.getInstanceType());
+        return CONTEXT.get(instance.getInstanceType());
+    }
+
+    public void updateLoginProfile(UserAmParam.UpdateLoginProfile updateLoginProfile){
+        IAccessManagementProcessor xamProcessor = getAmProcessorByInstanceUuid(updateLoginProfile.getInstanceUuid());
+        xamProcessor.updateLoginProfile(updateLoginProfile);
     }
 
 }

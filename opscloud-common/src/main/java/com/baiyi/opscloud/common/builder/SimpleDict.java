@@ -1,8 +1,9 @@
 package com.baiyi.opscloud.common.builder;
 
-import com.baiyi.opscloud.common.util.JSONUtil;
+import com.baiyi.opscloud.common.base.IToString;
 import com.google.common.collect.Maps;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.Map;
 
@@ -11,8 +12,9 @@ import java.util.Map;
  * @Date 2021/5/18 2:41 下午
  * @Version 1.0
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
-public class SimpleDict {
+public class SimpleDict extends IToString {
 
     private final Map<String, String> dict = Maps.newHashMap();
 
@@ -24,8 +26,4 @@ public class SimpleDict {
         this.dict.putAll(variable);
     }
 
-    @Override
-    public String toString() {
-        return JSONUtil.writeValueAsString(this);
-    }
 }

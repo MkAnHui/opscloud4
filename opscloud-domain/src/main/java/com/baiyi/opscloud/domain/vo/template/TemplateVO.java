@@ -2,8 +2,7 @@ package com.baiyi.opscloud.domain.vo.template;
 
 import com.baiyi.opscloud.domain.vo.base.BaseVO;
 import com.baiyi.opscloud.domain.vo.env.EnvVO;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
 /**
@@ -26,10 +25,10 @@ public class TemplateVO {
     @Builder
     @AllArgsConstructor
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class Template extends BaseVO implements EnvVO.IEnv {
 
-        @ApiModelProperty(value = "业务模版数量", example = "1")
+        @Schema(description = "业务模板数量", example = "1")
         private Integer bizTemplateSize;
 
         private EnvVO.Env env;
@@ -52,25 +51,27 @@ public class TemplateVO {
         private String instanceType;
 
         /**
-         * 模版key
+         * 模板key
          */
 
         private String templateKey;
 
         /**
-         * 模版类型
+         * 模板类型
          */
 
         private String templateType;
 
 
         /**
-         * 模版变量
+         * 模板变量
          */
         private String vars;
 
+        private String kind;
+
         /**
-         * 模版内容
+         * 模板内容
          */
         private String content;
 

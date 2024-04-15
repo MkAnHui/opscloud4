@@ -19,8 +19,8 @@ import java.util.Date;
  */
 public class RamPolicy {
 
-    public static Date toGmtDate(String time) {
-        return TimeUtil.toGmtDate(time, TimeZoneEnum.UTC);
+    public static Date toUtcDate(String time) {
+        return TimeUtil.toDate(time, TimeZoneEnum.UTC);
     }
 
     // ListPolicies
@@ -46,15 +46,13 @@ public class RamPolicy {
                     .kind("ramUser")
                     .assetType(DsAssetTypeConstants.RAM_POLICY.name())
                     .description(this.description)
-                    .createdTime(toGmtDate(this.createDate))
+                    .createdTime(toUtcDate(this.createDate))
                     .build();
 
             return AssetContainerBuilder.newBuilder()
                     .paramAsset(asset)
                     .build();
         }
-
-
     }
 
 }

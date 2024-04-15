@@ -9,6 +9,7 @@ import com.baiyi.opscloud.domain.generator.opscloud.DatasourceInstanceAsset;
 import com.baiyi.opscloud.domain.generator.opscloud.WorkOrderTicket;
 import com.baiyi.opscloud.domain.generator.opscloud.WorkOrderTicketEntry;
 import com.baiyi.opscloud.domain.param.datasource.DsAssetParam;
+import com.baiyi.opscloud.domain.param.workorder.WorkOrderTicketEntryParam;
 import com.baiyi.opscloud.workorder.constants.WorkOrderKeyConstants;
 import com.baiyi.opscloud.workorder.exception.TicketProcessException;
 import com.baiyi.opscloud.workorder.exception.TicketVerifyException;
@@ -16,10 +17,12 @@ import com.baiyi.opscloud.workorder.processor.impl.extended.AbstractDsAssetExten
 import com.google.common.base.Joiner;
 import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -60,22 +63,26 @@ public class NacosTicketProcessor extends AbstractDsAssetExtendedBaseTicketProce
     protected void processHandle(WorkOrderTicketEntry ticketEntry, DatasourceInstanceAsset entry) throws TicketProcessException {
         NacosConfig.Nacos config = getDsConfig(ticketEntry, NacosConfig.class).getNacos();
 
-        String prefix = Optional.ofNullable(config.getAccount())
+        final String prefix = Optional.ofNullable(config.getAccount())
                 .map(NacosConfig.Account::getPrefix)
                 .orElse("");
         WorkOrderTicket ticket = getTicketById(ticketEntry.getWorkOrderTicketId());
         String nacosUsername = Joiner.on("").skipNulls().join(prefix, ticket.getUsername());
-        createNacosUser(config, nacosUsername);
+        try {
+            createNacosUser(config, nacosUsername);
+        } catch (Exception e) {
+            throw new TicketProcessException("Create Nacos user err: {}", e.getMessage());
+        }
         try {
             NacosUser.AuthRoleResponse authRoleResponse = nacosAuthDrive.authRole(config, nacosUsername, ticketEntry.getName());
-            if (authRoleResponse.getCode() != 200) {
-                throw new TicketProcessException("工单配置Nacos失败: " + authRoleResponse.getMessage());
+            if (authRoleResponse.getCode() != HttpStatus.SC_OK) {
+                throw new TicketProcessException("工单配置Nacos失败: {}", authRoleResponse.getMessage());
             }
         } catch (FeignException e) {
-            if (e.status() == 500) {
+            if (e.status() == HttpStatus.SC_INTERNAL_SERVER_ERROR) {
                 log.info("Nacos授权角色接口500错误: 可能是重复申请导致的！");
             } else {
-                throw new TicketProcessException("工单配置Nacos失败: " + e.getMessage());
+                throw new TicketProcessException("工单配置Nacos失败: {}", e.getMessage());
             }
         }
     }
@@ -90,7 +97,7 @@ public class NacosTicketProcessor extends AbstractDsAssetExtendedBaseTicketProce
     }
 
     @Override
-    public void verifyHandle(WorkOrderTicketEntry ticketEntry) throws TicketVerifyException {
+    public void handleVerify(WorkOrderTicketEntryParam.TicketEntry ticketEntry) throws TicketVerifyException {
         DatasourceInstanceAsset entry = this.toEntry(ticketEntry.getContent());
         DatasourceInstanceAsset asset = getAsset(entry);
         verifyEntry(asset);
@@ -112,4 +119,3 @@ public class NacosTicketProcessor extends AbstractDsAssetExtendedBaseTicketProce
     }
 
 }
-

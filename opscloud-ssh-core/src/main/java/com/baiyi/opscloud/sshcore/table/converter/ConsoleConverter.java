@@ -6,9 +6,7 @@ import com.baiyi.opscloud.sshcore.table.PrettyTable;
 import org.apache.commons.lang3.StringUtils;
 
 import java.text.NumberFormat;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -44,15 +42,14 @@ public abstract class ConsoleConverter implements Converter, Bordered {
 
         leftBorder();
 
-        for (int i = 0; i < pt.fieldNames.size(); i++) {
+        IntStream.range(0, pt.fieldNames.size()).forEach(i -> {
             af(StringUtils.rightPad(pt.fieldNames.get(i), maxWidth[i]));
-
             if (i < pt.fieldNames.size() - 1) {
                 centerBorder();
             } else {
                 rightBorder();
             }
-        }
+        });
 
         bottomBorderLine(maxWidth);
 
@@ -61,7 +58,7 @@ public abstract class ConsoleConverter implements Converter, Bordered {
             ab("\n");
             leftBorder();
 
-            int rL = colLength(String.valueOf(r));
+            int rL = colLength(Arrays.toString(r));
             // for (int c = 0; c < r.length; c++) {
             for (int c = 0; c < r.length; c++) {
 
@@ -103,23 +100,27 @@ public abstract class ConsoleConverter implements Converter, Bordered {
         return toString();
     }
 
-    /*
+    /**
      * Adjust for max width of the column
+     * @param pt
+     * @return
      */
     public int[] adjustMaxWidth(PrettyTable pt) {
 
         // Adjust comma
-        List<List<String>> converted = pt.rows.stream()
-                .map(r -> Stream.of(r).map(o -> {
-                    if (pt.comma && o instanceof Number) {
-                        return NumberFormat
-                                .getNumberInstance(Locale.US)
-                                .format(o);
-                    } else {
-                        return o.toString();
-                    }
-                }).collect(Collectors.toList()))
-                .collect(Collectors.toList());
+        List<List<String>> converted = new ArrayList<>();
+        for (Object[] r : pt.rows) {
+            List<String> collect = Stream.of(r).map(o -> {
+                if (pt.comma && o instanceof Number) {
+                    return NumberFormat
+                            .getNumberInstance(Locale.US)
+                            .format(o);
+                } else {
+                    return o.toString();
+                }
+            }).collect(Collectors.toList());
+            converted.add(collect);
+        }
         return IntStream.range(0, pt.fieldNames.size())
                 .map(i -> {
                     int n = converted.stream()
@@ -133,13 +134,13 @@ public abstract class ConsoleConverter implements Converter, Bordered {
 
     private int colLength(String colStr) {
         final String searchChar = "[0m";
-        int origialLength = colStr.length();
+        int originalLength = colStr.length();
         // "\u001B[0m"
         colStr = colStr.replace(searchChar, "");
         int newLength = colStr.length();
         // int newLength = getChineseLength(colStr);
-        int count = (origialLength - newLength) / 3;
-        int length = origialLength - 8 * count;
+        int count = (originalLength - newLength) / 3;
+        int length = originalLength - 8 * count;
         // 补偿中文
         return length + fixLength(colStr);
     }
@@ -152,12 +153,12 @@ public abstract class ConsoleConverter implements Converter, Bordered {
 
     private int colorAnisSize(String str) {
         String searchChar = "[0m";
-        int origialLength = str.length();
+        int originalLength = str.length();
         // "\u001B[0m"
         str = str.replace(searchChar, "");
         int newLength = str.length();
 
-        return (origialLength - newLength) / 3;
+        return (originalLength - newLength) / 3;
     }
 
     /**
@@ -184,7 +185,6 @@ public abstract class ConsoleConverter implements Converter, Bordered {
         }
         return valueLength;
     }
-
 
     private ConsoleConverter topBorderLine(final int[] maxWidth) {
         ab(border ? line(maxWidth) + "\n" : "");
@@ -216,10 +216,13 @@ public abstract class ConsoleConverter implements Converter, Bordered {
         final StringBuilder sb = new StringBuilder();
 
         sb.append("+");
-        for (int i = 0; i < maxWidth.length; i++) {
+        int i = 0;
+        while (i < maxWidth.length) {
             sb.append(StringUtils.rightPad("", maxWidth[i] + 2, '-'));
             sb.append("+");
+            i++;
         }
         return sb.toString();
     }
+
 }

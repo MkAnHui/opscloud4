@@ -23,9 +23,12 @@ public interface BusinessTemplateService {
 
     List<BusinessTemplate> queryByInstanceUuid(String instanceUuid);
 
+    List<BusinessTemplate> queryByTemplateId(int templateId);
+
     BusinessTemplate getById(Integer id);
 
     void deleteById(int id);
 
     int countByTemplateId(int templateId);
+
 }

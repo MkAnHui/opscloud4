@@ -2,13 +2,14 @@ package com.baiyi.opscloud.facade.server.impl;
 
 import com.baiyi.opscloud.algorithm.ServerPack;
 import com.baiyi.opscloud.common.base.AccessLevel;
-import com.baiyi.opscloud.common.exception.common.CommonRuntimeException;
+import com.baiyi.opscloud.common.exception.common.OCException;
 import com.baiyi.opscloud.common.util.BeanCopierUtil;
-import com.baiyi.opscloud.common.util.RegexUtil;
 import com.baiyi.opscloud.datasource.ansible.ServerGroupingAlgorithm;
 import com.baiyi.opscloud.domain.DataTable;
 import com.baiyi.opscloud.domain.ErrorEnum;
 import com.baiyi.opscloud.domain.annotation.*;
+import com.baiyi.opscloud.domain.constants.ApplicationResTypeEnum;
+import com.baiyi.opscloud.domain.constants.BusinessTypeEnum;
 import com.baiyi.opscloud.domain.generator.opscloud.Server;
 import com.baiyi.opscloud.domain.generator.opscloud.ServerGroup;
 import com.baiyi.opscloud.domain.generator.opscloud.ServerGroupType;
@@ -17,18 +18,17 @@ import com.baiyi.opscloud.domain.param.application.ApplicationResourceParam;
 import com.baiyi.opscloud.domain.param.server.ServerGroupParam;
 import com.baiyi.opscloud.domain.param.server.ServerGroupTypeParam;
 import com.baiyi.opscloud.domain.param.user.UserBusinessPermissionParam;
-import com.baiyi.opscloud.domain.constants.ApplicationResTypeEnum;
-import com.baiyi.opscloud.domain.constants.BusinessTypeEnum;
 import com.baiyi.opscloud.domain.vo.application.ApplicationResourceVO;
 import com.baiyi.opscloud.domain.vo.server.ServerGroupTypeVO;
 import com.baiyi.opscloud.domain.vo.server.ServerGroupVO;
 import com.baiyi.opscloud.domain.vo.server.ServerTreeVO;
 import com.baiyi.opscloud.domain.vo.user.UserVO;
+import com.baiyi.opscloud.facade.server.converter.ServerGroupConverter;
 import com.baiyi.opscloud.facade.server.ServerGroupFacade;
 import com.baiyi.opscloud.facade.user.UserPermissionFacade;
 import com.baiyi.opscloud.facade.user.base.IUserBusinessPermissionPageQuery;
 import com.baiyi.opscloud.facade.user.factory.UserBusinessPermissionFactory;
-import com.baiyi.opscloud.factory.resource.base.AbstractApplicationResourceQuery;
+import com.baiyi.opscloud.factory.resource.base.AbstractAppResQuery;
 import com.baiyi.opscloud.packer.server.ServerGroupPacker;
 import com.baiyi.opscloud.packer.server.ServerGroupTypePacker;
 import com.baiyi.opscloud.packer.user.UserPermissionPacker;
@@ -57,7 +57,7 @@ import java.util.stream.Collectors;
 @BusinessType(BusinessTypeEnum.SERVERGROUP)
 @Service
 @RequiredArgsConstructor
-public class ServerGroupFacadeImpl extends AbstractApplicationResourceQuery implements ServerGroupFacade, IUserBusinessPermissionPageQuery, InitializingBean {
+public class ServerGroupFacadeImpl extends AbstractAppResQuery implements ServerGroupFacade, IUserBusinessPermissionPageQuery, InitializingBean {
 
     private final ServerGroupService serverGroupService;
 
@@ -80,8 +80,10 @@ public class ServerGroupFacadeImpl extends AbstractApplicationResourceQuery impl
     @Override
     public DataTable<ServerGroupVO.ServerGroup> queryServerGroupPage(ServerGroupParam.ServerGroupPageQuery pageQuery) {
         DataTable<ServerGroup> table = serverGroupService.queryPageByParam(pageQuery);
-        List<ServerGroupVO.ServerGroup> data = BeanCopierUtil.copyListProperties(table.getData(), ServerGroupVO.ServerGroup.class).stream()
-                .peek(e -> serverGroupPacker.wrap(e, pageQuery)).collect(Collectors.toList());
+        List<ServerGroupVO.ServerGroup> data = BeanCopierUtil.copyListProperties(table.getData(), ServerGroupVO.ServerGroup.class)
+                .stream()
+                .peek(e -> serverGroupPacker.wrap(e, pageQuery))
+                .collect(Collectors.toList());
         return new DataTable<>(data, table.getTotalNum());
     }
 
@@ -93,86 +95,92 @@ public class ServerGroupFacadeImpl extends AbstractApplicationResourceQuery impl
         query.setLength(pageQuery.getLength());
         query.setPage(pageQuery.getPage());
         DataTable<ServerGroupVO.ServerGroup> table = queryServerGroupPage(query);
-        return new DataTable<>(table.getData().stream().map(e ->
-                ApplicationResourceVO.Resource.builder()
+        return new DataTable<>(table.getData()
+                .stream()
+                .map(e -> ApplicationResourceVO.Resource.builder()
                         .name(e.getName())
                         .applicationId(pageQuery.getApplicationId())
-                        .resourceType(getApplicationResType())
+                        .resourceType(getAppResType())
                         .businessType(getBusinessType())
                         .businessId(e.getBusinessId())
                         .comment(e.getComment())
                         .build()
-        ).collect(Collectors.toList()), table.getTotalNum());
+                ).collect(Collectors.toList()), table.getTotalNum());
     }
 
     @Override
     public DataTable<UserVO.IUserPermission> queryUserBusinessPermissionPage(UserBusinessPermissionParam.UserBusinessPermissionPageQuery pageQuery) {
         pageQuery.setBusinessType(getBusinessType());
         DataTable<ServerGroup> table = serverGroupService.queryPageByParam(pageQuery);
-        List<ServerGroupVO.ServerGroup> data = BeanCopierUtil.copyListProperties(table.getData(), ServerGroupVO.ServerGroup.class).stream()
-                .peek(e -> serverGroupPacker.wrap(e, pageQuery)).collect(Collectors.toList());
-        if (pageQuery.getAuthorized())
+        List<ServerGroupVO.ServerGroup> data = BeanCopierUtil.copyListProperties(table.getData(), ServerGroupVO.ServerGroup.class)
+                .stream()
+                .peek(e -> serverGroupPacker.wrap(e, pageQuery))
+                .collect(Collectors.toList());
+        if (pageQuery.getAuthorized()) {
             data.forEach(e -> {
                 e.setUserId(pageQuery.getUserId());
                 userPermissionPacker.wrap(e);
             });
+        }
         return new DataTable<>(Lists.newArrayList(data), table.getTotalNum());
     }
 
     @Override
-    public void addServerGroup(ServerGroupVO.ServerGroup serverGroup) {
-        if (serverGroupService.getByName(serverGroup.getName()) != null)
-            throw new CommonRuntimeException(ErrorEnum.SERVERGROUP_NAME_ALREADY_EXIST);
-        serverGroupService.add(toDO(serverGroup));
+    public void addServerGroup(ServerGroupParam.AddServerGroup addServerGroup) {
+        if (serverGroupService.getByName(addServerGroup.getName()) != null) {
+            throw new OCException(ErrorEnum.SERVERGROUP_NAME_ALREADY_EXIST);
+        }
+        serverGroupService.add(ServerGroupConverter.to(addServerGroup));
     }
 
     @Override
-    public void updateServerGroup(ServerGroupVO.ServerGroup serverGroup) {
-        ServerGroup group = serverGroupService.getById(serverGroup.getId());
-        serverGroup.setName(group.getName()); // 不允许修改名称
-        serverGroupService.update(toDO(serverGroup));
+    public void updateServerGroup(ServerGroupParam.UpdateServerGroup updateServerGroup) {
+        ServerGroup group = serverGroupService.getById(updateServerGroup.getId());
+        // 不允许修改名称
+        updateServerGroup.setName(group.getName());
+        serverGroupService.update(ServerGroupConverter.to(updateServerGroup));
     }
 
     @TagClear
-    @BusinessPropertyClear
+    @BusinessObjectClear
     @RevokeUserPermission
     @Override
     public void deleteServerGroupById(int id) {
         ServerGroup serverGroup = serverGroupService.getById(id);
-        if (serverGroup == null) return;
-        if (serverService.countByServerGroupId(id) > 0)
-            throw new CommonRuntimeException("服务器组不为空：必须删除组内服务器成员！");
+        if (serverGroup == null) {
+            return;
+        }
+        if (serverService.countByServerGroupId(id) > 0) {
+            throw new OCException("服务器组不为空：必须删除组内服务器成员！");
+        }
         serverGroupService.delete(serverGroup);
-    }
-
-    private ServerGroup toDO(ServerGroupVO.ServerGroup serverGroup) {
-        ServerGroup pre = BeanCopierUtil.copyProperties(serverGroup, ServerGroup.class);
-        RegexUtil.tryServerGroupNameRule(pre.getName()); // 名称规范
-        return pre;
     }
 
     @Override
     public DataTable<ServerGroupTypeVO.ServerGroupType> queryServerGroupTypePage(ServerGroupTypeParam.ServerGroupTypePageQuery pageQuery) {
         DataTable<ServerGroupType> table = serverGroupTypeService.queryPageByParam(pageQuery);
-        List<ServerGroupTypeVO.ServerGroupType> data = BeanCopierUtil.copyListProperties(table.getData(),ServerGroupTypeVO.ServerGroupType.class).stream()
-                .peek(e->serverGroupTypePacker.wrap(e,pageQuery)).collect(Collectors.toList());
+        List<ServerGroupTypeVO.ServerGroupType> data = BeanCopierUtil.copyListProperties(table.getData(), ServerGroupTypeVO.ServerGroupType.class)
+                .stream()
+                .peek(e -> serverGroupTypePacker.wrap(e, pageQuery))
+                .collect(Collectors.toList());
         return new DataTable<>(data, table.getTotalNum());
     }
 
     @Override
-    public void addServerGroupType(ServerGroupTypeVO.ServerGroupType serverGroupType) {
-        serverGroupTypeService.add(BeanCopierUtil.copyProperties(serverGroupType, ServerGroupType.class));
+    public void addServerGroupType(ServerGroupTypeParam.AddServerGroupType addServerGroupType) {
+        serverGroupTypeService.add(BeanCopierUtil.copyProperties(addServerGroupType, ServerGroupType.class));
     }
 
     @Override
-    public void updateServerGroupType(ServerGroupTypeVO.ServerGroupType serverGroupType) {
-        serverGroupTypeService.update(BeanCopierUtil.copyProperties(serverGroupType, ServerGroupType.class));
+    public void updateServerGroupType(ServerGroupTypeParam.UpdateServerGroupType updateServerGroupType) {
+        serverGroupTypeService.update(BeanCopierUtil.copyProperties(updateServerGroupType, ServerGroupType.class));
     }
 
     @Override
     public void deleteServerGroupTypeById(int id) {
-        if (serverGroupService.countByServerGroupTypeId(id) > 0)
-            throw new CommonRuntimeException(ErrorEnum.SERVERGROUP_TYPE_HAS_USED);
+        if (serverGroupService.countByServerGroupTypeId(id) > 0) {
+            throw new OCException(ErrorEnum.SERVERGROUP_TYPE_HAS_USED);
+        }
         serverGroupTypeService.deleteById(id);
     }
 
@@ -181,21 +189,18 @@ public class ServerGroupFacadeImpl extends AbstractApplicationResourceQuery impl
         // 过滤空服务器组
         int accessLevel = userPermissionFacade.getUserAccessLevel(user.getUsername());
         queryParam.setIsAdmin(accessLevel >= AccessLevel.OPS.getLevel());
-
-        List<ServerGroup> groups
-                = serverGroupService.queryUserServerGroupTreeByParam(queryParam).stream()
+        List<ServerGroup> groups = serverGroupService.queryUserServerGroupTreeByParam(queryParam)
+                .stream()
                 .filter(g -> serverService.countByServerGroupId(g.getId()) != 0)
-                .collect(Collectors.toList());
+                .toList();
 
         List<ServerTreeVO.Tree> treeList = Lists.newArrayList();
         AtomicInteger treeSize = new AtomicInteger();
-
-        for (ServerGroup group : groups) {
+        groups.forEach(group -> {
             Map<String, List<ServerPack>> serverGroupMap = serverAlgorithm.grouping(group);
             treeList.add(serverTreeUtil.wrap(group, serverGroupMap));
             treeSize.addAndGet(serverTreeUtil.getServerGroupMapSize(serverGroupMap));
-        }
-
+        });
         return ServerTreeVO.ServerTree.builder()
                 .userId(user.getId())
                 .tree(treeList)
@@ -222,4 +227,5 @@ public class ServerGroupFacadeImpl extends AbstractApplicationResourceQuery impl
         super.afterPropertiesSet();
         UserBusinessPermissionFactory.register(this);
     }
+
 }

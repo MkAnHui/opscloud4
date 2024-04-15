@@ -1,8 +1,7 @@
 package com.baiyi.opscloud.domain.param.user;
 
 import com.baiyi.opscloud.domain.vo.datasource.DsInstanceVO;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
 /**
@@ -16,15 +15,15 @@ public class UserAmParam {
     @Builder
     @AllArgsConstructor
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class CreateUser implements DsInstanceVO.IInstance {
-        @ApiModelProperty(value = "数据源实例UUID")
+        @Schema(description = "数据源实例UUID")
         private String instanceUuid;
 
-        @ApiModelProperty(value = "数据源实例ID")
+        @Schema(description = "数据源实例ID")
         private Integer instanceId;
 
-        @ApiModelProperty(value = "用户名")
+        @Schema(description = "用户名")
         private String username;
     }
 
@@ -32,22 +31,22 @@ public class UserAmParam {
     @Builder
     @AllArgsConstructor
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class GrantPolicy implements DsInstanceVO.IInstance {
-        @ApiModelProperty(value = "数据源实例UUID")
+        @Schema(description = "数据源实例UUID")
         private String instanceUuid;
-        @ApiModelProperty(value = "数据源实例ID")
+        @Schema(description = "数据源实例ID")
         private Integer instanceId;
-        //        @ApiModelProperty(value = "需要创建账户")
-//        private Boolean needCreate;
+        //        @Schema(description = "需要创建账户")
+        //        private Boolean needCreate;
         private Policy policy;
-        @ApiModelProperty(value = "用户名")
+        @Schema(description = "用户名")
         private String username;
     }
 
     @EqualsAndHashCode(callSuper = true)
     @Data
-    @ApiModel
+    @Schema
     public static class RevokePolicy extends GrantPolicy {
     }
 
@@ -58,4 +57,26 @@ public class UserAmParam {
         private String policyType;
         private String policyArn; // IAM专用
     }
+
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Schema
+    public static class UpdateLoginProfile implements DsInstanceVO.IInstance {
+
+        @Schema(description = "数据源实例UUID")
+        private String instanceUuid;
+
+        @Schema(description = "数据源实例ID")
+        private Integer instanceId;
+
+        @Schema(description = "用户名")
+        private String username;
+
+        @Schema(description = "密码")
+        private String password;
+
+    }
+
 }

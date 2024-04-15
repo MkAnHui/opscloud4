@@ -24,19 +24,19 @@ public class UserEventConsumer extends AbstractEventConsumer<User> {
     }
 
     @Override
-    protected void onCreateMessage(NoticeEvent noticeEvent) {
+    protected void onCreatedMessage(NoticeEvent<User> noticeEvent) {
         User eventData = toEventData(noticeEvent.getMessage());
         dsAccountManager.create(eventData);
     }
 
     @Override
-    protected void onUpdateMessage(NoticeEvent noticeEvent) {
+    protected void onUpdatedMessage(NoticeEvent<User> noticeEvent) {
         User eventData = toEventData(noticeEvent.getMessage());
         dsAccountManager.update(eventData);
     }
 
     @Override
-    protected void onDeleteMessage(NoticeEvent noticeEvent) {
+    protected void onDeletedMessage(NoticeEvent<User> noticeEvent) {
         User eventData = toEventData(noticeEvent.getMessage());
         dsAccountManager.delete(eventData);
     }

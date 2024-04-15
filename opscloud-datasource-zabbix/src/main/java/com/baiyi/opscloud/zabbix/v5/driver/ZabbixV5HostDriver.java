@@ -1,8 +1,8 @@
 package com.baiyi.opscloud.zabbix.v5.driver;
 
-import com.baiyi.opscloud.common.config.CachingConfiguration;
+import com.baiyi.opscloud.common.configuration.CachingConfiguration;
 import com.baiyi.opscloud.common.datasource.ZabbixConfig;
-import com.baiyi.opscloud.zabbix.v5.driver.base.SimpleZabbixV5HostDrive;
+import com.baiyi.opscloud.zabbix.v5.driver.base.SimpleZabbixV5HostDriver;
 import com.baiyi.opscloud.zabbix.v5.entity.ZabbixHost;
 import com.baiyi.opscloud.zabbix.v5.entity.ZabbixHostGroup;
 import com.baiyi.opscloud.zabbix.v5.entity.ZabbixTrigger;
@@ -24,7 +24,7 @@ import java.util.List;
  */
 @Slf4j
 @Component
-public class ZabbixV5HostDriver extends SimpleZabbixV5HostDrive {
+public class ZabbixV5HostDriver extends SimpleZabbixV5HostDriver {
 
     public List<ZabbixHost.Host> list(ZabbixConfig.Zabbix config) {
         ZabbixRequest.DefaultRequest request = ZabbixRequestBuilder.builder()
@@ -61,29 +61,30 @@ public class ZabbixV5HostDriver extends SimpleZabbixV5HostDrive {
         return response.getResult();
     }
 
-    @CacheEvict(cacheNames = CachingConfiguration.Repositories.CACHE_1DAY, key = "#config.url + '_v5_host_hostid_' + #hostid")
+    @CacheEvict(cacheNames = CachingConfiguration.Repositories.CACHE_FOR_1D, key = "#config.url + '_v5_host_hostid_' + #hostid")
     public void evictHostById(ZabbixConfig.Zabbix config, String hostid) {
-        log.info("清除ZabbixHost缓存 : hostid = {}", hostid);
+        log.info("Evict cache Zabbix Host: hostid={}", hostid);
     }
 
-    @Cacheable(cacheNames = CachingConfiguration.Repositories.CACHE_1DAY, key = "#config.url + '_v5_host_hostid_' + #hostid", unless = "#result == null")
+    @Cacheable(cacheNames = CachingConfiguration.Repositories.CACHE_FOR_1D, key = "#config.url + '_v5_host_hostid_' + #hostid", unless = "#result == null")
     public ZabbixHost.Host getById(ZabbixConfig.Zabbix config, String hostid) {
         ZabbixRequest.DefaultRequest request = ZabbixRequestBuilder.builder()
                 .putParam("selectInterfaces", "extend")
                 .putParam("hostids", hostid)
                 .build();
         ZabbixHost.QueryHostResponse response = queryHandle(config, request);
-        if (CollectionUtils.isEmpty(response.getResult()))
+        if (CollectionUtils.isEmpty(response.getResult())) {
             return null;
-        return response.getResult().get(0);
+        }
+        return response.getResult().getFirst();
     }
 
-    @CacheEvict(cacheNames = CachingConfiguration.Repositories.CACHE_1DAY, key = "#config.url + '_v5_host_ip_' + #ip")
+    @CacheEvict(cacheNames = CachingConfiguration.Repositories.CACHE_FOR_1D, key = "#config.url + '_v5_host_ip_' + #ip")
     public void evictHostByIp(ZabbixConfig.Zabbix config, String ip) {
-        log.info("清除ZabbixHost缓存 : ip = {}", ip);
+        log.info("清除ZabbixHost缓存: ip={}", ip);
     }
 
-    @Cacheable(cacheNames = CachingConfiguration.Repositories.CACHE_1DAY, key = "#config.url + '_v5_host_ip_' + #ip", unless = "#result == null")
+    @Cacheable(cacheNames = CachingConfiguration.Repositories.CACHE_FOR_1D, key = "#config.url + '_v5_host_ip_' + #ip", unless = "#result == null")
     public ZabbixHost.Host getByIp(ZabbixConfig.Zabbix config, String ip) {
         ZabbixRequest.DefaultRequest request = ZabbixRequestBuilder.builder()
                 .filter(ZabbixFilterBuilder.builder()
@@ -91,16 +92,17 @@ public class ZabbixV5HostDriver extends SimpleZabbixV5HostDrive {
                         .build())
                 .build();
         ZabbixHost.QueryHostResponse response = queryHandle(config, request);
-        if (CollectionUtils.isEmpty(response.getResult()))
+        if (CollectionUtils.isEmpty(response.getResult())) {
             return null;
-        return response.getResult().get(0);
+        }
+        return response.getResult().getFirst();
     }
 
     public void updateHost(ZabbixConfig.Zabbix config, ZabbixHost.Host host, ZabbixRequest.DefaultRequest request) {
         request.putParam("hostid", host.getHostid());
         ZabbixHost.UpdateHostResponse response = updateHandle(config, request);
         if (CollectionUtils.isEmpty(response.getResult().getHostids())) {
-            log.error("更新ZabbixHost主机名称失败: hostName = {}", host.getHost());
+            log.error("Update Zabbix Host name error: hostName={}", host.getHost());
         }
     }
 
@@ -112,7 +114,7 @@ public class ZabbixV5HostDriver extends SimpleZabbixV5HostDrive {
                 .build();
         ZabbixHost.UpdateHostResponse response = updateHandle(config, request);
         if (CollectionUtils.isEmpty(response.getResult().getHostids())) {
-            log.error("更新ZabbixHost主机名称失败: hostName = {}", hostName);
+            log.error("Update Zabbix Host name error: hostName={}", hostName);
         }
     }
 
@@ -131,7 +133,7 @@ public class ZabbixV5HostDriver extends SimpleZabbixV5HostDrive {
                 .build();
         ZabbixHost.UpdateHostResponse response = updateHandle(config, request);
         if (CollectionUtils.isEmpty(response.getResult().getHostids())) {
-            log.error("更新ZabbixHost主机名称失败: hostName = {},  proxyHostid = {}", host.getHost(), proxyHostid);
+            log.error("Update Zabbix Host name error: hostName={}, proxyHostid={}", host.getHost(), proxyHostid);
         }
     }
 
@@ -149,7 +151,7 @@ public class ZabbixV5HostDriver extends SimpleZabbixV5HostDrive {
                 .build();
         ZabbixHost.DeleteHostResponse response = deleteHandle(config, request);
         if (CollectionUtils.isEmpty(response.getResult().getHostids())) {
-            log.error("删除ZabbixHost主机失败: hostid = {}", host.getHostid());
+            log.error("Delete Zabbix Host error: hostid={}", host.getHostid());
         }
     }
 

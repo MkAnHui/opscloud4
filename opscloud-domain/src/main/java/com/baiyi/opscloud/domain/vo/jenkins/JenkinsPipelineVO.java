@@ -1,10 +1,11 @@
 package com.baiyi.opscloud.domain.vo.jenkins;
 
 import com.google.common.collect.Lists;
-import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
@@ -16,15 +17,13 @@ import java.util.List;
  */
 public class JenkinsPipelineVO {
 
-
     @Data
     @Builder
-    @ApiModel
+    @Schema
     public static class Pipeline implements  Serializable {
 
+        @Serial
         private static final long serialVersionUID = -1020196514240621058L;
-
-
 
         @Builder.Default
         private String chartHeight = "120px";
@@ -48,12 +47,12 @@ public class JenkinsPipelineVO {
 
     }
 
-
     @Data
     @Builder
-    @ApiModel
+    @Schema
     public static class Node implements Serializable {
 
+        @Serial
         private static final long serialVersionUID = -1465972308441846486L;
         private String firstParent;
         private String name;
@@ -67,4 +66,5 @@ public class JenkinsPipelineVO {
         private List<Node> children = Lists.newArrayList();
 
     }
+
 }

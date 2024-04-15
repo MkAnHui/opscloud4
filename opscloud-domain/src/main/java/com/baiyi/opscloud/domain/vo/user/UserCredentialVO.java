@@ -3,11 +3,9 @@ package com.baiyi.opscloud.domain.vo.user;
 import com.baiyi.opscloud.domain.vo.base.BaseVO;
 import com.baiyi.opscloud.domain.vo.datasource.DsAssetVO;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
-import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -23,10 +21,15 @@ public class UserCredentialVO {
     @Builder
     @AllArgsConstructor
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class CredentialDetails {
-        private Map<String, List<Credential>> credentialMap; // 用户凭据
-        private Map<String,List<DsAssetVO.Asset>> assetCredentialMap; // 资产凭据
+
+        @Schema(description = "用户凭据")
+        private Map<String, List<Credential>> credentialMap;
+
+        @Schema(description = "资产凭据")
+        private Map<String, List<DsAssetVO.Asset>> assetCredentialMap;
+
     }
 
     @EqualsAndHashCode(callSuper = true)
@@ -34,31 +37,34 @@ public class UserCredentialVO {
     @AllArgsConstructor
     @Data
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class Credential extends BaseVO {
-        @ApiModelProperty(value = "主键")
+
+        @Schema(description = "主键")
         private Integer id;
 
-        @ApiModelProperty(value = "用户id")
+        @Schema(description = "用户ID")
         private Integer userId;
 
-        @ApiModelProperty(value = "标题")
+        @Schema(description = "实例UUID")
+        private String instanceUuid;
+
+        @Schema(description = "标题")
         private String title;
 
-        @ApiModelProperty(value = "凭据类型")
+        @Schema(description = "凭据类型")
         private Integer credentialType;
 
-        @ApiModelProperty(value = "凭据内容")
-        @NotNull(message = "凭据不能为空")
+        @Schema(description = "凭据内容")
         private String credential;
 
-        @ApiModelProperty(value = "凭据指纹")
+        @Schema(description = "凭据指纹")
         private String fingerprint;
 
-        @ApiModelProperty(value = "有效")
+        @Schema(description = "有效")
         private Boolean valid;
 
-        @ApiModelProperty(value = "有效期")
+        @Schema(description = "有效期")
         @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
         private Date expiredTime;
 

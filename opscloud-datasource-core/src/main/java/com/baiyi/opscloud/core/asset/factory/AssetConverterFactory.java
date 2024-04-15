@@ -19,15 +19,15 @@ public class AssetConverterFactory {
     private AssetConverterFactory() {
     }
 
-    private static final Map<String, IAssetConverter> context = new ConcurrentHashMap<>();
+    private static final Map<String, IAssetConverter> CONTEXT = new ConcurrentHashMap<>();
 
-    public static IAssetConverter getIAssetConvertByAssetType(String assetType) {
-        return context.get(assetType);
+    public static IAssetConverter getConverterByAssetType(String assetType) {
+        return CONTEXT.get(assetType);
     }
 
     public static void register(IAssetConverter bean) {
-        log.info("AssetConvertFactory注册: beanName = {}", bean.getClass().getSimpleName());
-        context.put(bean.getAssetType(), bean);
+        CONTEXT.put(bean.getAssetType(), bean);
+        log.debug("AssetConvertFactory Registered: beanName={}", bean.getClass().getSimpleName());
     }
 
 }

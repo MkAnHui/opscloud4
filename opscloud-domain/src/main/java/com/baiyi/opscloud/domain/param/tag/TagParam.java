@@ -1,8 +1,7 @@
 package com.baiyi.opscloud.domain.param.tag;
 
 import com.baiyi.opscloud.domain.param.PageParam;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
 /**
@@ -15,14 +14,17 @@ public class TagParam {
     @EqualsAndHashCode(callSuper = true)
     @Data
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class TagPageQuery extends PageParam {
 
-        @ApiModelProperty(value = "标签Key")
+        @Schema(description = "标签Key")
         private String tagKey;
 
-        @ApiModelProperty(value = "业务类型", example = "0")
+        @Schema(description = "业务类型", example = "0")
         private Integer businessType;
+
+        @Schema(description = "是否追加通用标签")
+        private Boolean append;
 
     }
 
@@ -30,17 +32,42 @@ public class TagParam {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
-    @ApiModel
+    @Schema
     public static class BusinessQuery {
 
-        @ApiModelProperty(value = "标签Key")
+        @Schema(description = "标签Key")
         private String tagKey;
 
-        @ApiModelProperty(value = "业务类型", example = "1")
+        @Schema(description = "业务类型", example = "1")
         private Integer businessType;
 
-        @ApiModelProperty(value = "业务id", example = "1")
+        @Schema(description = "业务ID", example = "1")
         private Integer businessId;
 
     }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    @Schema
+    public static class Tag  {
+
+        @Schema(description = "主键", example = "1")
+        private Integer id;
+
+        @Schema(description = "业务类型", example = "0")
+        private Integer businessType;
+
+        @Schema(description = "标签key")
+        private String tagKey;
+
+        @Schema(description = "颜色值")
+        private String color;
+
+        @Schema(description = "描述")
+        private String comment;
+
+    }
+
 }

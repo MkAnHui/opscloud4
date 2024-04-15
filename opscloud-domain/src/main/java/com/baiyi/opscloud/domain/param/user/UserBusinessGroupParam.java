@@ -1,8 +1,7 @@
 package com.baiyi.opscloud.domain.param.user;
 
 import com.baiyi.opscloud.domain.param.PageParam;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -17,19 +16,19 @@ public class UserBusinessGroupParam {
     @Data
     @EqualsAndHashCode(callSuper = true)
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class PageQuery extends PageParam {
 
-        @ApiModelProperty(value = "用户组名称")
+        @Schema(description = "用户组名称")
         private String name;
 
-        @ApiModelProperty(value = "用户组类型", example = "1")
+        @Schema(description = "用户组类型", example = "1")
         private Integer grpType;
 
-        @ApiModelProperty(value = "允许工单申请", example = "true")
+        @Schema(description = "允许工单申请", example = "true")
         private Boolean allowOrder;
 
-        @ApiModelProperty(value = "扩展属性", example = "0")
+        @Schema(description = "扩展属性", example = "0")
         private Integer extend;
 
     }
@@ -37,53 +36,53 @@ public class UserBusinessGroupParam {
     @Data
     @EqualsAndHashCode(callSuper = true)
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class UserUserGroupPageQuery extends PageParam {
 
-        @ApiModelProperty(value = "用户id")
+        @Schema(description = "用户ID")
         private Integer userId;
 
-        @ApiModelProperty(value = "查询名称")
+        @Schema(description = "查询名称")
         private String queryName;
     }
 
     @Data
     @EqualsAndHashCode(callSuper = true)
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class UserServerGroupPageQuery extends PageParam {
 
-        @ApiModelProperty(value = "用户id")
+        @Schema(description = "用户ID")
         private Integer userId;
 
-        @ApiModelProperty(value = "查询名称")
+        @Schema(description = "查询名称")
         private String queryName;
     }
 
     @Data
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class UserUserGroupPermission {
 
-        @ApiModelProperty(value = "用户id")
+        @Schema(description = "用户ID")
         private Integer userId;
 
-        @ApiModelProperty(value = "用户组id")
+        @Schema(description = "用户组ID")
         private Integer userGroupId;
     }
 
     @Data
     @EqualsAndHashCode(callSuper = true)
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class UserTicketOcUserGroupQuery extends PageParam {
 
-        @ApiModelProperty(value = "查询名称")
+        @Schema(description = "查询名称")
         private String queryName;
 
         private Integer userId;
 
-        @ApiModelProperty(value = "工单票据id")
+        @Schema(description = "工单票据ID")
         private Integer workorderTicketId;
 
     }

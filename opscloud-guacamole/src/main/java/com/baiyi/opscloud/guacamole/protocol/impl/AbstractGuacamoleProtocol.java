@@ -4,13 +4,13 @@ import com.baiyi.opscloud.common.constants.enums.DsTypeEnum;
 import com.baiyi.opscloud.common.datasource.GuacamoleConfig;
 import com.baiyi.opscloud.common.util.RandomUtil;
 import com.baiyi.opscloud.core.InstanceHelper;
-import com.baiyi.opscloud.core.factory.DsConfigHelper;
+import com.baiyi.opscloud.core.factory.DsConfigManager;
 import com.baiyi.opscloud.domain.generator.opscloud.*;
 import com.baiyi.opscloud.domain.model.property.ServerProperty;
 import com.baiyi.opscloud.domain.param.guacamole.GuacamoleParam;
 import com.baiyi.opscloud.guacamole.protocol.GuacamoleProtocolFactory;
 import com.baiyi.opscloud.guacamole.protocol.IGuacamoleProtocol;
-import com.baiyi.opscloud.service.business.BusinessPropertyHelper;
+import com.baiyi.opscloud.service.business.BizPropertyHelper;
 import com.baiyi.opscloud.service.server.ServerAccountService;
 import com.baiyi.opscloud.service.server.ServerService;
 import com.baiyi.opscloud.service.sys.CredentialService;
@@ -25,7 +25,7 @@ import org.jasypt.encryption.StringEncryptor;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.CollectionUtils;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.List;
 import java.util.Map;
 
@@ -41,7 +41,7 @@ public abstract class AbstractGuacamoleProtocol implements IGuacamoleProtocol, I
     private InstanceHelper instanceHelper;
 
     @Resource
-    private DsConfigHelper dsConfigHelper;
+    private DsConfigManager dsConfigManager;
 
     @Resource
     private CredentialService credentialService;
@@ -56,7 +56,7 @@ public abstract class AbstractGuacamoleProtocol implements IGuacamoleProtocol, I
     private ServerAccountService serverAccountService;
 
     @Resource
-    private BusinessPropertyHelper businessPropertyHelper;
+    private BizPropertyHelper businessPropertyHelper;
 
     /**
      * 支持认证的实例类型
@@ -71,8 +71,9 @@ public abstract class AbstractGuacamoleProtocol implements IGuacamoleProtocol, I
 
     protected Credential getCredential(ServerAccount serverAccount) {
         Credential credential = credentialService.getById(serverAccount.getCredentialId());
-        if (StringUtils.isEmpty(serverAccount.getUsername()))
+        if (StringUtils.isEmpty(serverAccount.getUsername())) {
             serverAccount.setUsername(credential.getUsername());
+        }
         credential.setCredential(stringEncryptor.decrypt(credential.getCredential()));
         return credential;
     }
@@ -93,13 +94,14 @@ public abstract class AbstractGuacamoleProtocol implements IGuacamoleProtocol, I
 
     private GuacamoleConfig getConfig() throws GuacamoleException{
         List<DatasourceInstance> instances = instanceHelper.listInstance(getFilterInstanceTypes(), getProtocol());
-        if (CollectionUtils.isEmpty(instances))
+        if (CollectionUtils.isEmpty(instances)) {
             throw new GuacamoleException("无可用的Guacamole数据源实例！");
+        }
         int index = RandomUtil.random(instances.size());
         DatasourceInstance instance = instances.get(index);
-        DatasourceConfig datasourceConfig = dsConfigHelper.getConfigById(instance.getConfigId());
+        DatasourceConfig datasourceConfig = dsConfigManager.getConfigById(instance.getConfigId());
 
-       return dsConfigHelper.build(datasourceConfig, GuacamoleConfig.class);
+       return dsConfigManager.build(datasourceConfig, GuacamoleConfig.class);
     }
 
     protected ServerProperty.Server getBusinessProperty(Server server) {
@@ -110,4 +112,5 @@ public abstract class AbstractGuacamoleProtocol implements IGuacamoleProtocol, I
     public void afterPropertiesSet() throws Exception {
         GuacamoleProtocolFactory.register(this);
     }
+
 }

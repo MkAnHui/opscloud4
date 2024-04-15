@@ -1,9 +1,11 @@
 package com.baiyi.opscloud.otp;
 
 import com.baiyi.opscloud.otp.exception.OtpException;
+import com.google.common.collect.Maps;
 
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.stream.IntStream;
 
 /**
  * @Author baiyi
@@ -13,31 +15,29 @@ import java.util.Locale;
 public class Base32StringUtil {
     // singleton
 
-    private static final Base32StringUtil INSTANCE =
-            new Base32StringUtil("ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"); // RFC 4648/3548
+    /**
+     * RFC 4648/3548
+     */
+    private static final Base32StringUtil INSTANCE = new Base32StringUtil("ABCDEFGHIJKLMNOPQRSTUVWXYZ234567");
 
     static Base32StringUtil getInstance() {
         return INSTANCE;
     }
 
-    // 32 alpha-numeric characters.
-    private final String ALPHABET;
     private final char[] DIGITS;
     private final int MASK;
     private final int SHIFT;
     private final HashMap<Character, Integer> CHAR_MAP;
 
-    static final String SEPARATOR = "-";
+    private static final String SEPARATOR = "-";
 
     protected Base32StringUtil(String alphabet) {
-        this.ALPHABET = alphabet;
-        DIGITS = ALPHABET.toCharArray();
+        // 32 alpha-numeric characters.
+        DIGITS = alphabet.toCharArray();
         MASK = DIGITS.length - 1;
         SHIFT = Integer.numberOfTrailingZeros(DIGITS.length);
-        CHAR_MAP = new HashMap<>();
-        for (int i = 0; i < DIGITS.length; i++) {
-            CHAR_MAP.put(DIGITS[i], i);
-        }
+        CHAR_MAP = Maps.newHashMap();
+        IntStream.range(0, DIGITS.length).forEach(i -> CHAR_MAP.put(DIGITS[i], i));
     }
 
     public static byte[] decode(String encoded) throws OtpException.DecodingException {
@@ -46,7 +46,9 @@ public class Base32StringUtil {
 
     protected byte[] decodeInternal(String encoded) throws OtpException.DecodingException {
         // Remove whitespace and separators
-        encoded = encoded.trim().replaceAll(SEPARATOR, "").replaceAll(" ", "");
+        encoded = encoded.trim()
+                .replaceAll(SEPARATOR, "")
+                .replaceAll(" ", "");
 
         // Remove padding. Note: the padding is used as hint to determine how many
         // bits to decode from the last incomplete chunk (which is commented out
@@ -55,7 +57,7 @@ public class Base32StringUtil {
 
         // Canonicalize to all upper case
         encoded = encoded.toUpperCase(Locale.US);
-        if (encoded.length() == 0) {
+        if (encoded.isEmpty()) {
             return new byte[0];
         }
         int encodedLength = encoded.length();
@@ -76,11 +78,6 @@ public class Base32StringUtil {
                 bitsLeft -= 8;
             }
         }
-        // We'll ignore leftover bits for now.
-        //
-        // if (next != outLength || bitsLeft >= SHIFT) {
-        //  throw new DecodingException("Bits left: " + bitsLeft);
-        // }
         return result;
     }
 
@@ -125,11 +122,15 @@ public class Base32StringUtil {
         return result.toString();
     }
 
+    /**
+     * enforce that this class is a singleton
+     *
+     * @return
+     * @throws CloneNotSupportedException
+     */
     @Override
-    // enforce that this class is a singleton
     public Object clone() throws CloneNotSupportedException {
         throw new CloneNotSupportedException();
     }
-
 
 }

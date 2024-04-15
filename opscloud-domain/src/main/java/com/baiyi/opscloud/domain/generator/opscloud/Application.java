@@ -1,6 +1,9 @@
 package com.baiyi.opscloud.domain.generator.opscloud;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.Column;
 import javax.persistence.GeneratedValue;
@@ -9,6 +12,9 @@ import javax.persistence.Id;
 import java.util.Date;
 
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class Application {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,6 +48,12 @@ public class Application {
      */
     @Column(name = "update_time", insertable = false, updatable = false)
     private Date updateTime;
+
+    /**
+     * 有效
+     */
+    @Column(name = "is_active")
+    private Boolean isActive;
 
     /**
      * 描述

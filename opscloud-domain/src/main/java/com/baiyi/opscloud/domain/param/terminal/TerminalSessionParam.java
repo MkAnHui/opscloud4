@@ -2,11 +2,12 @@ package com.baiyi.opscloud.domain.param.terminal;
 
 import com.baiyi.opscloud.domain.param.IExtend;
 import com.baiyi.opscloud.domain.param.PageParam;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 /**
  * @Author baiyi
@@ -18,16 +19,33 @@ public class TerminalSessionParam {
     @Data
     @EqualsAndHashCode(callSuper = true)
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class TerminalSessionPageQuery extends PageParam implements IExtend {
 
-        @ApiModelProperty(value = "用户名")
+        @Schema(description = "用户名")
         private String username;
 
-        @ApiModelProperty(value = "会话类型")
+        @Schema(description = "会话类型")
         private String sessionType;
+
+        @Schema(description = "会话状态")
+        private Boolean sessionClosed;
+
+        @Schema(description = "Opscloud实例名称")
+        private String serverHostname;
 
         private Boolean extend;
 
     }
+
+    @Data
+    @NoArgsConstructor
+    @Schema
+    public static class BatchCloseTerminalSession  {
+
+        @Schema(description = "查询参数")
+        private List<Integer> ids;
+
+    }
+
 }

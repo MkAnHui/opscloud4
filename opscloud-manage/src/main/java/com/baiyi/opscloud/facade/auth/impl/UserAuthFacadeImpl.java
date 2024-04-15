@@ -1,18 +1,20 @@
 package com.baiyi.opscloud.facade.auth.impl;
 
-import com.baiyi.opscloud.common.exception.auth.AuthRuntimeException;
-import com.baiyi.opscloud.common.util.SessionUtil;
+import com.baiyi.opscloud.common.exception.auth.AuthenticationException;
+import com.baiyi.opscloud.common.holder.SessionHolder;
 import com.baiyi.opscloud.datasource.manager.DsAuthManager;
 import com.baiyi.opscloud.domain.ErrorEnum;
 import com.baiyi.opscloud.domain.annotation.PermitEmptyPasswords;
 import com.baiyi.opscloud.domain.generator.opscloud.*;
+import com.baiyi.opscloud.domain.param.auth.AuthRoleResourceParam;
 import com.baiyi.opscloud.domain.param.auth.LoginParam;
-import com.baiyi.opscloud.domain.vo.auth.AuthRoleResourceVO;
 import com.baiyi.opscloud.domain.vo.auth.LogVO;
 import com.baiyi.opscloud.facade.auth.AuthFacade;
+import com.baiyi.opscloud.facade.auth.PlatformAuthValidator;
 import com.baiyi.opscloud.facade.auth.UserAuthFacade;
 import com.baiyi.opscloud.facade.auth.UserTokenFacade;
-import com.baiyi.opscloud.facade.auth.maf.MfaAuthHelper;
+import com.baiyi.opscloud.facade.auth.mfa.MfaValidator;
+import com.baiyi.opscloud.service.auth.AuthPlatformLogService;
 import com.baiyi.opscloud.service.auth.AuthResourceService;
 import com.baiyi.opscloud.service.auth.AuthRoleService;
 import com.baiyi.opscloud.service.user.AccessTokenService;
@@ -54,32 +56,39 @@ public class UserAuthFacadeImpl implements UserAuthFacade {
 
     private final StringEncryptor stringEncryptor;
 
-    private final DsAuthManager authProviderManager;
+    private final DsAuthManager dsAuthManager;
 
-    private final MfaAuthHelper mfaAuthHelper;
+    private final MfaValidator mfaValidator;
+
+    private final AuthPlatformLogService authPlatformLogService;
+
+    private final PlatformAuthValidator platformAuthValidator;
 
     @Override
-    public void tryUserHasResourceAuthorize(String token, String resourceName) {
+    public void verifyUserHasResourcePermissionWithToken(String token, String resourceName) {
         AuthResource authResource = authResourceService.queryByName(resourceName);
-        if (authResource == null)
-            throw new AuthRuntimeException(ErrorEnum.AUTHENTICATION_RESOURCE_NOT_EXIST); // 资源不存在
+        if (authResource == null) {
+            throw new AuthenticationException(ErrorEnum.AUTHENTICATION_RESOURCE_NOT_EXIST);
+        }
 
-        if (!authResource.getNeedAuth())
+        if (!authResource.getNeedAuth()) {
             return; // 此接口不需要鉴权
+        }
 
-        if (StringUtils.isEmpty(token))
-            throw new AuthRuntimeException(ErrorEnum.AUTHENTICATION_REQUEST_NO_TOKEN); // request请求中没有Token
+        if (StringUtils.isEmpty(token)) {
+            throw new AuthenticationException(ErrorEnum.AUTHENTICATION_REQUEST_NO_TOKEN);
+        }
 
-        UserToken userToken = userTokenService.getByVaildToken(token);
-        if (userToken == null)
-            throw new AuthRuntimeException(ErrorEnum.AUTHENTICATION_TOKEN_INVALID); // Token无效
-
-        SessionUtil.setUserToken(userToken); // 设置会话用户
-
+        UserToken userToken = userTokenService.getByValidToken(token);
+        if (userToken == null) {
+            throw new AuthenticationException(ErrorEnum.AUTHENTICATION_TOKEN_INVALID);
+        }
+        // 设置会话用户
+        SessionHolder.setUserToken(userToken);
         // 校验用户是否可以访问资源路径
         if (userTokenService.checkUserHasResourceAuthorize(token, resourceName) == 0) {
             if (userTokenService.checkUserHasRole(token, SUPER_ADMIN) == 0) {
-                throw new AuthRuntimeException(ErrorEnum.AUTHENTICATION_FAILURE);
+                throw new AuthenticationException(ErrorEnum.AUTHENTICATION_FAILURE);
             } else {
                 grantRoleResource(authResource);
             }
@@ -87,30 +96,37 @@ public class UserAuthFacadeImpl implements UserAuthFacade {
     }
 
     @Override
-    public void tryUserHasResourceAuthorizeByAccessToken(String accessToken, String resourceName) {
+    public void verifyUserHasResourcePermissionWithAccessToken(String accessToken, String resourceName) {
         AuthResource authResource = authResourceService.queryByName(resourceName);
-        if (authResource == null)
-            throw new AuthRuntimeException(ErrorEnum.AUTHENTICATION_RESOURCE_NOT_EXIST); // 资源不存在
-        if (!authResource.getNeedAuth())
+        if (authResource == null) {
+            throw new AuthenticationException(ErrorEnum.AUTHENTICATION_RESOURCE_NOT_EXIST);
+        }
+        if (!authResource.getNeedAuth()) {
             return; // 此接口不需要鉴权
-        if (StringUtils.isEmpty(accessToken))
-            throw new AuthRuntimeException(ErrorEnum.AUTHENTICATION_REQUEST_NO_TOKEN); // request请求中没有AccessToken
+        }
+        if (StringUtils.isEmpty(accessToken)) {
+            throw new AuthenticationException(ErrorEnum.AUTHENTICATION_REQUEST_NO_TOKEN);
+        }
         AccessToken token = accessTokenService.getByToken(accessToken);
-        if (token == null)
-            throw new AuthRuntimeException(ErrorEnum.AUTHENTICATION_TOKEN_INVALID); // Token无效
-        SessionUtil.setUsername(token.getUsername()); // 设置会话用户
+        if (token == null) {
+            throw new AuthenticationException(ErrorEnum.AUTHENTICATION_TOKEN_INVALID);
+        }
+        // 设置会话用户
+        SessionHolder.setUsername(token.getUsername());
         // 校验用户是否可以访问资源路径
         if (accessTokenService.checkUserHasResourceAuthorize(accessToken, resourceName) == 0) {
-            throw new AuthRuntimeException(ErrorEnum.AUTHENTICATION_FAILURE);
+            throw new AuthenticationException(ErrorEnum.AUTHENTICATION_FAILURE);
         }
     }
 
     // 授权资源到SA角色
     private void grantRoleResource(AuthResource authResource) {
         AuthRole authRole = authRoleService.getByRoleName(SUPER_ADMIN);
-        if (authRole == null) return;
+        if (authRole == null) {
+            return;
+        }
 
-        AuthRoleResourceVO.RoleResource roleResource = AuthRoleResourceVO.RoleResource.builder()
+        AuthRoleResourceParam.RoleResource roleResource = AuthRoleResourceParam.RoleResource.builder()
                 .resourceId(authResource.getId())
                 .roleId(authRole.getId())
                 .build();
@@ -118,36 +134,74 @@ public class UserAuthFacadeImpl implements UserAuthFacade {
     }
 
     @Override
-    @PermitEmptyPasswords // 允许空密码登录
+    @PermitEmptyPasswords
     public LogVO.Login login(LoginParam.Login loginParam) {
         User user = userService.getByUsername(loginParam.getUsername());
-        // 尝试使用authProvider 认证
-
-        if (authProviderManager.tryLogin(user, loginParam)) {
-            boolean bindMfa = false;
-            if (user.getMfa()) {
-                mfaAuthHelper.verify(user, loginParam);
-            } else {
-                bindMfa = mfaAuthHelper.tryBind(user, loginParam);
-            }
-            // 更新用户登录信息
-            user.setPassword(stringEncryptor.encrypt(loginParam.getPassword()));
-            user.setLastLogin(new Date()); // 更新用户登录时间
-            if (bindMfa) {
-                user.setMfa(true);
-            }
-            userService.updateLogin(user);
-            return userTokenFacade.userLogin(user);
+        // 尝试使用Provider认证
+        if (!dsAuthManager.tryLogin(user, loginParam)) {
+            throw new AuthenticationException(ErrorEnum.AUTH_USER_LOGIN_FAILURE);
+        }
+        boolean lockMfa = false;
+        if (user.getMfa()) {
+            mfaValidator.verify(user, loginParam);
         } else {
-            throw new AuthRuntimeException(ErrorEnum.AUTH_USER_LOGIN_FAILURE); // 登录失败
+            lockMfa = mfaValidator.tryBind(user, loginParam);
+        }
+        // 更新用户登录信息
+        User saveUser = User.builder()
+                .id(user.getId())
+                .password(stringEncryptor.encrypt(loginParam.getPassword()))
+                .lastLogin(new Date())
+                .mfa(lockMfa ? true : null)
+                .build();
+        userService.updateLogin(saveUser);
+        return userTokenFacade.userLogin(user);
+    }
+
+    @Override
+    public LogVO.Login platformLogin(LoginParam.PlatformLogin loginParam) {
+        AuthPlatform authPlatform = platformAuthValidator.verify(loginParam);
+        User user = userService.getByUsername(loginParam.getUsername());
+        // 尝试使用authProvider 认证
+        if (dsAuthManager.tryLogin(user, loginParam)) {
+            if (user.getMfa()) {
+                try {
+                    mfaValidator.verify(user, loginParam);
+                } catch (AuthenticationException e) {
+                    recordLog(authPlatform, loginParam, ErrorEnum.AUTH_USER_LOGIN_FAILURE);
+                    throw new AuthenticationException(e.getMessage());
+                }
+            }
+            recordLog(authPlatform, loginParam, ErrorEnum.OK);
+            return LogVO.Login.builder()
+                    .name(loginParam.getUsername())
+                    .build();
+        } else {
+            recordLog(authPlatform, loginParam, ErrorEnum.AUTH_USER_LOGIN_FAILURE);
+            throw new AuthenticationException(ErrorEnum.AUTH_USER_LOGIN_FAILURE);
         }
     }
 
+    private void recordLog(AuthPlatform authPlatform, LoginParam.PlatformLogin loginParam, ErrorEnum errorEnum) {
+        AuthPlatformLog authPlatformLog = AuthPlatformLog.builder()
+                .platformId(authPlatform.getId())
+                .platformName(authPlatform.getName())
+                .username(loginParam.getUsername())
+                .otp(StringUtils.isNotBlank(loginParam.getOtp()))
+                .result(errorEnum == ErrorEnum.OK)
+                .resultMsg(errorEnum.getMessage())
+                .build();
+        try {
+            authPlatformLogService.add(authPlatformLog);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+    }
 
     @Override
     public void logout() {
-        log.info("用户登出: username = {}", SessionUtil.getUsername());
-        userTokenFacade.revokeUserToken(SessionUtil.getUsername());
+        log.info("User logout: {}", SessionHolder.getUsername());
+        userTokenFacade.revokeUserToken(SessionHolder.getUsername());
     }
 
 }

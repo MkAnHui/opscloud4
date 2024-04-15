@@ -1,7 +1,8 @@
 package com.baiyi.opscloud.service.user.impl;
 
+import com.baiyi.opscloud.common.annotation.ArkIntercept;
 import com.baiyi.opscloud.domain.generator.opscloud.UserToken;
-import com.baiyi.opscloud.mapper.opscloud.UserTokenMapper;
+import com.baiyi.opscloud.mapper.UserTokenMapper;
 import com.baiyi.opscloud.service.user.UserTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import java.util.List;
  * @Date 2021/5/14 4:04 下午
  * @Version 1.0
  */
+@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @Service
 @RequiredArgsConstructor
 public class UserTokenServiceImpl implements UserTokenService {
@@ -31,17 +33,19 @@ public class UserTokenServiceImpl implements UserTokenService {
     }
 
     @Override
+    @ArkIntercept
     public int checkUserHasResourceAuthorize(String token, String resourceName) {
         return userTokenMapper.checkUserHasResourceAuthorize(token, resourceName);
     }
 
     @Override
+    @ArkIntercept
     public int checkUserHasRole(String token, String roleName) {
         return userTokenMapper.checkUserHasRole(token, roleName);
     }
 
     @Override
-    public UserToken getByVaildToken(String token) {
+    public UserToken getByValidToken(String token) {
         Example example = new Example(UserToken.class);
         Example.Criteria criteria = example.createCriteria();
         criteria.andEqualTo("valid", true)
@@ -50,11 +54,12 @@ public class UserTokenServiceImpl implements UserTokenService {
     }
 
     @Override
-    public List<UserToken> queryByVaildTokenByUsername(String username) {
+    public List<UserToken> queryByValidTokenByUsername(String username) {
         Example example = new Example(UserToken.class);
         Example.Criteria criteria = example.createCriteria();
         criteria.andEqualTo("valid", true)
                 .andEqualTo("username", username);
         return userTokenMapper.selectByExample(example);
     }
+
 }

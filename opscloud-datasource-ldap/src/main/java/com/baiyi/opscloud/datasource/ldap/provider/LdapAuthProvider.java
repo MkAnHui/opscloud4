@@ -9,7 +9,7 @@ import com.baiyi.opscloud.domain.model.Authorization;
 import com.baiyi.opscloud.datasource.ldap.driver.LdapDriver;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * @Author baiyi
@@ -24,11 +24,11 @@ public class LdapAuthProvider extends BaseAuthProvider {
 
     @Override
     protected boolean auth(DsInstanceContext dsInstanceContext, Authorization.Credential credential) {
-        return ldapDriver.loginCheck(buildConfig(dsInstanceContext.getDsConfig()), credential);
+        return ldapDriver.verifyLogin(buildConfig(dsInstanceContext.getDsConfig()), credential);
     }
 
     private LdapConfig.Ldap buildConfig(DatasourceConfig dsConfig) {
-        return dsConfigHelper.build(dsConfig, LdapConfig.class).getLdap();
+        return dsConfigManager.build(dsConfig, LdapConfig.class).getLdap();
     }
 
     @Override
@@ -36,6 +36,4 @@ public class LdapAuthProvider extends BaseAuthProvider {
         return DsTypeEnum.LDAP.name();
     }
 
-
 }
-

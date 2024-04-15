@@ -1,7 +1,7 @@
 package com.baiyi.opscloud.common.datasource;
 
-import com.baiyi.opscloud.common.datasource.base.BaseConfig;
-import io.swagger.annotations.ApiModel;
+import com.baiyi.opscloud.common.datasource.base.BaseDsConfig;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -13,9 +13,9 @@ import java.util.List;
  * @Date 2022/1/4 6:11 PM
  * @Version 1.0
  */
-@EqualsAndHashCode(callSuper = true)
 @Data
-public class GuacamoleConfig extends BaseConfig {
+@EqualsAndHashCode(callSuper = true)
+public class GuacamoleConfig extends BaseDsConfig {
 
     private static final int DEF_PORT = 4822;
 
@@ -23,7 +23,7 @@ public class GuacamoleConfig extends BaseConfig {
 
     @Data
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class Guacamole {
 
         private String host;
@@ -31,13 +31,11 @@ public class GuacamoleConfig extends BaseConfig {
         private List<String> protocolSupport;
 
         public Integer getPort() {
-            if (this.port == null || this.port <= 0)
+            if (this.port == null || this.port <= 0) {
                 return DEF_PORT;
+            }
             return this.port;
         }
     }
 
-
 }
-
-

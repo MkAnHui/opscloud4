@@ -1,18 +1,19 @@
 package com.baiyi.opscloud.controller.http;
 
 import com.baiyi.opscloud.common.HttpResult;
-import com.baiyi.opscloud.domain.param.notify.gitlab.GitlabNotifyParam;
-import com.baiyi.opscloud.facade.datasource.instance.GitlabFacade;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import com.baiyi.opscloud.domain.param.notify.gitlab.GitLabNotifyParam;
+import com.baiyi.opscloud.facade.datasource.instance.GitLabFacade;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
+import java.io.Serial;
 
 /**
  * @Author baiyi
@@ -21,17 +22,30 @@ import javax.validation.Valid;
  */
 @RestController
 @RequestMapping("/api/receive/event")
-@Api(tags = "接收信息")
+@Tag(name = "接收信息")
 @RequiredArgsConstructor
+@Slf4j
 public class ReceiveEventController {
 
-    private final GitlabFacade gitlabFacade;
+    public static final String GITLAB_TOKEN = "X-Gitlab-Token";
 
-    @ApiOperation(value = "Gitlab(API:v4)通知接口")
-    @PostMapping(value = "/gitlab/v4/system/hooks",consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public HttpResult<Boolean> receiveGitlabV4SystemHooks(@RequestBody @Valid GitlabNotifyParam.SystemHook systemHook) {
-        gitlabFacade.consumeEventV4(systemHook);
+    private final GitLabFacade gitLabFacade;
+
+    @Operation(summary = "GitLab API v4 hooks")
+    @PostMapping(value = "/gitlab/v4/system/hooks", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public HttpResult<Boolean> receiveGitLabV4SystemHooks(@RequestHeader(GITLAB_TOKEN) @NotNull(message = "Header `X-Gitlab-Token` is null") String gitLabToken, @RequestBody @Valid GitLabNotifyParam.SystemHook systemHook) {
+        try {
+            gitLabFacade.consumeEventV4(systemHook, gitLabToken);
+        } catch (Exception e) {
+            throw new InvalidTokenException();
+        }
         return HttpResult.SUCCESS;
+    }
+
+    @ResponseStatus(value = HttpStatus.SERVICE_UNAVAILABLE)
+    public static class InvalidTokenException extends RuntimeException {
+        @Serial
+        private static final long serialVersionUID = -7714152822790396676L;
     }
 
 }

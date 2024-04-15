@@ -1,15 +1,16 @@
 package com.baiyi.opscloud.sshcore.task.audit;
 
+import com.baiyi.opscloud.common.util.NewTimeUtil;
 import com.baiyi.opscloud.sshcore.AuditRecordHelper;
 import com.baiyi.opscloud.sshcore.model.SessionOutput;
 import com.baiyi.opscloud.sshcore.task.audit.output.OutputMessage;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.websocket.Session;
+import jakarta.websocket.Session;
+
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @Author baiyi
@@ -30,19 +31,17 @@ public class TerminalAuditOutputTask implements Runnable {
     @Override
     public void run() {
         String auditLogPath = AuditRecordHelper.getAuditLogPath(sessionOutput.getSessionId(), sessionOutput.getInstanceId());
-        String str;
         try {
             LineNumberReader reader = new LineNumberReader(new FileReader(auditLogPath));
-            while (session.isOpen() && (str = reader.readLine()) != null) {
-                if (!str.isEmpty()) {
-                    send(str +"\n");
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (!line.isEmpty()) {
+                    send(line + "\n");
                 }
-                TimeUnit.MILLISECONDS.sleep(25L);
+                NewTimeUtil.millisecondsSleep(25L);
             }
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
+        } catch (IOException ignored) {
         }
-        log.info("outputTask线程结束! sessionId = {} , instanceId = {}", sessionOutput.getSessionId(), sessionOutput.getInstanceId());
     }
 
     private void send(String auditLog) throws IOException {

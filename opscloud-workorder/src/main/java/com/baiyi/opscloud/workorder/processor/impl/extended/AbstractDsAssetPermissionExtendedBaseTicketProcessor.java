@@ -6,7 +6,7 @@ import com.baiyi.opscloud.service.datasource.DsInstanceAssetService;
 import com.baiyi.opscloud.workorder.exception.TicketVerifyException;
 import com.baiyi.opscloud.workorder.processor.impl.base.BaseTicketProcessor;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * @Author baiyi
@@ -21,11 +21,12 @@ public abstract class AbstractDsAssetPermissionExtendedBaseTicketProcessor exten
     protected DatasourceInstanceAsset getAsset(DatasourceInstanceAsset queryParam) throws TicketVerifyException {
         try {
             DatasourceInstanceAsset asset = dsInstanceAssetService.getByUniqueKey(queryParam);
-            if (asset == null)
-                throw new TicketVerifyException("校验工单条目失败: 授权资产不存在!");
+            if (asset == null) {
+                throw new TicketVerifyException("校验工单条目失败: 授权资产不存在！");
+            }
             return asset;
         } catch (Exception e) {
-            throw new TicketVerifyException("查询授权资产错误: " + e.getMessage());
+            throw new TicketVerifyException("查询授权资产错误: {}", e.getMessage());
         }
     }
 

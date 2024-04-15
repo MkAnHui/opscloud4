@@ -1,7 +1,7 @@
 package com.baiyi.opscloud.service.user.impl;
 
 import com.baiyi.opscloud.domain.generator.opscloud.AccessToken;
-import com.baiyi.opscloud.mapper.opscloud.AccessTokenMapper;
+import com.baiyi.opscloud.mapper.AccessTokenMapper;
 import com.baiyi.opscloud.service.user.AccessTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,6 +14,7 @@ import java.util.List;
  * @Date 2021/8/5 9:47 上午
  * @Version 1.0
  */
+@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @Service
 @RequiredArgsConstructor
 public class AccessTokenServiceImpl implements AccessTokenService {
@@ -61,4 +62,5 @@ public class AccessTokenServiceImpl implements AccessTokenService {
     public int checkUserHasResourceAuthorize(String accessToken, String resourceName) {
         return accessTokenMapper.checkUserHasResourceAuthorize(accessToken, resourceName);
     }
+
 }

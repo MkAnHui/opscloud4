@@ -1,8 +1,8 @@
 package com.baiyi.opscloud.zabbix.v5.driver;
 
-import com.baiyi.opscloud.common.config.CachingConfiguration;
+import com.baiyi.opscloud.common.configuration.CachingConfiguration;
 import com.baiyi.opscloud.common.datasource.ZabbixConfig;
-import com.baiyi.opscloud.zabbix.v5.driver.base.AbstractZabbixV5UserDrive;
+import com.baiyi.opscloud.zabbix.v5.driver.base.AbstractZabbixV5UserDriver;
 import com.baiyi.opscloud.zabbix.v5.entity.ZabbixMedia;
 import com.baiyi.opscloud.zabbix.v5.entity.ZabbixUser;
 import com.baiyi.opscloud.zabbix.v5.entity.ZabbixUserGroup;
@@ -27,25 +27,27 @@ import java.util.UUID;
  */
 @Slf4j
 @Component
-public class ZabbixV5UserDriver extends AbstractZabbixV5UserDrive {
+public class ZabbixV5UserDriver extends AbstractZabbixV5UserDriver {
 
-    @CacheEvict(cacheNames = CachingConfiguration.Repositories.CACHE_1DAY, key = "#config.url + '_v5_user_name_' + #username")
+    @CacheEvict(cacheNames = CachingConfiguration.Repositories.CACHE_FOR_1D, key = "#config.url + '_v5_user_name_' + #username")
     public void evictByUsername(ZabbixConfig.Zabbix config, String username) {
-        log.info("清除ZabbixUser缓存 : alias = {}", username);
+        log.info("Evict cache Zabbix User: alias={}", username);
     }
 
-    @Cacheable(cacheNames = CachingConfiguration.Repositories.CACHE_1DAY, key = "#config.url + '_v5_user_name_' + #username", unless = "#result == null")
+    @Cacheable(cacheNames = CachingConfiguration.Repositories.CACHE_FOR_1D, key = "#config.url + '_v5_user_name_' + #username", unless = "#result == null")
     public ZabbixUser.User getByUsername(ZabbixConfig.Zabbix config, String username) {
         ZabbixRequest.DefaultRequest request = ZabbixRequestBuilder.builder()
-                .putParam("selectMedias", "extend")   // 在medias 属性返回用户使用的媒体。
+                // 在medias 属性返回用户使用的媒体。
+                .putParam("selectMedias", "extend")
                 .filter(ZabbixFilterBuilder.builder()
                         .putEntry("alias", username)
                         .build())
                 .build();
         ZabbixUser.QueryUserResponse response = queryHandle(config, request);
-        if (CollectionUtils.isEmpty(response.getResult()))
+        if (CollectionUtils.isEmpty(response.getResult())) {
             return null;
-        return response.getResult().get(0);
+        }
+        return response.getResult().getFirst();
     }
 
     public List<ZabbixUser.User> list(ZabbixConfig.Zabbix config) {
@@ -75,7 +77,7 @@ public class ZabbixV5UserDriver extends AbstractZabbixV5UserDrive {
                 .build();
         ZabbixUser.CreateUserResponse response = createHandle(config, request);
         if (CollectionUtils.isEmpty(response.getResult().getUserids())) {
-            log.error("创建ZabbixUser失败: name = {}", user.getName());
+            log.error("Create Zabbix User error: name={}", user.getName());
         }
     }
 
@@ -96,7 +98,7 @@ public class ZabbixV5UserDriver extends AbstractZabbixV5UserDrive {
                 .build();
         ZabbixUser.UpdateUserResponse response = updateHandle(config, request);
         if (CollectionUtils.isEmpty(response.getResult().getUserids())) {
-            log.error("更新ZabbixUser失败: name = {}", user.getName());
+            log.error("Update Zabbix User error: name={}", user.getName());
         }
     }
 
@@ -113,32 +115,35 @@ public class ZabbixV5UserDriver extends AbstractZabbixV5UserDrive {
 
     public void delete(ZabbixConfig.Zabbix config, String username) {
         ZabbixUser.User user = getByUsername(config, username);
-        if (user == null) return;
+        if (user == null) {
+            return;
+        }
         // 数组形参数 https://www.zabbix.com/documentation/2.2/manual/api/reference/user/delete
         ZabbixRequest.DeleteRequest request = ZabbixRequest.DeleteRequest.builder()
                 .params(new String[]{user.getUserid()})
                 .build();
         ZabbixUser.DeleteUserResponse response = deleteHandle(config, request);
         if (CollectionUtils.isEmpty(response.getResult().getUserids())) {
-            log.error("删除用户失败: username = {}", username);
+            log.error("Delete Zabbix User error: username={}", username);
         }
     }
 
-    @CacheEvict(cacheNames = CachingConfiguration.Repositories.CACHE_1DAY, key = "#config.url + '_v5_user_userid_' + #userid")
+    @CacheEvict(cacheNames = CachingConfiguration.Repositories.CACHE_FOR_1D, key = "#config.url + '_v5_user_userid_' + #userid")
     public void evictById(ZabbixConfig.Zabbix config, String userid) {
-        log.info("清除ZabbixUser缓存 : userid = {}", userid);
+        log.info("Evict cache Zabbix User: userid={}", userid);
     }
 
-    @Cacheable(cacheNames = CachingConfiguration.Repositories.CACHE_1DAY, key = "#config.url + '_v5_user_userid_' + #userid", unless = "#result == null")
+    @Cacheable(cacheNames = CachingConfiguration.Repositories.CACHE_FOR_1D, key = "#config.url + '_v5_user_userid_' + #userid", unless = "#result == null")
     public ZabbixUser.User getById(ZabbixConfig.Zabbix config, String userid) {
         ZabbixRequest.DefaultRequest request = ZabbixRequestBuilder.builder()
                 .putParam("selectMedias", "extend")
                 .putParam("userids", userid)
                 .build();
         ZabbixUser.QueryUserResponse response = queryHandle(config, request);
-        if (CollectionUtils.isEmpty(response.getResult()))
+        if (CollectionUtils.isEmpty(response.getResult())) {
             return null;
-        return response.getResult().get(0);
+        }
+        return response.getResult().getFirst();
     }
 
 }

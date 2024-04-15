@@ -12,8 +12,11 @@
     <artifactId>opscloud-manage</artifactId>
 
     <properties>
-        <java.version>1.8</java.version>
+        <java.version>21</java.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <start-class>com.baiyi.opscloud.ManageApplication</start-class>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <dependencies>
@@ -60,12 +63,12 @@
 
         <dependency>
             <groupId>com.baiyi</groupId>
-            <artifactId>opscloud-otp</artifactId>
+            <artifactId>opscloud-kubernetes-terminal</artifactId>
         </dependency>
 
         <dependency>
             <groupId>com.baiyi</groupId>
-            <artifactId>opscloud-kubernetes-terminal</artifactId>
+            <artifactId>opscloud-leo</artifactId>
         </dependency>
 
         <dependency>
@@ -74,7 +77,17 @@
         </dependency>
 
     </dependencies>
+
     <profiles>
+        <profile>
+            <id>local</id>
+            <!--            <activation>-->
+            <!--                <activeByDefault>true</activeByDefault>-->
+            <!--            </activation>-->
+            <properties>
+                <env>local</env>
+            </properties>
+        </profile>
         <profile>
             <id>dev</id>
             <activation>
@@ -85,15 +98,15 @@
             </properties>
         </profile>
         <profile>
-            <id>test</id>
+            <id>github</id>
             <properties>
-                <env>test</env>
+                <env>github</env>
             </properties>
         </profile>
         <profile>
-            <id>open</id>
+            <id>pre</id>
             <properties>
-                <env>open</env>
+                <env>pre</env>
             </properties>
         </profile>
         <profile>
@@ -104,7 +117,6 @@
         </profile>
     </profiles>
 
-
     <build>
         <finalName>${project.artifactId}-${env}</finalName>
         <resources>
@@ -113,8 +125,7 @@
                 <directory>src/main/resources</directory>
                 <excludes>
                     <exclude>application-dev.yml</exclude>
-                    <exclude>application-test.yml</exclude>
-                    <exclude>application-open.yml</exclude>
+                    <exclude>application-github.yml</exclude>
                     <exclude>application-pre.yml</exclude>
                     <exclude>application-prod.yml</exclude>
                     <exclude>static/fonts/**</exclude>
@@ -142,7 +153,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
-                <version>3.1.0</version>
+                <version>3.3.1</version>
                 <configuration>
                     <encoding>UTF-8</encoding>
                 </configuration>
@@ -166,7 +177,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.22.1</version>
+                <version>3.1.2</version>
                 <configuration>
                     <skip>true</skip>
                 </configuration>
@@ -174,6 +185,5 @@
             <!--跳过test end-->
         </plugins>
     </build>
-
 
 </project>

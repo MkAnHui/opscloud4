@@ -1,6 +1,6 @@
 package com.baiyi.opscloud.datasource.zabbix.v5;
 
-import com.baiyi.opscloud.datasource.business.server.impl.ZabbixHostServerProvider;
+import com.baiyi.opscloud.datasource.business.server.impl.ZabbixHostServerHandler;
 import com.baiyi.opscloud.datasource.zabbix.base.BaseZabbixTest;
 import com.baiyi.opscloud.domain.DataTable;
 import com.baiyi.opscloud.domain.generator.opscloud.DatasourceInstance;
@@ -13,7 +13,7 @@ import com.baiyi.opscloud.zabbix.v5.entity.ZabbixHost;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.List;
 
 /**
@@ -28,7 +28,7 @@ public class ZabbixHostTest extends BaseZabbixTest {
     private ZabbixV5HostDriver zabbixV5HostDrive;
 
     @Resource
-    private ZabbixHostServerProvider zabbixHostServerProvider;
+    private ZabbixHostServerHandler zabbixHostServerProvider;
 
     @Resource
     private DsInstanceService dsInstanceService;
@@ -46,7 +46,7 @@ public class ZabbixHostTest extends BaseZabbixTest {
         DataTable<Server> dataTable = serverService.queryServerPage(pageQuery);
         for (Server server : dataTable.getData()) {
             zabbixHostServerProvider.update(datasourceInstance, server);
-            log.info("创建Zabbix主机: name = {} , envType = {}", server.getName(), server.getEnvType());
+            log.info("创建Zabbix主机: name={}, envType={}", server.getName(), server.getEnvType());
         }
     }
 

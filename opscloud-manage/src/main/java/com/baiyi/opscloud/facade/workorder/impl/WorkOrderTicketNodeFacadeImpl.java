@@ -1,6 +1,6 @@
 package com.baiyi.opscloud.facade.workorder.impl;
 
-import com.baiyi.opscloud.common.util.WorkflowUtil;
+import com.baiyi.opscloud.workorder.util.WorkflowUtil;
 import com.baiyi.opscloud.domain.generator.opscloud.WorkOrder;
 import com.baiyi.opscloud.domain.generator.opscloud.WorkOrderTicket;
 import com.baiyi.opscloud.domain.generator.opscloud.WorkOrderTicketNode;
@@ -32,7 +32,7 @@ public class WorkOrderTicketNodeFacadeImpl implements WorkOrderTicketNodeFacade 
 
     @Override
     public void createWorkflowNodes(WorkOrder workOrder, WorkOrderTicket workOrderTicket) {
-        WorkflowVO.Workflow workflowVO = WorkflowUtil.toWorkflowView(workOrder.getWorkflow());
+        WorkflowVO.Workflow workflowVO = WorkflowUtil.load(workOrder.getWorkflow());
         List<WorkOrderTicketNode> nodes = Lists.newArrayList();
         for (WorkflowVO.Node node : workflowVO.getNodes()) {
             WorkOrderTicketNode workOrderTicketNode = WorkOrderTicketNode.builder()
@@ -48,15 +48,17 @@ public class WorkOrderTicketNodeFacadeImpl implements WorkOrderTicketNodeFacade 
 
     @Override
     public void verifyWorkflowNodes(WorkOrder workOrder, WorkOrderTicket workOrderTicket) {
-        Map<String, WorkflowVO.Node> nodeMap = WorkflowUtil.toWorkflowNodeMap(workOrder.getWorkflow());
+        Map<String, WorkflowVO.Node> nodeMap = WorkflowUtil.toNodeMap(workOrder.getWorkflow());
         List<WorkOrderTicketNode> nodes = workOrderTicketNodeService.queryByWorkOrderTicketId(workOrderTicket.getId());
         for (WorkOrderTicketNode node : nodes) {
-            if (!nodeMap.containsKey(node.getNodeName()))
-                throw new TicketVerifyException(String.format("工单验证失败: 未找到%s审批节点！", node.getNodeName()));
+            if (!nodeMap.containsKey(node.getNodeName())) {
+                throw new TicketVerifyException("工单验证失败: 未找到 {} 审批节点！", node.getNodeName());
+            }
             if (NodeTypeConstants.USER_LIST.getCode() == nodeMap.get(node.getNodeName()).getType()) {
                 // 用户必须指定
-                if (StringUtils.isEmpty(node.getUsername()))
-                    throw new TicketVerifyException(String.format("工单验证失败: %s审批节点必须指定审批人！", node.getNodeName()));
+                if (StringUtils.isEmpty(node.getUsername())) {
+                    throw new TicketVerifyException("工单验证失败: {} 审批节点必须指定审批人！", node.getNodeName());
+                }
             }
         }
     }
@@ -64,7 +66,9 @@ public class WorkOrderTicketNodeFacadeImpl implements WorkOrderTicketNodeFacade 
     @Override
     public void updateWorkflowNodeAuditUser(int workOrderTicketId, String nodeName, UserVO.User auditUser) {
         WorkOrderTicketNode workOrderTicketNode = workOrderTicketNodeService.getByUniqueKey(workOrderTicketId, nodeName);
-        if (workOrderTicketNode == null) return;
+        if (workOrderTicketNode == null) {
+            return;
+        }
         workOrderTicketNode.setUsername(auditUser.getUsername());
         workOrderTicketNodeService.update(workOrderTicketNode);
     }

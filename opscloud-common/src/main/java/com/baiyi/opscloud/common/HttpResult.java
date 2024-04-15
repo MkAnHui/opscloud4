@@ -4,16 +4,24 @@ import com.baiyi.opscloud.common.exception.BaseException;
 import com.baiyi.opscloud.common.util.JSONUtil;
 import com.baiyi.opscloud.domain.BusinessWrapper;
 import com.baiyi.opscloud.domain.ErrorEnum;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class HttpResult<T> {
 
     public static final HttpResult<Boolean> SUCCESS = new HttpResult<>(true);
 
     private T body;
 
+    @Schema(description = "是否成功")
     private boolean success;
 
     private String msg;

@@ -3,7 +3,7 @@ package com.baiyi.opscloud.service.sys.impl;
 import com.baiyi.opscloud.domain.DataTable;
 import com.baiyi.opscloud.domain.generator.opscloud.Instance;
 import com.baiyi.opscloud.domain.param.sys.RegisteredInstanceParam;
-import com.baiyi.opscloud.mapper.opscloud.InstanceMapper;
+import com.baiyi.opscloud.mapper.InstanceMapper;
 import com.baiyi.opscloud.service.sys.InstanceService;
 import com.baiyi.opscloud.util.SQLUtil;
 import com.github.pagehelper.Page;
@@ -56,7 +56,7 @@ public class InstanceServiceImpl implements InstanceService {
 
     @Override
     public DataTable<Instance> queryRegisteredInstancePage(RegisteredInstanceParam.RegisteredInstancePageQuery pageQuery) {
-        Page page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
+        Page<?> page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
         Example example = new Example(Instance.class);
         Example.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(pageQuery.getName())) {
@@ -65,7 +65,7 @@ public class InstanceServiceImpl implements InstanceService {
         if (pageQuery.getIsActive() != null) {
             criteria.andEqualTo("isActive", pageQuery.getIsActive());
         }
-        example.setOrderByClause("create_time");
+        example.setOrderByClause("name");
         List<Instance> data = instanceMapper.selectByExample(example);
         return new DataTable<>(data, page.getTotal());
     }
@@ -77,4 +77,5 @@ public class InstanceServiceImpl implements InstanceService {
         criteria.andEqualTo("isActive", true);
         return instanceMapper.selectByExample(example);
     }
+
 }

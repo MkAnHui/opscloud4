@@ -10,6 +10,9 @@ import lombok.Getter;
 @Getter
 public enum InstanceSessionTypeEnum {
 
+    /**
+     * 实例会话类型
+     */
     SERVER("SERVER"),
     // container
     CONTAINER_LOG("CONTAINER_LOG"),
@@ -20,4 +23,5 @@ public enum InstanceSessionTypeEnum {
     InstanceSessionTypeEnum(String type) {
         this.type = type;
     }
+
 }

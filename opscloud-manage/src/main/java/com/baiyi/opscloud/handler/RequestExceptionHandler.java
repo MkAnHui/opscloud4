@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 
+@SuppressWarnings("rawtypes")
 @Slf4j
 @RestControllerAdvice
 public class RequestExceptionHandler {
@@ -18,7 +19,7 @@ public class RequestExceptionHandler {
     @ResponseStatus(HttpStatus.OK)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public HttpResult handleMethodArgumentNotValidException(MethodArgumentNotValidException exception) {
-        return new HttpResult(ErrorEnum.SYSTEM_ERROR.getCode(), exception.getBindingResult().getAllErrors().get(0).getDefaultMessage());
+        return new HttpResult(ErrorEnum.SYSTEM_ERROR.getCode(), exception.getBindingResult().getAllErrors().getFirst().getDefaultMessage());
     }
 
 }

@@ -11,8 +11,12 @@ import java.util.Arrays;
  * @Date 2021/11/11 11:23 上午
  * @Version 1.0
  */
+@Getter
 public enum ApprovalTypeConstants {
 
+    /**
+     * 动作
+     */
     AGREE("同意"),
     CANCEL("取消"),
     REJECT("拒绝");
@@ -21,10 +25,10 @@ public enum ApprovalTypeConstants {
         this.desc = desc;
     }
 
-    @Getter
     private final String desc;
 
     public static String getDesc(String name) {
-        return Arrays.stream(ApprovalTypeConstants.values()).filter(typeEnum -> typeEnum.name().equals(name) ).findFirst().map(ApprovalTypeConstants::getDesc).orElse("undefined");
+        return Arrays.stream(ApprovalTypeConstants.values()).filter(typeEnum -> typeEnum.name().equals(name)).findFirst().map(ApprovalTypeConstants::getDesc).orElse("undefined");
     }
+
 }

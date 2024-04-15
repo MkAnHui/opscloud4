@@ -1,12 +1,11 @@
 package com.baiyi.opscloud.domain.param.sys;
 
 import com.baiyi.opscloud.domain.vo.sys.MenuVO;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.NotEmpty;
 import java.util.List;
 
 /**
@@ -17,32 +16,32 @@ import java.util.List;
 public class MenuParam {
 
     @Data
-    @ApiModel
+    @Schema
     public static class MenuSave {
         @NotEmpty(message = "菜单列表不能为空")
-        @ApiModelProperty(value = "菜单列表")
+        @Schema(description = "菜单列表")
         private List<MenuVO.Menu> menuList;
     }
 
     @Data
-    @ApiModel
+    @Schema
     public static class MenuChildSave {
-        @ApiModelProperty(value = "子菜单列表")
+        @Schema(description = "子菜单列表")
         private List<MenuVO.Child> menuChildList;
     }
 
     @Data
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class AuthRoleMenuSave {
 
-        @ApiModelProperty(value = "角色id")
+        @Schema(description = "角色ID")
         private Integer roleId;
 
         @NotEmpty(message = "菜单列表不能为空")
-        @ApiModelProperty(value = "菜单id列表")
+        @Schema(description = "菜单ID列表")
         private List<Integer> menuChildIdList;
 
     }
-}
 
+}

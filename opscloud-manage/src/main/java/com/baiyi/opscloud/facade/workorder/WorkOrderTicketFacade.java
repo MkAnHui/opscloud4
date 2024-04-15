@@ -1,5 +1,6 @@
 package com.baiyi.opscloud.facade.workorder;
 
+import com.baiyi.opscloud.common.HttpResult;
 import com.baiyi.opscloud.domain.DataTable;
 import com.baiyi.opscloud.domain.param.workorder.WorkOrderTicketEntryParam;
 import com.baiyi.opscloud.domain.param.workorder.WorkOrderTicketParam;
@@ -62,6 +63,13 @@ public interface WorkOrderTicketFacade {
      */
     WorkOrderTicketVO.TicketView approveTicket(WorkOrderTicketParam.ApproveTicket approveTicket);
 
+    /**
+     * 移动端审批
+     *
+     * @param outApproveTicket
+     */
+    HttpResult approveTicket(WorkOrderTicketParam.OutApproveTicket outApproveTicket);
+
 
     WorkOrderTicketVO.TicketView getTicketEntries(int ticketId, String workOrderKey);
 
@@ -106,5 +114,7 @@ public interface WorkOrderTicketFacade {
     void deleteTicketEntry(Integer ticketEntryId);
 
     void deleteTicketById(Integer ticketId);
+
+    void deleteTicketByWorkOrderAndPhase(int workOrderId, String phase);
 
 }

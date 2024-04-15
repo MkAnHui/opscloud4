@@ -1,7 +1,6 @@
 package com.baiyi.opscloud.domain.param.server;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -18,10 +17,10 @@ public class ServerTaskExecutorParam {
     @Data
     @EqualsAndHashCode(callSuper = true)
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class ServerTaskCommandExecutor extends TaskExecutor {
 
-        @ApiModelProperty(value = "命令")
+        @Schema(description = "命令")
         private String command;
 
     }
@@ -29,57 +28,54 @@ public class ServerTaskExecutorParam {
     @Data
     @EqualsAndHashCode(callSuper = true)
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class ServerTaskScriptExecutor extends TaskExecutor {
 
-        @ApiModelProperty(value = "指定执行的scriptId",example = "1")
+        @Schema(description = "指定执行的scriptId",example = "1")
         private Integer scriptId;
 
-        @ApiModelProperty(value = "自定义脚本参数")
+        @Schema(description = "自定义脚本参数")
         private String scriptParam;
 
     }
 
-
     @Data
     @EqualsAndHashCode(callSuper = true)
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class ServerTaskPlaybookExecutor extends TaskExecutor {
 
-        @ApiModelProperty(value = "指定执行的playbookId",example = "1")
+        @Schema(description = "指定执行的playbookId",example = "1")
         private Integer playbookId;
 
-        @ApiModelProperty(value = "自定义变量")
+        @Schema(description = "自定义变量")
         private String vars;
 
-        @ApiModelProperty(value = "按标签执行playbook")
+        @Schema(description = "按标签执行playbook")
         private Set<String> tags;
 
     }
 
-
     @Data
-    @ApiModel
+    @Schema
     public static class TaskExecutor {
 
         // TASK_CONCURRENT
-        @ApiModelProperty(value = "并发线程数",example = "5")
+        @Schema(description = "并发线程数",example = "5")
         private Integer concurrent;
 
-        @ApiModelProperty(value = "系统用户")
+        @Schema(description = "系统用户")
         private String becomeUser;
 
-        @ApiModelProperty(value = "主机模式")
+        @Schema(description = "主机模式")
         private Set<String> hostPatterns;
 
-        @ApiModelProperty(value = "用户的服务器树缓存uuid")
+        @Schema(description = "用户的服务器树缓存UUID")
         private String uuid;
 
-        @ApiModelProperty(value = "任务类型")
+        @Schema(description = "任务类型")
         private Integer taskType;
 
     }
-
 
 }

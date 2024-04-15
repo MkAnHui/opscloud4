@@ -13,12 +13,9 @@ import lombok.Data;
 @Data
 @Builder
 public class SshCredential {
-//    private String systemUser;
-//    private String passphrase;
-//    private String privateKey;
-//    private String publicKey;
 
     private Credential credential;
 
     private ServerAccount serverAccount;
+
 }

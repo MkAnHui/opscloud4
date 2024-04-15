@@ -4,26 +4,26 @@ import com.baiyi.opscloud.algorithm.ServerPack;
 import com.baiyi.opscloud.common.annotation.SingleTask;
 import com.baiyi.opscloud.common.constants.enums.DsTypeEnum;
 import com.baiyi.opscloud.common.datasource.AnsibleConfig;
+import com.baiyi.opscloud.core.comparer.AssetComparer;
+import com.baiyi.opscloud.core.comparer.AssetComparerBuilder;
 import com.baiyi.opscloud.core.factory.AssetProviderFactory;
 import com.baiyi.opscloud.core.model.DsInstanceContext;
 import com.baiyi.opscloud.core.provider.asset.BaseAssetProvider;
-import com.baiyi.opscloud.core.util.AssetUtil;
 import com.baiyi.opscloud.datasource.ansible.ServerGroupingAlgorithm;
 import com.baiyi.opscloud.datasource.ansible.entity.AnsibleHosts;
 import com.baiyi.opscloud.domain.DataTable;
+import com.baiyi.opscloud.domain.constants.DsAssetTypeConstants;
 import com.baiyi.opscloud.domain.generator.opscloud.Credential;
 import com.baiyi.opscloud.domain.generator.opscloud.DatasourceConfig;
-import com.baiyi.opscloud.domain.generator.opscloud.DatasourceInstanceAsset;
 import com.baiyi.opscloud.domain.generator.opscloud.ServerGroup;
 import com.baiyi.opscloud.domain.param.server.ServerGroupParam;
-import com.baiyi.opscloud.domain.constants.DsAssetTypeConstants;
 import com.baiyi.opscloud.service.server.ServerGroupService;
 import com.baiyi.opscloud.service.server.ServerService;
 import com.google.common.collect.Lists;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
 
@@ -61,7 +61,7 @@ public class AnsibleHostsProvider extends BaseAssetProvider<AnsibleHosts.Hosts> 
     }
 
     private AnsibleConfig.Ansible buildConfig(DatasourceConfig dsConfig) {
-        return dsConfigHelper.build(dsConfig, AnsibleConfig.class).getAnsible();
+        return dsConfigManager.build(dsConfig, AnsibleConfig.class).getAnsible();
     }
 
     @Override
@@ -83,7 +83,8 @@ public class AnsibleHostsProvider extends BaseAssetProvider<AnsibleHosts.Hosts> 
         for (ServerGroup e : table.getData()) {
             int serverSize = serverService.countByServerGroupId(e.getId());
             if (serverSize > 0) {
-                Map<String, List<ServerPack>> serverSubgroup = serverGroupingAlgorithm.intactGrouping(e, true); // 包含环境整组
+                // 包含环境整组
+                Map<String, List<ServerPack>> serverSubgroup = serverGroupingAlgorithm.intactGrouping(e, true);
                 AnsibleHosts.Group group = AnsibleHosts.Group.builder()
                         .serverGroup(e)
                         .serverMap(serverSubgroup)
@@ -105,22 +106,19 @@ public class AnsibleHostsProvider extends BaseAssetProvider<AnsibleHosts.Hosts> 
     }
 
     @Override
-    protected boolean equals(DatasourceInstanceAsset asset, DatasourceInstanceAsset preAsset) {
-        if (!AssetUtil.equals(preAsset.getName(), asset.getName()))
-            return false;
-        if (!AssetUtil.equals(preAsset.getAssetKey(), asset.getAssetKey()))
-            return false;
-        if (!AssetUtil.equals(preAsset.getAssetKey2(), asset.getAssetKey2()))
-            return false;
-        if (!AssetUtil.equals(preAsset.getDescription(), asset.getDescription()))
-            return false;
-        if (preAsset.getIsActive() != asset.getIsActive())
-            return false;
-        return true;
+    protected AssetComparer getAssetComparer() {
+        return AssetComparerBuilder.newBuilder()
+                .compareOfName()
+                .compareOfKey()
+                .compareOfKey2()
+                .compareOfDescription()
+                .compareOfActive()
+                .build();
     }
 
     @Override
     public void afterPropertiesSet() {
         AssetProviderFactory.register(ansibleHostsProvider);
     }
+
 }

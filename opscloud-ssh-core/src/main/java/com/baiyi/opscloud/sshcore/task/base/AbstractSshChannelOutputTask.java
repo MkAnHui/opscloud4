@@ -1,5 +1,6 @@
 package com.baiyi.opscloud.sshcore.task.base;
 
+import com.baiyi.opscloud.common.util.NewTimeUtil;
 import com.baiyi.opscloud.sshcore.AuditRecordHelper;
 import com.baiyi.opscloud.sshcore.model.SessionOutput;
 import com.baiyi.opscloud.sshcore.util.SessionOutputUtil;
@@ -9,9 +10,10 @@ import org.apache.commons.io.input.ClosedInputStream;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.concurrent.TimeUnit;
+import java.nio.charset.StandardCharsets;
 
 /**
  * @Author baiyi
@@ -20,14 +22,14 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @Data
-public abstract class AbstractSshChannelOutputTask implements IOutputTask {
+public abstract class AbstractSshChannelOutputTask implements IRecordOutputTask {
 
-    private ByteArrayOutputStream baos;
+    private ByteArrayOutputStream outputStream;
     private SessionOutput sessionOutput;
 
     private boolean isClosed = false;
 
-    private static final int BUFF_SIZE = 1024; // 1KB
+    private static final int BUFF_SIZE = 1024;
 
     public void close() {
         this.isClosed = true;
@@ -38,39 +40,41 @@ public abstract class AbstractSshChannelOutputTask implements IOutputTask {
         SessionOutputUtil.addOutput(this.sessionOutput);
         try {
             while (!isClosed) {
-                TimeUnit.MILLISECONDS.sleep(25L);
-                InputStream ins = baos.toInputStream();
-                if (ins instanceof ClosedInputStream)
+                NewTimeUtil.millisecondsSleep(25L);
+                InputStream ins = outputStream.toInputStream();
+                if (ins instanceof ClosedInputStream) {
                     continue;
-                baos.reset();
-                InputStreamReader isr = new InputStreamReader(ins);
+                }
+                outputStream.reset();
+                InputStreamReader isr = new InputStreamReader(ins, StandardCharsets.UTF_8);
                 BufferedReader br = new BufferedReader(isr, BUFF_SIZE);
                 char[] buff = new char[BUFF_SIZE];
                 int read;
                 while ((read = br.read(buff)) != -1) {
-                    write(buff, 0, read);
-                    auditing(buff, 0, read);
+                    writeAndRecord(buff, 0, read);
                 }
             }
-        } catch (Exception ex) {
-            log.error(ex.toString(), ex);
+        } catch (IOException ignored) {
         } finally {
-            log.info("outputTask线程结束! sessionId = {} , instanceId = {}", sessionOutput.getSessionId(), sessionOutput.getInstanceId());
+            log.debug("Ssh channel output task end: sessionId={}, instanceId={}", sessionOutput.getSessionId(), sessionOutput.getInstanceId());
             SessionOutputUtil.removeOutput(sessionOutput.getSessionId(), sessionOutput.getInstanceId());
         }
     }
 
     /**
-     * 审计日志
+     * 写审计
      *
      * @param buf
+     * @param off
+     * @param len
      */
-    private void auditing(char[] buf, int off, int len) {
-        AuditRecordHelper.recordAuditLog(sessionOutput.getSessionId(), sessionOutput.getInstanceId(), buf, off, len);
+    @Override
+    public void record(char[] buf, int off, int len) {
+        AuditRecordHelper.record(sessionOutput.getSessionId(), sessionOutput.getInstanceId(), buf, off, len);
     }
 
     protected byte[] toBytes(char[] chars) {
-        return TaskUtil.toBytes(chars);
+        return String.valueOf(chars).getBytes(StandardCharsets.UTF_8);
     }
 
 }

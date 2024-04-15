@@ -4,10 +4,10 @@ import com.baiyi.opscloud.common.datasource.LdapConfig;
 import com.baiyi.opscloud.datasource.ldap.driver.LdapDriver;
 import com.baiyi.opscloud.datasource.ldap.entity.LdapGroup;
 import com.baiyi.opscloud.datasource.ldap.repo.GroupRepo;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -18,10 +18,10 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class GroupRepoImpl implements GroupRepo {
 
-    @Resource
-    private LdapDriver ldapDrive;
+    private final LdapDriver ldapDrive;
 
     @Override
     public List<LdapGroup.Group> getGroupList(LdapConfig.Ldap ldapConfig) {
@@ -37,7 +37,7 @@ public class GroupRepoImpl implements GroupRepo {
     public List<LdapGroup.Group> searchGroupByUsername(LdapConfig.Ldap ldapConfig, String username) {
         List<String> groupNames = ldapDrive.searchLdapGroup(ldapConfig, username);
         return groupNames.stream().map(e ->
-                ldapDrive.getGroupWithDn(ldapConfig, ldapConfig.buildGroupDn(e))
+                ldapDrive.getGroupWithDN(ldapConfig, ldapConfig.buildGroupDn(e))
         ).collect(Collectors.toList());
     }
 

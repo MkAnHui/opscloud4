@@ -1,11 +1,12 @@
 package com.baiyi.opscloud.domain.vo.workorder;
 
-import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
@@ -20,9 +21,10 @@ public class WorkOrderNodeVO {
     @AllArgsConstructor
     @NoArgsConstructor
     @Data
-    @ApiModel
+    @Schema
     public static class NodeView implements Serializable {
 
+        @Serial
         private static final long serialVersionUID = 466008285525003198L;
         private List<Stage> stages;
 
@@ -32,18 +34,24 @@ public class WorkOrderNodeVO {
     @AllArgsConstructor
     @NoArgsConstructor
     @Data
-    @ApiModel
+    @Schema
     public static class Stage implements Serializable {
 
+        @Serial
         private static final long serialVersionUID = 1606626459378798989L;
         private String name;
 
-        private String state; // "SUCCESS","PAUSED","not_built","FINISHED"
+        @Schema(description = "SUCCESS,PAUSED,not_built,FINISHED")
+        private String state;
+
         @Builder.Default
         private int completePercent = 50;
 
         private int id;
-        private String type; // STAGE,PARALLEL
+
+        @Schema(description = "STAGE,PARALLEL")
+        private String type;
+
         private PopInfo popInfo;
 
         private List<Stage> children;
@@ -52,8 +60,9 @@ public class WorkOrderNodeVO {
 
     @Builder
     @Data
-    @ApiModel
+    @Schema
     public static class PopInfo implements Serializable {
+        @Serial
         private static final long serialVersionUID = 4493746212394051044L;
 
         private String title;

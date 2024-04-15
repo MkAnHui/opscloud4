@@ -1,12 +1,18 @@
 package com.baiyi.opscloud.domain.generator.opscloud;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.util.Date;
 
+@AllArgsConstructor
+@NoArgsConstructor
 @Data
 @Table(name = "server_account")
+@Builder
 public class ServerAccount {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -1,58 +1,62 @@
 package com.baiyi.opscloud.event.consumer.impl;
 
-import com.baiyi.opscloud.common.helper.TopicHelper;
-import com.baiyi.opscloud.domain.constants.EventActionTypeEnum;
 import com.baiyi.opscloud.common.event.IEvent;
 import com.baiyi.opscloud.common.event.NoticeEvent;
+import com.baiyi.opscloud.common.helper.topic.TopicHelper;
+import com.baiyi.opscloud.domain.constants.EventActionTypeEnum;
 import com.baiyi.opscloud.event.consumer.EventConsumerFactory;
 import com.baiyi.opscloud.event.consumer.IEventConsumer;
+import jakarta.annotation.Resource;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.scheduling.annotation.Async;
-
-import javax.annotation.Resource;
-
-import static com.baiyi.opscloud.common.config.ThreadPoolTaskConfiguration.TaskPools.CORE;
 
 /**
  * @Author baiyi
  * @Date 2021/8/17 7:02 下午
  * @Version 1.0
  */
-public abstract class AbstractEventConsumer<T> implements IEventConsumer, InitializingBean {
+public abstract class AbstractEventConsumer<T> implements IEventConsumer<T>, InitializingBean {
 
     @Resource
     protected TopicHelper topicHelper;
 
     @Override
-    @Async(value = CORE)
-    public void onMessage(NoticeEvent noticeEvent) {
-        preHandle(noticeEvent); // 预处理
+    @Async
+    public void onMessage(NoticeEvent<T> noticeEvent) {
+        // 预处理
+        preHandle(noticeEvent);
         String action = noticeEvent.getMessage().getAction();
         messageRoute(noticeEvent, action);
-        postHandle(noticeEvent); // 后处理
+        // 后处理
+        postHandle(noticeEvent);
     }
 
-    private void messageRoute(NoticeEvent noticeEvent, String action) {
+    private void messageRoute(NoticeEvent<T> noticeEvent, String action) {
         if (EventActionTypeEnum.CREATE.name().equals(action)) {
-            onCreateMessage(noticeEvent);
+            onCreatedMessage(noticeEvent);
             return;
         }
         if (EventActionTypeEnum.UPDATE.name().equals(action)) {
-            onUpdateMessage(noticeEvent);
+            onUpdatedMessage(noticeEvent);
             return;
         }
         if (EventActionTypeEnum.DELETE.name().equals(action)) {
-            onDeleteMessage(noticeEvent);
+            onDeletedMessage(noticeEvent);
         }
     }
 
-    protected void onCreateMessage(NoticeEvent noticeEvent) {
+    /**
+     * chuang
+     *
+     * @param noticeEvent
+     */
+    protected void onCreatedMessage(NoticeEvent<T> noticeEvent) {
     }
 
-    protected void onUpdateMessage(NoticeEvent noticeEvent) {
+    protected void onUpdatedMessage(NoticeEvent<T> noticeEvent) {
     }
 
-    protected void onDeleteMessage(NoticeEvent noticeEvent) {
+    protected void onDeletedMessage(NoticeEvent<T> noticeEvent) {
     }
 
     /**
@@ -60,7 +64,7 @@ public abstract class AbstractEventConsumer<T> implements IEventConsumer, Initia
      *
      * @param noticeEvent
      */
-    protected void preHandle(NoticeEvent noticeEvent) {
+    protected void preHandle(NoticeEvent<T> noticeEvent) {
     }
 
     /**
@@ -68,7 +72,7 @@ public abstract class AbstractEventConsumer<T> implements IEventConsumer, Initia
      *
      * @param noticeEvent
      */
-    protected void postHandle(NoticeEvent noticeEvent) {
+    protected void postHandle(NoticeEvent<T> noticeEvent) {
     }
 
     protected T toEventData(IEvent<T> event) {

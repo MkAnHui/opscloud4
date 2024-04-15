@@ -1,9 +1,9 @@
 package com.baiyi.opscloud.aspect.wrapper;
 
 import com.baiyi.opscloud.common.annotation.DurationWrapper;
-import com.baiyi.opscloud.common.exception.common.CommonRuntimeException;
+import com.baiyi.opscloud.common.exception.common.OCException;
 import com.baiyi.opscloud.domain.param.IExtend;
-import com.baiyi.opscloud.domain.vo.base.ShowTime;
+import com.baiyi.opscloud.domain.vo.base.ReadableTime;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -20,9 +20,9 @@ import java.util.TimeZone;
  * @Date 2022/2/23 1:10 PM
  * @Version 1.0
  */
+@Slf4j
 @Aspect
 @Component
-@Slf4j
 public class DurationWrapperAspect {
 
     @Pointcut(value = "@annotation(com.baiyi.opscloud.common.annotation.DurationWrapper)")
@@ -30,18 +30,20 @@ public class DurationWrapperAspect {
     }
 
     @Around("@annotation(durationWrapper)")
-    public Object around(ProceedingJoinPoint joinPoint, DurationWrapper durationWrapper) throws CommonRuntimeException {
+    public Object around(ProceedingJoinPoint joinPoint, DurationWrapper durationWrapper) throws OCException {
         Object result;
         try {
             result = joinPoint.proceed();
         } catch (Throwable e) {
-            throw new CommonRuntimeException(e.getMessage());
+            throw new OCException(e.getMessage());
         }
         boolean extend = durationWrapper.extend();
-        ShowTime.IDuration targetDuration = null;
+        ReadableTime.IDuration targetDuration = null;
         MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
-        String[] params = methodSignature.getParameterNames();// 获取参数名称
-        Object[] args = joinPoint.getArgs();// 获取参数值
+        // 获取参数名称
+        String[] params = methodSignature.getParameterNames();
+        // 获取参数值
+        Object[] args = joinPoint.getArgs();
         if (params != null && params.length != 0) {
             for (Object arg : args) {
                 if (!extend) {
@@ -51,8 +53,8 @@ public class DurationWrapperAspect {
                     }
                 }
                 if (targetDuration == null) {
-                    if (arg instanceof ShowTime.IDuration) {
-                        targetDuration = (ShowTime.IDuration) arg;
+                    if (arg instanceof ReadableTime.IDuration) {
+                        targetDuration = (ReadableTime.IDuration) arg;
                     }
                 }
             }
@@ -63,8 +65,10 @@ public class DurationWrapperAspect {
         return result;
     }
 
-    private void wrap(ShowTime.IDuration iDuration) {
-        if (iDuration.getStartTime() == null || iDuration.getEndTime() == null) return;
+    private void wrap(ReadableTime.IDuration iDuration) {
+        if (iDuration.getStartTime() == null || iDuration.getEndTime() == null) {
+            return;
+        }
         long diffTime = iDuration.getEndTime().getTime() - iDuration.getStartTime().getTime();
         SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss");
         formatter.setTimeZone(TimeZone.getTimeZone("GMT+0:00"));

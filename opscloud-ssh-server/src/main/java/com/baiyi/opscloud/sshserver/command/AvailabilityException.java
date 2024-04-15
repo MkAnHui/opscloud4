@@ -16,10 +16,16 @@
 
 package com.baiyi.opscloud.sshserver.command;
 
+import java.io.Serial;
+
 /**
  * Availability
  */
-public class AvailabilityException extends Exception {
+public class AvailabilityException
+        extends Exception {
+
+    @Serial
+    private static final long serialVersionUID = -8323343028474225670L;
 
     public AvailabilityException(String message) {
         super(message);
@@ -28,4 +34,5 @@ public class AvailabilityException extends Exception {
     public AvailabilityException(String message, Throwable cause) {
         super(message, cause);
     }
+
 }

@@ -1,8 +1,7 @@
 package com.baiyi.opscloud.domain.vo.auth;
 
 import com.baiyi.opscloud.domain.vo.base.BaseVO;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -17,26 +16,27 @@ public class UserRoleVO {
     @EqualsAndHashCode(callSuper = true)
     @Data
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class UserRole extends BaseVO {
 
-        @ApiModelProperty(value = "主键",example="1")
+        @Schema(description = "主键", example = "1")
         private Integer id;
 
-        @ApiModelProperty(value = "用户名")
+        @Schema(description = "用户名")
         private String username;
 
-        @ApiModelProperty(value = "显示名")
+        @Schema(description = "显示名")
         private String displayName;
 
-        @ApiModelProperty(value = "角色id",example="1")
+        @Schema(description = "角色ID", example = "1")
         private Integer roleId;
 
-        @ApiModelProperty(value = "角色名")
+        @Schema(description = "角色名")
         private String roleName;
 
-        @ApiModelProperty(value = "角色描述")
+        @Schema(description = "角色描述")
         private String roleComment;
 
     }
+
 }

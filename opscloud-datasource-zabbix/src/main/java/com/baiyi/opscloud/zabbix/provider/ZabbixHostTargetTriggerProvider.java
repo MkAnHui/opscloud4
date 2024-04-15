@@ -8,7 +8,7 @@ import com.baiyi.opscloud.zabbix.provider.base.AbstractZabbixHostProvider;
 import com.baiyi.opscloud.zabbix.v5.entity.ZabbixTrigger;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.List;
 
 /**
@@ -27,7 +27,6 @@ public class ZabbixHostTargetTriggerProvider extends AbstractZabbixHostProvider<
     protected List<com.baiyi.opscloud.zabbix.v5.entity.ZabbixHost.Host> listEntities(DsInstanceContext dsInstanceContext, ZabbixTrigger.Trigger target) {
         ZabbixConfig.Zabbix zabbix = buildConfig(dsInstanceContext.getDsConfig());
         return zabbixV5HostDrive.listByTrigger(zabbix, target);
-
     }
 
     @Override
@@ -39,4 +38,5 @@ public class ZabbixHostTargetTriggerProvider extends AbstractZabbixHostProvider<
     public void afterPropertiesSet() {
         AssetProviderFactory.register(zabbixHostTargetTriggerProvider);
     }
+
 }

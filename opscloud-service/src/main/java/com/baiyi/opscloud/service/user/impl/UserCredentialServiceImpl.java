@@ -1,7 +1,7 @@
 package com.baiyi.opscloud.service.user.impl;
 
 import com.baiyi.opscloud.domain.generator.opscloud.UserCredential;
-import com.baiyi.opscloud.mapper.opscloud.UserCredentialMapper;
+import com.baiyi.opscloud.mapper.UserCredentialMapper;
 import com.baiyi.opscloud.service.user.UserCredentialService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,6 +14,7 @@ import java.util.List;
  * @Date 2021/6/9 10:04 上午
  * @Version 1.0
  */
+@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @Service
 @RequiredArgsConstructor
 public class UserCredentialServiceImpl implements UserCredentialService {

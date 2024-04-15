@@ -17,15 +17,15 @@ public class BusinessServiceFactory {
     private BusinessServiceFactory() {
     }
 
-    private static final Map<Integer, IBusinessService> context = new ConcurrentHashMap<>();
+    private static final Map<Integer, IBusinessService<?>> CONTEXT = new ConcurrentHashMap<>();
 
-    public static IBusinessService getIBusinessServiceByBusinessType(Integer businessType) {
-        return context.get(businessType);
+    public static IBusinessService<?> getIBusinessServiceByBusinessType(Integer businessType) {
+        return CONTEXT.get(businessType);
     }
 
-    public static void register(IBusinessService bean) {
-        log.info("BusinessServiceFactory注册: beanName = {} , businessType = {} ", bean.getClass().getSimpleName(), bean.getBusinessType());
-        context.put(bean.getBusinessType(), bean);
+    public static void register(IBusinessService<?> bean) {
+        CONTEXT.put(bean.getBusinessType(), bean);
+        log.debug("BusinessServiceFactory Registered: beanName={}, businessType={}", bean.getClass().getSimpleName(), bean.getBusinessType());
     }
 
 }

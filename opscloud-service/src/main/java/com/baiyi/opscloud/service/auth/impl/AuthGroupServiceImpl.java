@@ -3,7 +3,7 @@ package com.baiyi.opscloud.service.auth.impl;
 import com.baiyi.opscloud.domain.DataTable;
 import com.baiyi.opscloud.domain.generator.opscloud.AuthGroup;
 import com.baiyi.opscloud.domain.param.auth.AuthGroupParam;
-import com.baiyi.opscloud.mapper.opscloud.AuthGroupMapper;
+import com.baiyi.opscloud.mapper.AuthGroupMapper;
 import com.baiyi.opscloud.service.auth.AuthGroupService;
 import com.baiyi.opscloud.util.SQLUtil;
 import com.github.pagehelper.Page;
@@ -33,7 +33,7 @@ public class AuthGroupServiceImpl implements AuthGroupService {
 
     @Override
     public DataTable<AuthGroup> queryPageByParam(AuthGroupParam.AuthGroupPageQuery pageQuery) {
-        Page page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
+        Page<?> page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
         Example example = new Example(AuthGroup.class);
         if (StringUtils.isNotBlank(pageQuery.getGroupName())) {
             Example.Criteria criteria = example.createCriteria();
@@ -58,4 +58,5 @@ public class AuthGroupServiceImpl implements AuthGroupService {
     public void deleteById(int id) {
         authGroupMapper.deleteByPrimaryKey(id);
     }
+
 }

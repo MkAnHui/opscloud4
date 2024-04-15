@@ -12,7 +12,7 @@ import com.baiyi.opscloud.workorder.constants.WorkOrderKeyConstants;
 import com.baiyi.opscloud.workorder.query.impl.base.BaseTicketEntryQuery;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.List;
 
 /**
@@ -39,8 +39,8 @@ public class ApplicationEntryQuery extends BaseTicketEntryQuery<Application> {
     }
 
     @Override
-    protected WorkOrderTicketVO.Entry toEntry(WorkOrderTicketEntryParam.EntryQuery entryQuery, Application entry) {
-        return WorkOrderTicketVO.Entry.builder()
+    protected WorkOrderTicketVO.Entry<Application> toEntry(WorkOrderTicketEntryParam.EntryQuery entryQuery, Application entry) {
+        return WorkOrderTicketVO.Entry.<Application>builder()
                 .workOrderTicketId(entryQuery.getWorkOrderTicketId())
                 .name(entry.getName())
                 .entryKey(entry.getName())

@@ -18,7 +18,7 @@ public class ServiceAssetConverter {
     public static AssetContainer toAssetContainer(DatasourceInstance dsInstance, Service entity) {
         String namespace = entity.getMetadata().getNamespace();
         String name = entity.getMetadata().getName();
-        /**
+        /*
          * 为了兼容多集群中Service名称相同导致无法拉取资产
          * 资产id使用联合键 namespace:deploymentName
          */
@@ -29,10 +29,11 @@ public class ServiceAssetConverter {
                 .assetId(assetId)
                 .name(name)
                 .assetKey(name)
-                .assetKey2(namespace) // namespace
+                // namespace
+                .assetKey2(namespace)
                 .kind(entity.getKind())
                 .assetType(DsAssetTypeConstants.KUBERNETES_SERVICE.name())
-                .createdTime(DeploymentAssetConverter.toGmtDate(entity.getMetadata().getCreationTimestamp()))
+                .createdTime(DeploymentAssetConverter.toUtcDate(entity.getMetadata().getCreationTimestamp()))
                 .build();
 
         return AssetContainerBuilder.newBuilder()

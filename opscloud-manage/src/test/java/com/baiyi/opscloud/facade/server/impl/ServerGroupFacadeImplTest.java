@@ -6,7 +6,7 @@ import com.baiyi.opscloud.domain.param.server.ServerGroupParam;
 import com.baiyi.opscloud.facade.server.ServerGroupFacade;
 import org.junit.jupiter.api.Test;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.List;
 import java.util.Map;
 
@@ -28,7 +28,7 @@ class ServerGroupFacadeImplTest extends BaseUnit {
     @Test
     void queryServerGroupHostPatternByEnvTest(){
         ServerGroupParam.ServerGroupEnvHostPatternQuery query = ServerGroupParam.ServerGroupEnvHostPatternQuery.builder()
-                .serverGroupName("group_account")
+                .serverGroupName("group_opscloud4")
                 .envType(4)
                 .build();
         Map<String, List<Server>> map= serverGroupFacade.queryServerGroupHostPatternByEnv(query);

@@ -11,6 +11,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -21,16 +22,13 @@ import java.util.Date;
  */
 public class IamUser {
 
-//    public static Date toGmtDate(String time) {
-//        return TimeUtil.toGmtDate(time, TimeZoneEnum.UTC);
-//    }
-
     @Builder
     @AllArgsConstructor
     @NoArgsConstructor
     @Data
     public static class User implements IToAsset, Serializable {
 
+        @Serial
         private static final long serialVersionUID = 4845240806163256599L;
 
         private String path;
@@ -58,4 +56,5 @@ public class IamUser {
                     .build();
         }
     }
+
 }

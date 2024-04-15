@@ -4,19 +4,21 @@ import com.baiyi.opscloud.common.annotation.SingleTask;
 import com.baiyi.opscloud.common.constants.SingleTaskConstants;
 import com.baiyi.opscloud.common.constants.enums.DsTypeEnum;
 import com.baiyi.opscloud.common.datasource.NacosConfig;
+import com.baiyi.opscloud.core.comparer.AssetComparer;
+import com.baiyi.opscloud.core.comparer.AssetComparerBuilder;
+import com.baiyi.opscloud.core.exception.DatasourceProviderException;
 import com.baiyi.opscloud.core.factory.AssetProviderFactory;
 import com.baiyi.opscloud.core.model.DsInstanceContext;
 import com.baiyi.opscloud.core.provider.asset.BaseAssetProvider;
-import com.baiyi.opscloud.core.util.AssetUtil;
 import com.baiyi.opscloud.datasource.nacos.driver.NacosAuthDriver;
 import com.baiyi.opscloud.datasource.nacos.entity.NacosPermission;
 import com.baiyi.opscloud.datasource.nacos.param.NacosPageParam;
-import com.baiyi.opscloud.domain.generator.opscloud.DatasourceConfig;
-import com.baiyi.opscloud.domain.generator.opscloud.DatasourceInstanceAsset;
 import com.baiyi.opscloud.domain.constants.DsAssetTypeConstants;
+import com.baiyi.opscloud.domain.generator.opscloud.DatasourceConfig;
+import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import java.util.List;
 
 /**
@@ -24,6 +26,7 @@ import java.util.List;
  * @Date 2021/11/12 4:13 下午
  * @Version 1.0
  */
+@Slf4j
 @Component
 public class NacosPermissionProvider extends BaseAssetProvider<NacosPermission.Permission> {
 
@@ -44,7 +47,7 @@ public class NacosPermissionProvider extends BaseAssetProvider<NacosPermission.P
     }
 
     private NacosConfig.Nacos buildConfig(DatasourceConfig dsConfig) {
-        return dsConfigHelper.build(dsConfig, NacosConfig.class).getNacos();
+        return dsConfigManager.build(dsConfig, NacosConfig.class).getNacos();
     }
 
     @Override
@@ -53,9 +56,9 @@ public class NacosPermissionProvider extends BaseAssetProvider<NacosPermission.P
             NacosPermission.PermissionsResponse permissionsResponse = nacosAuthDriver.listPermissions(buildConfig(dsInstanceContext.getDsConfig()), NacosPageParam.PageQuery.builder().build());
             return permissionsResponse.getPageItems();
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new DatasourceProviderException(e.getMessage());
         }
-        throw new RuntimeException("查询条目失败");
     }
 
     @Override
@@ -65,12 +68,11 @@ public class NacosPermissionProvider extends BaseAssetProvider<NacosPermission.P
     }
 
     @Override
-    protected boolean equals(DatasourceInstanceAsset asset, DatasourceInstanceAsset preAsset) {
-        if (!AssetUtil.equals(preAsset.getName(), asset.getName()))
-            return false;
-        if (preAsset.getIsActive() != asset.getIsActive())
-            return false;
-        return true;
+    protected AssetComparer getAssetComparer() {
+        return AssetComparerBuilder.newBuilder()
+                .compareOfName()
+                .compareOfActive()
+                .build();
     }
 
     @Override

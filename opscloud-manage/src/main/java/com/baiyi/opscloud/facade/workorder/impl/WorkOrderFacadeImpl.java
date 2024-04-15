@@ -13,7 +13,7 @@ import com.baiyi.opscloud.packer.workorder.WorkOrderGroupPacker;
 import com.baiyi.opscloud.packer.workorder.WorkOrderPacker;
 import com.baiyi.opscloud.service.workorder.WorkOrderGroupService;
 import com.baiyi.opscloud.service.workorder.WorkOrderService;
-import com.baiyi.opscloud.workorder.exception.TicketCommonException;
+import com.baiyi.opscloud.workorder.exception.TicketException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -38,18 +38,22 @@ public class WorkOrderFacadeImpl implements WorkOrderFacade {
     private final WorkOrderGroupPacker workOrderGroupPacker;
 
     @Override
+    public List<WorkOrderVO.WorkOrder> getWorkOrderOptions() {
+        List<WorkOrder> workOrders = workOrderService.queryAll();
+        return BeanCopierUtil.copyListProperties(workOrders, WorkOrderVO.WorkOrder.class);
+    }
+
+    @Override
     public DataTable<WorkOrderVO.WorkOrder> queryWorkOrderPage(WorkOrderParam.WorkOrderPageQuery pageQuery) {
         DataTable<WorkOrder> table = workOrderService.queryPageByParam(pageQuery);
-        List<WorkOrderVO.WorkOrder> data = BeanCopierUtil.copyListProperties(table.getData(), WorkOrderVO.WorkOrder.class).stream()
-                .peek(e -> workOrderPacker.wrap(e, pageQuery)).collect(Collectors.toList());
+        List<WorkOrderVO.WorkOrder> data = BeanCopierUtil.copyListProperties(table.getData(), WorkOrderVO.WorkOrder.class).stream().peek(e -> workOrderPacker.wrap(e, pageQuery)).collect(Collectors.toList());
         return new DataTable<>(data, table.getTotalNum());
     }
 
     @Override
     public DataTable<WorkOrderVO.Group> queryWorkOrderGroupPage(WorkOrderGroupParam.WorkOrderGroupPageQuery pageQuery) {
         DataTable<WorkOrderGroup> table = workOrderGroupService.queryPageByParam(pageQuery);
-        List<WorkOrderVO.Group> data = BeanCopierUtil.copyListProperties(table.getData(), WorkOrderVO.Group.class).stream()
-                .peek(e -> workOrderGroupPacker.wrap(e, pageQuery)).collect(Collectors.toList());
+        List<WorkOrderVO.Group> data = BeanCopierUtil.copyListProperties(table.getData(), WorkOrderVO.Group.class).stream().peek(e -> workOrderGroupPacker.wrap(e, pageQuery)).collect(Collectors.toList());
         return new DataTable<>(data, table.getTotalNum());
     }
 
@@ -57,34 +61,33 @@ public class WorkOrderFacadeImpl implements WorkOrderFacade {
     public WorkOrderViewVO.View getWorkOrderView() {
         List<WorkOrderGroup> groups = workOrderGroupService.queryAll();
         List<WorkOrderVO.Group> workOrderGroups = groups.stream().map(workOrderPacker::wrap).collect(Collectors.toList());
-        return WorkOrderViewVO.View.builder()
-                .workOrderGroups(workOrderGroups)
-                .build();
+        return WorkOrderViewVO.View.builder().workOrderGroups(workOrderGroups).build();
     }
 
     @Override
-    public void saveWorkOrderGroup(WorkOrderVO.Group group) {
-        WorkOrderGroup newWorkOrderGroup = BeanCopierUtil.copyProperties(group, WorkOrderGroup.class);
+    public void saveWorkOrderGroup(WorkOrderGroupParam.Group group) {
+        WorkOrderGroup workOrderGroup = BeanCopierUtil.copyProperties(group, WorkOrderGroup.class);
         if (group.getId() == null) {
-            if (group.getSeq() == null)
-                newWorkOrderGroup.setSeq(workOrderGroupService.count() + 1);
-            workOrderGroupService.add(newWorkOrderGroup);
+            if (group.getSeq() == null) {
+                workOrderGroup.setSeq(workOrderGroupService.count() + 1);
+            }
+            workOrderGroupService.add(workOrderGroup);
         } else {
-            workOrderGroupService.update(newWorkOrderGroup);
+            workOrderGroupService.update(workOrderGroup);
         }
     }
 
     @Override
     public void deleteWorkOrderGroup(Integer workOrderGroupId) {
         if (0 != workOrderService.countByWorkOrderGroupId(workOrderGroupId)) {
-            throw new TicketCommonException("工单组下存在工单，无法删除！");
+            throw new TicketException("工单组下存在工单，无法删除！");
         }
         workOrderGroupService.deleteById(workOrderGroupId);
     }
 
     @Override
-    public void updateWorkOrder(WorkOrderVO.WorkOrder workOrder) {
-        WorkOrder newWorkOrder = BeanCopierUtil.copyProperties(workOrder, WorkOrder.class);
-        workOrderService.update(newWorkOrder);
+    public void updateWorkOrder(WorkOrderParam.WorkOrder workOrder) {
+        workOrderService.update(BeanCopierUtil.copyProperties(workOrder, WorkOrder.class));
     }
+
 }

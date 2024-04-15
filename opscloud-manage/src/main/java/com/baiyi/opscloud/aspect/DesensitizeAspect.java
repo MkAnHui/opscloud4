@@ -1,6 +1,6 @@
 package com.baiyi.opscloud.aspect;
 
-import com.baiyi.opscloud.common.util.RegexUtil;
+import com.baiyi.opscloud.common.util.ValidationUtil;
 import com.baiyi.opscloud.domain.annotation.DesensitizedField;
 import com.baiyi.opscloud.domain.constants.SensitiveTypeEnum;
 import lombok.extern.slf4j.Slf4j;
@@ -19,10 +19,9 @@ import java.util.Objects;
  * @Date 2021/6/11 10:56 上午
  * @Since 1.0
  */
-
+@Slf4j
 @Aspect
 @Component
-@Slf4j
 public class DesensitizeAspect {
 
     /**
@@ -59,19 +58,22 @@ public class DesensitizeAspect {
 
     private String setNewValueForField(String value, SensitiveTypeEnum type) {
         switch (type) {
-            case MOBILE_PHONE:
-                if (StringUtils.isEmpty(value)) return value;
-                if (RegexUtil.isPhone(value)) {
+            case MOBILE_PHONE -> {
+                if (StringUtils.isEmpty(value)) {
+                    return value;
+                }
+                if (ValidationUtil.isPhone(value)) {
                     StringBuilder sb = new StringBuilder(value);
                     return sb.replace(3, 7, getSymbol(4)).toString();
                 }
                 return value;
-            case PASSWORD:
-                return StringUtils.EMPTY;
-            case TOKEN:
+            }
+            case TOKEN -> {
                 return getSymbol(6);
-            default:
+            }
+            default -> {
                 return StringUtils.EMPTY;
+            }
         }
     }
 
@@ -81,10 +83,7 @@ public class DesensitizeAspect {
      * @param number 符号个数
      */
     private String getSymbol(int number) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < number; i++) {
-            sb.append(STAR);
-        }
-        return sb.toString();
+        return STAR.repeat(Math.max(0, number));
     }
+
 }

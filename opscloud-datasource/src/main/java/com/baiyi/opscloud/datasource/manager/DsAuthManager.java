@@ -1,20 +1,20 @@
 package com.baiyi.opscloud.datasource.manager;
 
-import com.baiyi.opscloud.domain.constants.DsInstanceTagConstants;
-import com.baiyi.opscloud.common.exception.auth.AuthRuntimeException;
 import com.baiyi.opscloud.common.constants.enums.DsTypeEnum;
+import com.baiyi.opscloud.common.exception.auth.AuthenticationException;
 import com.baiyi.opscloud.core.factory.AuthProviderFactory;
-import com.baiyi.opscloud.datasource.manager.base.BaseManager;
 import com.baiyi.opscloud.core.provider.auth.BaseAuthProvider;
+import com.baiyi.opscloud.datasource.manager.base.BaseManager;
+import com.baiyi.opscloud.domain.constants.TagConstants;
 import com.baiyi.opscloud.domain.generator.opscloud.DatasourceInstance;
 import com.baiyi.opscloud.domain.generator.opscloud.User;
 import com.baiyi.opscloud.domain.model.Authorization;
 import com.baiyi.opscloud.domain.param.auth.LoginParam;
-import com.github.xiaoymin.knife4j.core.util.CollectionUtils;
+import lombok.RequiredArgsConstructor;
 import org.jasypt.encryption.StringEncryptor;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
-import javax.annotation.Resource;
 import java.util.List;
 
 /**
@@ -25,10 +25,10 @@ import java.util.List;
  * @Version 1.0
  */
 @Component
+@RequiredArgsConstructor
 public class DsAuthManager extends BaseManager {
 
-    @Resource
-    private StringEncryptor stringEncryptor;
+    private final StringEncryptor stringEncryptor;
 
     /**
      * 支持认证的实例类型
@@ -42,21 +42,28 @@ public class DsAuthManager extends BaseManager {
 
     @Override
     protected String getTag() {
-        return DsInstanceTagConstants.AUTHORIZATION.getTag();
+        return TagConstants.AUTHORIZATION.getTag();
     }
 
-    public boolean tryLogin(User user, LoginParam.Login loginParam) throws AuthRuntimeException {
+    public boolean tryLogin(User user, LoginParam.Login loginParam) throws AuthenticationException {
         List<DatasourceInstance> instances = listInstance();
-        if (!CollectionUtils.isEmpty(instances)) {
-            Authorization.Credential credential = Authorization.Credential.builder().username(loginParam.getUsername()).password(loginParam.getPassword()).build();
-            for (DatasourceInstance instance : instances) {
-                BaseAuthProvider authProvider = AuthProviderFactory.getProvider(instance.getInstanceType());
-                if (authProvider == null) continue;
-                if (authProvider.login(instance, credential)) return true;
-            }
-            return false; // 有认证实例不允许本地认证
+        if (CollectionUtils.isEmpty(instances)) {
+            return loginWithLocal(user, loginParam);
         }
-        return localLogin(user, loginParam);
+        Authorization.Credential credential = Authorization.Credential.builder()
+                .username(loginParam.getUsername())
+                .password(loginParam.getPassword())
+                .build();
+        for (DatasourceInstance instance : instances) {
+            BaseAuthProvider authProvider = AuthProviderFactory.getProvider(instance.getInstanceType());
+            if (authProvider == null) {
+                continue;
+            }
+            if (authProvider.login(instance, credential)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -66,7 +73,7 @@ public class DsAuthManager extends BaseManager {
      * @param loginParam
      * @return
      */
-    private boolean localLogin(User user, LoginParam.Login loginParam) {
+    private boolean loginWithLocal(User user, LoginParam.Login loginParam) {
         return verifyPassword(loginParam.getPassword(), user.getPassword());
     }
 
@@ -74,11 +81,11 @@ public class DsAuthManager extends BaseManager {
      * 校验密码
      *
      * @param password         密码
-     * @param encryptdPassword 加密的密码
+     * @param encryptedPassword 加密的密码
      * @return
      */
-    private boolean verifyPassword(String password, String encryptdPassword) {
-        return password.equals(stringEncryptor.decrypt(encryptdPassword));
+    private boolean verifyPassword(String password, String encryptedPassword) {
+        return password.equals(stringEncryptor.decrypt(encryptedPassword));
     }
 
 }

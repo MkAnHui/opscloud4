@@ -1,9 +1,11 @@
 package com.baiyi.opscloud.service.datasource.impl;
 
+import com.baiyi.opscloud.common.util.JSONUtil;
 import com.baiyi.opscloud.domain.generator.opscloud.DatasourceInstanceAssetProperty;
-import com.baiyi.opscloud.mapper.opscloud.DatasourceInstanceAssetPropertyMapper;
+import com.baiyi.opscloud.mapper.DatasourceInstanceAssetPropertyMapper;
 import com.baiyi.opscloud.service.datasource.DsInstanceAssetPropertyService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import tk.mybatis.mapper.entity.Example;
 
@@ -15,6 +17,7 @@ import java.util.Map;
  * @Date 2021/6/19 9:23 上午
  * @Version 1.0
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DsInstanceAssetPropertyServiceImpl implements DsInstanceAssetPropertyService {
@@ -29,6 +32,15 @@ public class DsInstanceAssetPropertyServiceImpl implements DsInstanceAssetProper
     @Override
     public void deleteById(Integer id) {
         dsInstanceAssetPropertyMapper.deleteByPrimaryKey(id);
+    }
+
+    @Override
+    public DatasourceInstanceAssetProperty getByUniqueKey(Integer assetId, String name) {
+        Example example = new Example(DatasourceInstanceAssetProperty.class);
+        Example.Criteria criteria = example.createCriteria();
+        criteria.andEqualTo("datasourceInstanceAssetId", assetId)
+                .andEqualTo("name", name);
+        return dsInstanceAssetPropertyMapper.selectOneByExample(example);
     }
 
     @Override
@@ -58,7 +70,12 @@ public class DsInstanceAssetPropertyServiceImpl implements DsInstanceAssetProper
             if (property.getName().equals(assetProperty.getName())) {
                 if (!property.getValue().equals(assetProperty.getValue())) {
                     property.setValue(assetProperty.getValue());
-                    dsInstanceAssetPropertyMapper.updateByPrimaryKey(property);
+                    try {
+                        dsInstanceAssetPropertyMapper.updateByPrimaryKey(property);
+                    } catch (Exception e) {
+                        log.error(e.getMessage());
+                        log.error(JSONUtil.writeValueAsString(property));
+                    }
                 }
                 assetProperties.remove(property);
                 return;
@@ -67,36 +84,4 @@ public class DsInstanceAssetPropertyServiceImpl implements DsInstanceAssetProper
         dsInstanceAssetPropertyMapper.insert(assetProperty);
     }
 
-    // Bug
-//    public void saveAssetProperties(int assetId, Map<String, String> properties) {
-//        List<DatasourceInstanceAssetProperty> assetPropertyList = queryByAssetId(assetId);
-//        properties.forEach((k, v) -> {
-//            if (isEmptyProperty(assetPropertyList, k, v)) {
-//                DatasourceInstanceAssetProperty property = DatasourceInstanceAssetProperty.builder()
-//                        .datasourceInstanceAssetId(assetId)
-//                        .name(k)
-//                        .value(v)
-//                        .build();
-//                dsInstanceAssetPropertyMapper.insert(property);
-//            }
-//        });
-//        assetPropertyList.forEach(e -> deleteById(e.getId()));
-//    }
-//
-//    private boolean isEmptyProperty(List<DatasourceInstanceAssetProperty> assetPropertyList, String name, String value) {
-//        Iterator<DatasourceInstanceAssetProperty> iter = assetPropertyList.iterator();
-//        while (iter.hasNext()) {
-//            DatasourceInstanceAssetProperty property = iter.next();
-//            if (property.getName().equals(name)) {
-//                if (property.getValue().equals(value)) {
-//                    iter.remove();
-//                } else {
-//                    property.setValue(value);
-//                    dsInstanceAssetPropertyMapper.updateByPrimaryKey(property);
-//                }
-//                return false;
-//            }
-//        }
-//        return true;
-//    }
 }

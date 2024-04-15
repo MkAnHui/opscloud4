@@ -13,7 +13,7 @@ import com.baiyi.opscloud.domain.vo.business.BusinessAssetRelationVO;
 import com.baiyi.opscloud.domain.vo.datasource.DsAssetVO;
 import com.baiyi.opscloud.domain.vo.server.ServerGroupVO;
 import com.baiyi.opscloud.factory.business.base.AbstractBusinessService;
-import com.baiyi.opscloud.mapper.opscloud.ServerGroupMapper;
+import com.baiyi.opscloud.mapper.ServerGroupMapper;
 import com.baiyi.opscloud.service.server.ServerGroupService;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -88,14 +88,14 @@ public class ServerGroupServiceImpl extends AbstractBusinessService<ServerGroup>
 
     @Override
     public DataTable<ServerGroup> queryPageByParam(ServerGroupParam.ServerGroupPageQuery pageQuery) {
-        Page page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
+        Page<?> page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
         List<ServerGroup> data = serverGroupMapper.queryServerGroupByParam(pageQuery);
         return new DataTable<>(data, page.getTotal());
     }
 
     @Override
     public DataTable<ServerGroup> queryPageByParam(UserBusinessPermissionParam.UserBusinessPermissionPageQuery pageQuery) {
-        Page page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
+        Page<?> page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
         List<ServerGroup> data = serverGroupMapper.queryUserPermissionServerGroupByParam(pageQuery);
         return new DataTable<>(data, page.getTotal());
     }
@@ -104,4 +104,5 @@ public class ServerGroupServiceImpl extends AbstractBusinessService<ServerGroup>
     public List<ServerGroup> queryUserServerGroupTreeByParam(ServerGroupParam.UserServerTreeQuery queryParam) {
         return serverGroupMapper.queryUserServerGroupTreeByParam(queryParam);
     }
+
 }

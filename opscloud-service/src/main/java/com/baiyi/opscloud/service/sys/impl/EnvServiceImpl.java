@@ -4,7 +4,7 @@ import com.baiyi.opscloud.common.util.IdUtil;
 import com.baiyi.opscloud.domain.DataTable;
 import com.baiyi.opscloud.domain.generator.opscloud.Env;
 import com.baiyi.opscloud.domain.param.sys.EnvParam;
-import com.baiyi.opscloud.mapper.opscloud.EnvMapper;
+import com.baiyi.opscloud.mapper.EnvMapper;
 import com.baiyi.opscloud.service.sys.EnvService;
 import com.baiyi.opscloud.util.SQLUtil;
 import com.github.pagehelper.Page;
@@ -28,6 +28,19 @@ public class EnvServiceImpl implements EnvService {
     private final EnvMapper envMapper;
 
     @Override
+    public List<Env> queryAll() {
+        return envMapper.selectAll();
+    }
+
+    @Override
+    public List<Env> queryAllActive() {
+        Example example = new Example(Env.class);
+        Example.Criteria criteria = example.createCriteria();
+        criteria.andEqualTo("isActive", true);
+        return envMapper.selectByExample(example);
+    }
+
+    @Override
     public void add(Env env) {
         envMapper.insert(env);
     }
@@ -39,7 +52,7 @@ public class EnvServiceImpl implements EnvService {
 
     @Override
     public DataTable<Env> queryPageByParam(EnvParam.EnvPageQuery pageQuery) {
-        Page page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
+        Page<?> page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
         Example example = new Example(Env.class);
         Example.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(pageQuery.getEnvName())) {
@@ -48,7 +61,10 @@ public class EnvServiceImpl implements EnvService {
         if (IdUtil.isNotEmpty(pageQuery.getEnvType())) {
             criteria.andEqualTo("envType", pageQuery.getEnvType());
         }
-        example.setOrderByClause("create_time");
+        if (pageQuery.getIsActive() != null) {
+            criteria.andEqualTo("isActive", pageQuery.getIsActive());
+        }
+        example.setOrderByClause("seq");
         List<Env> data = envMapper.selectByExample(example);
         return new DataTable<>(data, page.getTotal());
     }
@@ -68,4 +84,5 @@ public class EnvServiceImpl implements EnvService {
         criteria.andEqualTo("envName", envName);
         return envMapper.selectOneByExample(example);
     }
+
 }

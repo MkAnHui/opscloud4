@@ -13,7 +13,7 @@ import com.baiyi.opscloud.domain.vo.business.BusinessAssetRelationVO;
 import com.baiyi.opscloud.domain.vo.datasource.DsAssetVO;
 import com.baiyi.opscloud.domain.vo.user.UserGroupVO;
 import com.baiyi.opscloud.factory.business.base.AbstractBusinessService;
-import com.baiyi.opscloud.mapper.opscloud.UserGroupMapper;
+import com.baiyi.opscloud.mapper.UserGroupMapper;
 import com.baiyi.opscloud.service.user.UserGroupService;
 import com.baiyi.opscloud.util.SQLUtil;
 import com.github.pagehelper.Page;
@@ -30,6 +30,7 @@ import java.util.List;
  * @Date 2021/6/16 3:16 下午
  * @Version 1.0
  */
+@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @BusinessType(BusinessTypeEnum.USERGROUP)
 @Service
 @RequiredArgsConstructor
@@ -82,7 +83,7 @@ public class UserGroupServiceImpl extends AbstractBusinessService<UserGroup> imp
 
     @Override
     public DataTable<UserGroup> queryPageByParam(UserGroupParam.UserGroupPageQuery pageQuery) {
-        Page page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
+        Page<?> page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
         Example example = new Example(UserGroup.class);
         Example.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(pageQuery.getQueryName())) {
@@ -97,7 +98,7 @@ public class UserGroupServiceImpl extends AbstractBusinessService<UserGroup> imp
 
     @Override
     public DataTable<UserGroup> queryPageByParam(UserBusinessPermissionParam.UserBusinessPermissionPageQuery pageQuery) {
-        Page page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
+        Page<?> page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
         List<UserGroup> data = userGroupMapper.queryUserPermissionGroupByParam(pageQuery);
         return new DataTable<>(data, page.getTotal());
     }

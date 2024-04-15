@@ -12,18 +12,18 @@ import java.util.Map;
 
 /**
  * JsonParser class.
+ * @author liangjian
  */
 public final class JsonParser implements Parser {
 
     @Override
     public PrettyTable parse(String text) throws IOException {
-
         ObjectMapper om = new ObjectMapper();
         JsonNode root = om.readTree(text);
 
         if (root.isArray()) {
 
-            if (root.size() < 1) {
+            if (root.isEmpty()) {
                 return PrettyTable.fieldNames();
             }
 
@@ -48,20 +48,20 @@ public final class JsonParser implements Parser {
      * @param field
      * @return
      */
+    @SuppressWarnings("AlibabaSwitchStatement")
     private static Object toStr(final Map.Entry<String, JsonNode> field) {
         JsonNode value = field.getValue();
         switch (value.getNodeType()) {
-            case STRING:
+            case STRING -> {
                 return value.asText();
-            case NUMBER:
-                if (value.toString().contains(".")) {
-                    return value.asDouble();
-                } else {
-                    return value.asInt();
-                }
-
-            default:
+            }
+            case NUMBER -> {
+                return value.toString().contains(".") ? value.asDouble() : value.asInt();
+            }
+            default -> {
                 return value.toString();
+            }
         }
     }
+
 }

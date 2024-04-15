@@ -1,6 +1,7 @@
 package com.baiyi.opscloud.domain.util;
 
 import com.google.common.collect.Maps;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;
 import java.util.Collections;
@@ -12,6 +13,7 @@ import java.util.Map;
  * @Date 2021/12/1 7:18 下午
  * @Version 1.0
  */
+@Slf4j
 public class ObjectUtil {
 
     private ObjectUtil() {
@@ -34,22 +36,21 @@ public class ObjectUtil {
                 }
                 return map;
             } catch (IllegalAccessException e) {
-                e.printStackTrace();
+                log.error(e.getMessage());
             }
         }
         return Collections.emptyMap();
     }
-
 
     public static boolean isEmpty(Object obj) {
         if (obj == null) {
             return true;
         }
         if ((obj instanceof List)) {
-            return ((List) obj).size() == 0;
+            return ((List<?>) obj).isEmpty();
         }
         if ((obj instanceof String)) {
-            return ((String) obj).trim().equals("");
+            return ((String) obj).trim().isEmpty();
         }
         return false;
     }

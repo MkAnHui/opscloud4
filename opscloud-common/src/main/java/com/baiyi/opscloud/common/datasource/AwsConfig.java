@@ -1,7 +1,8 @@
 package com.baiyi.opscloud.common.datasource;
 
-import com.baiyi.opscloud.common.datasource.base.BaseConfig;
-import io.swagger.annotations.ApiModel;
+import com.baiyi.opscloud.common.base.IToURL;
+import com.baiyi.opscloud.common.datasource.base.BaseDsConfig;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -13,25 +14,26 @@ import java.util.Set;
  * @Date 2021/10/21 4:35 下午
  * @Version 1.0
  */
-@EqualsAndHashCode(callSuper = true)
 @Data
-public class AwsConfig extends BaseConfig {
+@EqualsAndHashCode(callSuper = true)
+public class AwsConfig extends BaseDsConfig {
 
     private Aws aws;
 
     @Data
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class Aws {
         private Account account;
         private String regionId;
         private Set<String> regionIds; // 可用区
         private Ec2 ec2;
+        private SerDeploy serDeploy;
     }
 
     @Data
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class Account {
 
         private String id;
@@ -43,14 +45,27 @@ public class AwsConfig extends BaseConfig {
 
     }
 
+    @EqualsAndHashCode(callSuper = true)
     @Data
     @NoArgsConstructor
-    @ApiModel
-    public static class Ec2 {
+    @Schema
+    public static class Ec2 extends IToURL {
 
         private String instances;
+
+        @Override
+        protected String acqURL() {
+            return instances;
+        }
+    }
+
+    @Data
+    @NoArgsConstructor
+    @Schema
+    public static class SerDeploy {
+
+        private String bucketName;
 
     }
 
 }
-

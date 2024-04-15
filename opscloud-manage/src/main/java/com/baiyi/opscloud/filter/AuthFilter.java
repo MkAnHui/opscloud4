@@ -1,34 +1,32 @@
 package com.baiyi.opscloud.filter;
 
 import com.baiyi.opscloud.common.HttpResult;
-import com.baiyi.opscloud.common.exception.auth.AuthRuntimeException;
-import com.baiyi.opscloud.common.util.GitlabTokenUtil;
-import com.baiyi.opscloud.config.properties.WhiteConfigurationProperties;
+import com.baiyi.opscloud.common.exception.auth.AuthenticationException;
+import com.baiyi.opscloud.configuration.properties.WhiteConfigurationProperties;
+import com.baiyi.opscloud.facade.audit.OperationalAuditFacade;
 import com.baiyi.opscloud.facade.auth.UserAuthFacade;
-import org.springframework.stereotype.Component;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import javax.annotation.Resource;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.stream.Stream;
 
-import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 
 @Component
+@RequiredArgsConstructor
 public class AuthFilter extends OncePerRequestFilter {
 
-    @Resource
-    private UserAuthFacade userAuthFacade;
+    private final UserAuthFacade userAuthFacade;
 
-    @Resource
-    private WhiteConfigurationProperties whiteConfig;
+    private final WhiteConfigurationProperties whiteConfig;
 
     /**
      * 前端框架 token 名称
@@ -40,14 +38,13 @@ public class AuthFilter extends OncePerRequestFilter {
      */
     public static final String ACCESS_TOKEN = "AccessToken";
 
-
-    public static final String GITLAB_TOKEN = "X-Gitlab-Token";
+    private final OperationalAuditFacade operationalAuditFacade;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
         response.setContentType(APPLICATION_JSON_VALUE);
         if (!"options".equalsIgnoreCase(request.getMethod())) {
-            String resourceName = request.getServletPath();
+            final String resourceName = request.getServletPath();
             // 单页不拦截页面,只拦截协议请求
             if ("/dashboard".equalsIgnoreCase(resourceName)) {
                 filterChain.doFilter(request, response);
@@ -58,32 +55,26 @@ public class AuthFilter extends OncePerRequestFilter {
                 filterChain.doFilter(request, response);
                 return;
             }
-            //静态资源不拦截
-            if (Stream.of(".js", ".md", ".css", ".woff", ".otf", ".eot", ".ttf", ".svg", ".jpg", ".png", ".html").anyMatch(resourceName::endsWith)) {
+            // 白名单-静态资源不拦截
+            if (whiteConfig.getResources().stream().anyMatch(resourceName::endsWith)) {
                 filterChain.doFilter(request, response);
                 return;
-            }
-            // GitlabSystemHooks鉴权
-            try {
-                String gitlabToken = request.getHeader(GITLAB_TOKEN);
-                if (!StringUtils.isEmpty(gitlabToken))
-                    GitlabTokenUtil.setToken(gitlabToken);
-            } catch (Exception ignored) {
             }
             try {
                 final String token = request.getHeader(AUTHORIZATION);
                 if (!StringUtils.isEmpty(token)) {
-                    userAuthFacade.tryUserHasResourceAuthorize(token, resourceName);
+                    userAuthFacade.verifyUserHasResourcePermissionWithToken(token, resourceName);
+                    operationalAuditFacade.save(resourceName, false);
                 } else {
                     final String accessToken = request.getHeader(ACCESS_TOKEN);
-                    userAuthFacade.tryUserHasResourceAuthorizeByAccessToken(accessToken, resourceName);
+                    userAuthFacade.verifyUserHasResourcePermissionWithAccessToken(accessToken, resourceName);
+                    operationalAuditFacade.save(resourceName, true);
                 }
                 filterChain.doFilter(request, response);
-            } catch (AuthRuntimeException ex) {
-                response.setContentType(APPLICATION_JSON_UTF8_VALUE);
+            } catch (AuthenticationException ex) {
+                response.setContentType("application/json;charset=UTF-8");
                 setHeaders(request, response);
-                HttpResult result = new HttpResult(ex);
-                response.getWriter().println(result);
+                response.getWriter().println(new HttpResult<>(ex));
             }
         } else {
             setHeaders(request, response);

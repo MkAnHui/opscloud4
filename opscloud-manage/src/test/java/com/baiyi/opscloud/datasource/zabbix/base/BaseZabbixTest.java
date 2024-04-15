@@ -3,9 +3,9 @@ package com.baiyi.opscloud.datasource.zabbix.base;
 import com.baiyi.opscloud.BaseUnit;
 import com.baiyi.opscloud.common.constants.enums.DsTypeEnum;
 import com.baiyi.opscloud.common.datasource.ZabbixConfig;
-import com.baiyi.opscloud.core.factory.DsConfigHelper;
+import com.baiyi.opscloud.core.factory.DsConfigManager;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * @Author baiyi
@@ -15,10 +15,10 @@ import javax.annotation.Resource;
 public class BaseZabbixTest extends BaseUnit {
 
     @Resource
-    private DsConfigHelper dsConfigHelper;
+    private DsConfigManager dsConfigManager;
 
     protected ZabbixConfig getConfig() {
-        return dsConfigHelper.build(dsConfigHelper.getConfigByDsType(DsTypeEnum.ZABBIX.getType()), ZabbixConfig.class);
+        return dsConfigManager.build(dsConfigManager.getConfigByDsType(DsTypeEnum.ZABBIX.getType()), ZabbixConfig.class);
     }
 
 }

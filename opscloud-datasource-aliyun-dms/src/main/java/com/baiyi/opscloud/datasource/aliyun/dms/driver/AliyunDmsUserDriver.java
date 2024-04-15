@@ -2,7 +2,7 @@ package com.baiyi.opscloud.datasource.aliyun.dms.driver;
 
 import com.aliyun.dms_enterprise20181101.models.*;
 import com.baiyi.opscloud.common.datasource.AliyunConfig;
-import com.baiyi.opscloud.common.exception.common.CommonRuntimeException;
+import com.baiyi.opscloud.common.exception.common.OCException;
 import com.baiyi.opscloud.common.util.BeanCopierUtil;
 import com.baiyi.opscloud.datasource.aliyun.dms.client.DmsClient;
 import com.baiyi.opscloud.datasource.aliyun.dms.client.AliyunDmsClient;
@@ -26,8 +26,9 @@ public class AliyunDmsUserDriver {
                 .map(AliyunConfig.Aliyun::getDms)
                 .map(AliyunConfig.Dms::getTid)
                 .orElse(-1L);
-        if (tid == -1L)
-            throw new CommonRuntimeException("租户TID未配置！");
+        if (tid == -1L) {
+            throw new OCException("租户TID未配置！");
+        }
         return listUser(aliyun, tid);
     }
 
@@ -36,15 +37,17 @@ public class AliyunDmsUserDriver {
         ListUsersRequest request = new ListUsersRequest()
                 .setPageSize(PAGE_SIZE)
                 .setTid(tid);
-        long size = PAGE_SIZE;
+        long size = 0;
         int pageNumber = 1;
         List<DmsUser.User> users = Lists.newArrayList();
-        while (PAGE_SIZE <= size) {
+        while (true) {
             request.setPageNumber(pageNumber);
             ListUsersResponse response = client.listUsers(request);
             List<ListUsersResponseBody.ListUsersResponseBodyUserListUser> list = response.getBody().getUserList().getUser();
             users.addAll(BeanCopierUtil.copyListProperties(list, DmsUser.User.class));
-            size = response.getBody().getTotalCount();
+            if(users.size() >= response.getBody().getTotalCount()){
+                break;
+            }
             pageNumber++;
         }
         return users;
@@ -60,8 +63,9 @@ public class AliyunDmsUserDriver {
         request.setUid(user.getUid());
         request.setRoleNames("USER");
         RegisterUserResponse response = client.registerUser(request);
-        if (!response.getBody().getSuccess())
-            throw new CommonRuntimeException(response.getBody().errorMessage);
+        if (!response.getBody().getSuccess()) {
+            throw new OCException(response.getBody().errorMessage);
+        }
     }
 
 }

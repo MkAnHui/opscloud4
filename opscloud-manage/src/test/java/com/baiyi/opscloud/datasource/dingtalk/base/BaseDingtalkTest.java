@@ -3,9 +3,9 @@ package com.baiyi.opscloud.datasource.dingtalk.base;
 import com.baiyi.opscloud.BaseUnit;
 import com.baiyi.opscloud.common.constants.enums.DsTypeEnum;
 import com.baiyi.opscloud.common.datasource.DingtalkConfig;
-import com.baiyi.opscloud.core.factory.DsConfigHelper;
+import com.baiyi.opscloud.core.factory.DsConfigManager;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * @Author baiyi
@@ -15,9 +15,9 @@ import javax.annotation.Resource;
 public class BaseDingtalkTest extends BaseUnit {
 
     @Resource
-    private DsConfigHelper dsConfigHelper;
+    private DsConfigManager dsConfigManager;
 
     protected DingtalkConfig getConfig() {
-        return dsConfigHelper.build(dsConfigHelper.getConfigByDsType(DsTypeEnum.DINGTALK_APP.getType()), DingtalkConfig.class);
+        return dsConfigManager.build(dsConfigManager.getConfigByDsType(DsTypeEnum.DINGTALK_APP.getType()), DingtalkConfig.class);
     }
 }

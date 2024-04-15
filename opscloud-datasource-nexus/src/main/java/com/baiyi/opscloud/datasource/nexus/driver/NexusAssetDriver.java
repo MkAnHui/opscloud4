@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
  * @Date 2021/10/15 3:10 下午
  * @Version 1.0
  */
+@SuppressWarnings("AlibabaLowerCamelCaseVariableNaming")
 @Slf4j
 @Component
 public class NexusAssetDriver {
@@ -44,4 +45,5 @@ public class NexusAssetDriver {
             return nexusAPI.listAssets(buildCredential(config).toBasic(), repository, continuationToken);
         }
     }
+
 }

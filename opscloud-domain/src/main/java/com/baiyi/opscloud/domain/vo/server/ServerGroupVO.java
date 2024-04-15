@@ -4,15 +4,16 @@ import com.baiyi.opscloud.domain.base.IAllowOrder;
 import com.baiyi.opscloud.domain.constants.BusinessTypeEnum;
 import com.baiyi.opscloud.domain.vo.base.BaseVO;
 import com.baiyi.opscloud.domain.vo.business.BusinessAssetRelationVO;
+import com.baiyi.opscloud.domain.vo.business.BusinessDocumentVO;
 import com.baiyi.opscloud.domain.vo.business.BusinessPropertyVO;
+import com.baiyi.opscloud.domain.vo.business.IBusinessPermissionUser;
 import com.baiyi.opscloud.domain.vo.tag.TagVO;
 import com.baiyi.opscloud.domain.vo.user.UserPermissionVO;
 import com.baiyi.opscloud.domain.vo.user.UserVO;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
-import javax.validation.constraints.NotNull;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
@@ -33,25 +34,35 @@ public class ServerGroupVO {
     @EqualsAndHashCode(callSuper = true)
     @Data
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class ServerGroup extends BaseVO implements
             ServerGroupTypeVO.IServerGroupType,
             TagVO.ITags,
             UserVO.IUserPermission,
             IAllowOrder,
             BusinessPropertyVO.IBusinessProperty,
-            BusinessAssetRelationVO.IBusinessAssetRelation, // 资产与业务对象绑定关系
+            // 资产与业务对象绑定关系
+            BusinessAssetRelationVO.IBusinessAssetRelation,
+            BusinessDocumentVO.IBusinessDocument,
+            IBusinessPermissionUser,
             Serializable {
 
+        @Serial
         private static final long serialVersionUID = 5059407999240740609L;
+
+        @Schema(description = "授权用户")
+        private List<UserVO.User> users;
+
         private final Integer businessType = BusinessTypeEnum.SERVERGROUP.getType();
+
+        private BusinessDocumentVO.Document document;
 
         @Override
         public String getBusinessUniqueKey() {
             return name;
         }
 
-        @ApiModelProperty(value = "组类型")
+        @Schema(description = "组类型")
         private ServerGroupTypeVO.ServerGroupType serverGroupType;
 
         private List<TagVO.Tag> tags;
@@ -67,30 +78,27 @@ public class ServerGroupVO {
 
         private Integer userId;
 
-        @ApiModelProperty(value = "服务器数量", example = "1")
+        @Schema(description = "服务器数量", example = "1")
         private Integer serverSize;
 
-        @ApiModelProperty(value = "主键", example = "1")
+        @Schema(description = "主键", example = "1")
         private Integer id;
 
-        @ApiModelProperty(value = "组名称")
-        @NotNull(message = "组名称不能为空")
+        @Schema(description = "组名称")
         private String name;
 
-        @ApiModelProperty(value = "组类型", example = "1")
-        @NotNull(message = "组类型不能为空")
+        @Schema(description = "组类型", example = "1")
         private Integer serverGroupTypeId;
 
-        @ApiModelProperty(value = "是否支持工单")
-        @NotNull(message = "是否支持工单不能为空")
+        @Schema(description = "是否支持工单")
         private Boolean allowOrder;
 
-        @ApiModelProperty(value = "资源描述")
+        @Schema(description = "资源描述")
         private String comment;
 
         private Boolean isAdmin;
 
-        @ApiModelProperty(value = "资产id")
+        @Schema(description = "资产id")
         private Integer assetId;
 
     }

@@ -1,7 +1,7 @@
 package com.baiyi.opscloud.datasource.ansible.executor;
 
+import com.baiyi.opscloud.common.util.NewTimeUtil;
 import com.baiyi.opscloud.datasource.ansible.entity.AnsibleExecuteResult;
-import com.baiyi.opscloud.common.util.TimeUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
@@ -18,8 +18,10 @@ import java.io.ByteArrayOutputStream;
 @Slf4j
 public class AnsibleExecutor {
 
-    // 100 分钟
-    public static final long MAX_TIMEOUT = TimeUtil.minuteTime * 100;
+    /**
+     * 100 分钟
+     */
+    public static final long MAX_TIMEOUT = NewTimeUtil.MINUTE_TIME * 100;
 
     /**
      * 阻塞方式运行
@@ -29,8 +31,9 @@ public class AnsibleExecutor {
      * @return
      */
     public static AnsibleExecuteResult execute(CommandLine commandLine, long timeout) {
-        if (timeout == 0)
+        if (timeout == 0) {
             timeout = MAX_TIMEOUT;
+        }
         try {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
@@ -48,9 +51,11 @@ public class AnsibleExecutor {
                     .error(errorStream)
                     .build();
         } catch (Exception e) {
+            log.error(e.getMessage());
             AnsibleExecuteResult result = AnsibleExecuteResult.FAILED;
             result.setException(e);
             return result;
         }
     }
+
 }

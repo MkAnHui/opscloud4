@@ -30,6 +30,11 @@
 
         <dependency>
             <groupId>com.baiyi</groupId>
+            <artifactId>opscloud-datasource-aliyun-cms</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.baiyi</groupId>
             <artifactId>opscloud-datasource-aliyun-log</artifactId>
         </dependency>
 
@@ -48,10 +53,37 @@
             <artifactId>opscloud-datasource-aliyun-redis</artifactId>
         </dependency>
 
+        <!--suppress VulnerableLibrariesLocal -->
         <dependency>
             <groupId>com.baiyi</groupId>
             <artifactId>opscloud-datasource-aliyun-dms</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.baiyi</groupId>
+            <artifactId>opscloud-datasource-aliyun-domain</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.baiyi</groupId>
+            <artifactId>opscloud-datasource-aliyun-acr</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.baiyi</groupId>
+            <artifactId>opscloud-datasource-aliyun-devops</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.baiyi</groupId>
+            <artifactId>opscloud-datasource-aliyun-arms</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.baiyi</groupId>
+            <artifactId>opscloud-datasource-aliyun-eventbridge</artifactId>
+        </dependency>
+
     </dependencies>
+
 </project>

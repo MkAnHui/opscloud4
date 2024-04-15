@@ -2,8 +2,7 @@ package com.baiyi.opscloud.domain.param.datasource;
 
 import com.baiyi.opscloud.domain.param.IExtend;
 import com.baiyi.opscloud.domain.param.PageParam;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -18,20 +17,21 @@ public class DsConfigParam {
     @Data
     @EqualsAndHashCode(callSuper = true)
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class DsConfigPageQuery extends PageParam implements IExtend {
 
-        @ApiModelProperty(value = "模糊查询")
+        @Schema(description = "模糊查询")
         private String queryName;
 
-        @ApiModelProperty(value = "展开")
+        @Schema(description = "展开")
         private Boolean extend;
 
-        @ApiModelProperty(value = "数据源类型", example = "1")
+        @Schema(description = "数据源类型", example = "1")
         private Integer dsType;
 
-        @ApiModelProperty(value = "是否激活")
+        @Schema(description = "是否激活")
         private Boolean isActive;
 
     }
+
 }

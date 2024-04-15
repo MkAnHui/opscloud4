@@ -1,16 +1,17 @@
 package com.baiyi.opscloud.facade.datasource.impl;
 
 import com.baiyi.opscloud.common.datasource.AnsibleConfig;
-import com.baiyi.opscloud.common.template.YamlUtil;
+import com.baiyi.opscloud.common.exception.common.OCException;
+import com.baiyi.opscloud.common.util.YamlUtil;
 import com.baiyi.opscloud.common.util.BeanCopierUtil;
 import com.baiyi.opscloud.common.util.IOUtil;
-import com.baiyi.opscloud.common.util.TimeUtil;
-import com.baiyi.opscloud.core.factory.DsConfigHelper;
+import com.baiyi.opscloud.common.util.NewTimeUtil;
+import com.baiyi.opscloud.core.factory.DsConfigManager;
 import com.baiyi.opscloud.core.model.DsInstanceContext;
 import com.baiyi.opscloud.core.provider.base.common.SimpleDsInstanceProvider;
 import com.baiyi.opscloud.core.util.SystemEnvUtil;
-import com.baiyi.opscloud.datasource.ansible.args.AnsibleArgs;
 import com.baiyi.opscloud.datasource.ansible.builder.AnsiblePlaybookArgumentsBuilder;
+import com.baiyi.opscloud.datasource.ansible.builder.args.AnsiblePlaybookArgs;
 import com.baiyi.opscloud.datasource.ansible.entity.AnsibleExecuteResult;
 import com.baiyi.opscloud.datasource.ansible.executor.AnsibleExecutor;
 import com.baiyi.opscloud.domain.DataTable;
@@ -26,10 +27,11 @@ import org.apache.commons.exec.CommandLine;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -48,20 +50,20 @@ public class DsInstanceAssetSubscriptionFacadeImpl extends SimpleDsInstanceProvi
     private DsInstanceAssetSubscriptionService dsInstanceAssetSubscriptionService;
 
     @Resource
-    private DsConfigHelper dsConfigHelper;
+    private DsConfigManager dsConfigManager;
 
     @Override
     public DataTable<DsAssetSubscriptionVO.AssetSubscription> queryAssetSubscriptionPage(DsAssetSubscriptionParam.AssetSubscriptionPageQuery pageQuery) {
         DataTable<DatasourceInstanceAssetSubscription> table = dsInstanceAssetSubscriptionService.queryPageByParam(pageQuery);
 
         List<DsAssetSubscriptionVO.AssetSubscription> data = BeanCopierUtil.copyListProperties(table.getData(), DsAssetSubscriptionVO.AssetSubscription.class)
-                .stream().peek(e->dsAssetSubscriptionPacker.wrap(e,pageQuery)).collect(Collectors.toList());
+                .stream().peek(e -> dsAssetSubscriptionPacker.wrap(e, pageQuery)).collect(Collectors.toList());
 
         return new DataTable<>(data, table.getTotalNum());
     }
 
     @Override
-    public void updateAssetSubscription(DsAssetSubscriptionVO.AssetSubscription assetSubscription) {
+    public void updateAssetSubscription(DsAssetSubscriptionParam.AssetSubscription assetSubscription) {
         DatasourceInstanceAssetSubscription pre = BeanCopierUtil.copyProperties(assetSubscription, DatasourceInstanceAssetSubscription.class);
         DatasourceInstanceAssetSubscription datasourceInstanceAssetSubscription = dsInstanceAssetSubscriptionService.getById(assetSubscription.getId());
         datasourceInstanceAssetSubscription.setPlaybook(pre.getPlaybook());
@@ -85,33 +87,38 @@ public class DsInstanceAssetSubscriptionFacadeImpl extends SimpleDsInstanceProvi
     @Override
     public void publishAssetSubscription(DatasourceInstanceAssetSubscription datasourceInstanceAssetSubscription) {
         DsInstanceContext instanceContext = buildDsInstanceContext(datasourceInstanceAssetSubscription.getInstanceUuid());
-        AnsibleConfig.Ansible ansible = dsConfigHelper.build(instanceContext.getDsConfig(), AnsibleConfig.class).getAnsible();
-        AnsibleArgs.Playbook args = AnsibleArgs.Playbook.builder()
-                .extraVars(YamlUtil.toVars(datasourceInstanceAssetSubscription.getVars()).getVars())
+        AnsibleConfig.Ansible ansible = dsConfigManager.build(instanceContext.getDsConfig(), AnsibleConfig.class).getAnsible();
+        AnsiblePlaybookArgs args = AnsiblePlaybookArgs.builder()
+                .extraVars(YamlUtil.loadVars(datasourceInstanceAssetSubscription.getVars()).getVars())
                 .keyFile(SystemEnvUtil.renderEnvHome(ansible.getPrivateKey()))
                 .playbook(toSubscriptionPlaybookFile(ansible, datasourceInstanceAssetSubscription))
                 .inventory(SystemEnvUtil.renderEnvHome(ansible.getInventoryHost()))
                 .build();
         CommandLine commandLine = AnsiblePlaybookArgumentsBuilder.build(ansible, args);
-        AnsibleExecuteResult er = AnsibleExecutor.execute(commandLine, TimeUtil.minuteTime * 2);
+        AnsibleExecuteResult er = AnsibleExecutor.execute(commandLine, NewTimeUtil.MINUTE_TIME * 2);
+        Optional.ofNullable(er)
+                .map(AnsibleExecuteResult::getOutput)
+                .orElseThrow(() -> new OCException("AnsibleExecuteResult 不存在！"));
         try {
             datasourceInstanceAssetSubscription.setLastSubscriptionLog(er.getOutput().toString("utf8"));
             datasourceInstanceAssetSubscription.setLastSubscriptionTime(new Date());
             dsInstanceAssetSubscriptionService.update(datasourceInstanceAssetSubscription);
         } catch (UnsupportedEncodingException e) {
-            log.error("发布订阅任务失败！id = {}", datasourceInstanceAssetSubscription.getId());
+            log.error("发布订阅任务失败: id={}", datasourceInstanceAssetSubscription.getId());
         }
     }
 
     @Override
-    public void addAssetSubscription(DsAssetSubscriptionVO.AssetSubscription assetSubscription) {
+    public void addAssetSubscription(DsAssetSubscriptionParam.AssetSubscription assetSubscription) {
         DatasourceInstanceAssetSubscription pre = BeanCopierUtil.copyProperties(assetSubscription, DatasourceInstanceAssetSubscription.class);
         dsInstanceAssetSubscriptionService.add(pre);
         saveSubscriptionPlaybookFile(pre);
     }
 
     private void saveSubscriptionPlaybookFile(DatasourceInstanceAssetSubscription subscription) {
-        if (StringUtils.isEmpty(subscription.getPlaybook())) return;
+        if (StringUtils.isEmpty(subscription.getPlaybook())) {
+            return;
+        }
         String file = toSubscriptionPlaybookFile(subscription);
         IOUtil.writeFile(subscription.getPlaybook(), file);
     }
@@ -124,7 +131,7 @@ public class DsInstanceAssetSubscriptionFacadeImpl extends SimpleDsInstanceProvi
      */
     public String toSubscriptionPlaybookFile(DatasourceInstanceAssetSubscription subscription) {
         DsInstanceContext instanceContext = buildDsInstanceContext(subscription.getInstanceUuid());
-        AnsibleConfig.Ansible ansible = dsConfigHelper.build(instanceContext.getDsConfig(), AnsibleConfig.class).getAnsible();
+        AnsibleConfig.Ansible ansible = dsConfigManager.build(instanceContext.getDsConfig(), AnsibleConfig.class).getAnsible();
         return toSubscriptionPlaybookFile(ansible, subscription);
     }
 

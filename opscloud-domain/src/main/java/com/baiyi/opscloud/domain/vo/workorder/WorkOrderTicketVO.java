@@ -1,17 +1,18 @@
 package com.baiyi.opscloud.domain.vo.workorder;
 
 import com.baiyi.opscloud.domain.vo.base.BaseVO;
-import com.baiyi.opscloud.domain.vo.base.ShowTime;
+import com.baiyi.opscloud.domain.vo.base.ReadableTime;
 import com.baiyi.opscloud.domain.vo.datasource.DsInstanceVO;
 import com.baiyi.opscloud.domain.vo.user.UserVO;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @Author baiyi
@@ -44,46 +45,51 @@ public class WorkOrderTicketVO {
 
     @Builder
     @Data
-    @ApiModel
+    @Schema
     public static class TicketView implements WorkOrderVO.IWorkOrder, ITicketEntries, Serializable {
+        @Serial
         private static final long serialVersionUID = -5342262347843407536L;
-        @ApiModelProperty(value = "工单")
+        @Schema(description = "工单")
         private WorkOrderVO.WorkOrder workOrder;
-        @ApiModelProperty(value = "工单票据")
+        @Schema(description = "工单票据")
         private Ticket ticket;
-        @ApiModelProperty(value = "工单票据条目")
+        @Schema(description = "工单票据条目")
         private List<Entry> ticketEntries;
-        @ApiModelProperty(value = "工单创建用户")
+        @Schema(description = "工单创建用户")
         private UserVO.User createUser;
-        @ApiModelProperty(value = "工作流")
+        @Schema(description = "工作流")
         private WorkflowVO.WorkflowView workflowView;
-        @ApiModelProperty(value = "工作流审批节点视图")
+        @Schema(description = "工作流审批节点视图")
         private WorkOrderNodeVO.NodeView nodeView;
 
         @Override
         public Integer getTicketId() {
-            if (this.ticket != null)
+            if (this.ticket != null) {
                 return this.ticket.getId();
+            }
             return 0;
         }
 
         @Override
         public String getWorkOrderKey() {
-            if (this.workOrder != null)
+            if (this.workOrder != null) {
                 return this.workOrder.getWorkOrderKey();
+            }
             return null;
         }
 
         @Override
         public Integer getWorkOrderId() {
-            if (this.ticket != null)
+            if (this.ticket != null) {
                 return this.ticket.getWorkOrderId();
+            }
             return 0;
         }
 
         public String getTicketPhase() {
-            if (this.ticket != null)
+            if (this.ticket != null) {
                 return this.ticket.getTicketPhase();
+            }
             return "NEW";
         }
 
@@ -93,14 +99,16 @@ public class WorkOrderTicketVO {
          * @return
          */
         public String getComment() {
-            if (this.ticket != null)
+            if (this.ticket != null) {
                 return this.ticket.getComment();
+            }
             return "";
         }
 
         public Boolean getIsApprover() {
-            if (this.ticket != null)
+            if (this.ticket != null) {
                 return this.ticket.getIsApprover();
+            }
             return false;
         }
 
@@ -111,27 +119,26 @@ public class WorkOrderTicketVO {
     @AllArgsConstructor
     @NoArgsConstructor
     @Data
-    @ApiModel
-    public static class Ticket extends BaseVO implements WorkOrderVO.IWorkOrder, IApprover, ShowTime.IAgo, Serializable {
+    @Schema
+    public static class Ticket extends BaseVO implements WorkOrderVO.IWorkOrder, IApprover, ReadableTime.IAgo, Serializable {
 
+        @Serial
         private static final long serialVersionUID = -3191271933875590264L;
 
-        @ApiModelProperty(value = "是否为审批人")
+        @Schema(description = "是否为审批人")
         private Boolean isApprover;
 
         @Override
         public Boolean getIsApprover() {
-            if (this.isApprover == null)
-                return false;
-            return this.isApprover;
+            return Objects.requireNonNullElse(this.isApprover, false);
         }
 
         private String ago;
 
-        @ApiModelProperty(value = "工单")
+        @Schema(description = "工单")
         private WorkOrderVO.WorkOrder workOrder;
 
-        @ApiModelProperty(value = "创建（申请）人")
+        @Schema(description = "创建（申请）人")
         private UserVO.User createUser;
 
         private Integer id;
@@ -165,11 +172,14 @@ public class WorkOrderTicketVO {
     }
 
     @EqualsAndHashCode(callSuper = true)
+    @NoArgsConstructor
+    @AllArgsConstructor
     @Builder
     @Data
-    @ApiModel
+    @Schema
     public static class Entry<T> extends BaseVO implements DsInstanceVO.IDsInstance, Serializable {
 
+        @Serial
         private static final long serialVersionUID = 5462899820190005914L;
 
         private DsInstanceVO.Instance instance;

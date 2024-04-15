@@ -16,6 +16,7 @@ import org.quartz.JobExecutionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 
@@ -55,21 +56,24 @@ public class AssetPullJob extends QuartzJobBean {
         // 任务
         String assetType = jobDataMap.getString(ASSET_TYPE);
         Integer instanceId = jobDataMap.getInt(INSTANCE_ID);
-        log.info("---Quartz Task执行 : assetType = {} , instanceId = {} , trigger = {}", assetType, instanceId, jobExecutionContext.getTrigger());
+        log.info("Pull asset task: assetType={}, instanceId={}, trigger={}", assetType, instanceId, jobExecutionContext.getTrigger());
         // 任务开始时间
         DsAssetParam.PullAsset pullAsset = DsAssetParam.PullAsset.builder()
                 .assetType(assetType)
                 .instanceId(instanceId)
                 .build();
         try {
-            List<SimpleAssetProvider> providers = getProviders(pullAsset.getInstanceId(), pullAsset.getAssetType());
-            assert providers != null;
-            providers.forEach(x -> x.pullAsset(pullAsset.getInstanceId()));
-        } catch (Exception ignored) {
+            List<SimpleAssetProvider<?>> providers = getProviders(pullAsset.getInstanceId(), pullAsset.getAssetType());
+            if (!CollectionUtils.isEmpty(providers)) {
+                providers.forEach(x -> x.pullAsset(pullAsset.getInstanceId()));
+            }
+        } catch (Exception e) {
+            log.error("Pull asset task error: assetType={}, instanceId={}, trigger={}, {}", assetType, instanceId, jobExecutionContext.getTrigger(), e.getMessage());
+            throw new JobExecutionException(e.getMessage());
         }
     }
 
-    private List<SimpleAssetProvider> getProviders(Integer instanceId, String assetType) {
+    private List<SimpleAssetProvider<?>> getProviders(Integer instanceId, String assetType) {
         DatasourceInstance dsInstance = dsInstanceService.getById(instanceId);
         DsInstanceVO.Instance instance = BeanCopierUtil.copyProperties(dsInstance, DsInstanceVO.Instance.class);
         dsInstancePacker.wrap(instance, SimpleExtend.EXTEND);

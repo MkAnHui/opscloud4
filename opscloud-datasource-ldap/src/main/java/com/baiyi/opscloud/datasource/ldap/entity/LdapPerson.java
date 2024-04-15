@@ -18,6 +18,7 @@ import java.util.Date;
  * @Version 1.0
  */
 public class LdapPerson {
+
     /**
      * @Author baiyi
      * @Date 2019/12/27 1:04 下午
@@ -28,7 +29,7 @@ public class LdapPerson {
     @AllArgsConstructor
     @Data
     @ToString
-    @Entry(objectClasses = {"inetorgperson"}) //  base = "ou=users"
+    @Entry(objectClasses = {"inetorgperson"})
     public static class Person implements IToAsset {
         /**
          * 主键
@@ -120,4 +121,5 @@ public class LdapPerson {
                     .build();
         }
     }
+
 }

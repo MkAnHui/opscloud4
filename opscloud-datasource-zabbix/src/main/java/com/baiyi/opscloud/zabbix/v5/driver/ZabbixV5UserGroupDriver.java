@@ -1,8 +1,8 @@
 package com.baiyi.opscloud.zabbix.v5.driver;
 
-import com.baiyi.opscloud.common.config.CachingConfiguration;
+import com.baiyi.opscloud.common.configuration.CachingConfiguration;
 import com.baiyi.opscloud.common.datasource.ZabbixConfig;
-import com.baiyi.opscloud.zabbix.v5.driver.base.AbstractZabbixV5UserGroupDrive;
+import com.baiyi.opscloud.zabbix.v5.driver.base.AbstractZabbixV5UserGroupDriver;
 import com.baiyi.opscloud.zabbix.v5.entity.ZabbixHostGroup;
 import com.baiyi.opscloud.zabbix.v5.entity.ZabbixUser;
 import com.baiyi.opscloud.zabbix.v5.entity.ZabbixUserGroup;
@@ -25,7 +25,7 @@ import java.util.Map;
  */
 @Slf4j
 @Component
-public class ZabbixV5UserGroupDriver extends AbstractZabbixV5UserGroupDrive {
+public class ZabbixV5UserGroupDriver extends AbstractZabbixV5UserGroupDriver {
 
     public List<ZabbixUserGroup.UserGroup> list(ZabbixConfig.Zabbix config) {
         ZabbixRequest.DefaultRequest request = ZabbixRequestBuilder.builder()
@@ -42,18 +42,19 @@ public class ZabbixV5UserGroupDriver extends AbstractZabbixV5UserGroupDrive {
         return response.getResult();
     }
 
-    @Cacheable(cacheNames = CachingConfiguration.Repositories.CACHE_1DAY, key = "#config.url + '_v5_usergroup_usrgrpid_' + #usrgrpid", unless = "#result == null")
+    @Cacheable(cacheNames = CachingConfiguration.Repositories.CACHE_FOR_1D, key = "#config.url + '_v5_usergroup_usrgrpid_' + #usrgrpid", unless = "#result == null")
     public ZabbixUserGroup.UserGroup getById(ZabbixConfig.Zabbix config, String usrgrpid) {
         ZabbixRequest.DefaultRequest request = ZabbixRequestBuilder.builder()
                 .putParam("usrgrpids", usrgrpid)
                 .build();
         ZabbixUserGroup.QueryUserGroupResponse response = queryHandle(config, request);
-        if (CollectionUtils.isEmpty(response.getResult()))
+        if (CollectionUtils.isEmpty(response.getResult())) {
             return null;
-        return response.getResult().get(0);
+        }
+        return response.getResult().getFirst();
     }
 
-    @Cacheable(cacheNames = CachingConfiguration.Repositories.CACHE_1DAY, key = "#config.url + '_v5_usergroup_name_' + #usergroup", unless = "#result == null")
+    @Cacheable(cacheNames = CachingConfiguration.Repositories.CACHE_FOR_1D, key = "#config.url + '_v5_usergroup_name_' + #usergroup", unless = "#result == null")
     public ZabbixUserGroup.UserGroup getByName(ZabbixConfig.Zabbix config, String usergroup) {
         ZabbixRequest.DefaultRequest request = ZabbixRequestBuilder.builder()
                 .putParam("status", 0)
@@ -62,15 +63,16 @@ public class ZabbixV5UserGroupDriver extends AbstractZabbixV5UserGroupDrive {
                         .build())
                 .build();
         ZabbixUserGroup.QueryUserGroupResponse response = queryHandle(config, request);
-        if (CollectionUtils.isEmpty(response.getResult()))
+        if (CollectionUtils.isEmpty(response.getResult())) {
             return null;
-        return response.getResult().get(0);
+        }
+        return response.getResult().getFirst();
     }
 
     public ZabbixUserGroup.UserGroup create(ZabbixConfig.Zabbix config, String usergroup, ZabbixHostGroup.HostGroup hostGroup) {
         // 创建用户组
         Map<String, String> rights = Maps.newHashMap();
-        /**
+        /*
          * Possible values:
          0 - access denied;
          2 - read-only access;
@@ -86,7 +88,7 @@ public class ZabbixV5UserGroupDriver extends AbstractZabbixV5UserGroupDrive {
         if (CollectionUtils.isEmpty(response.getResult().getUsrgrpids())) {
             return null;
         }
-        return getById(config, response.getResult().getUsrgrpids().get(0));
+        return getById(config, response.getResult().getUsrgrpids().getFirst());
     }
 
 }

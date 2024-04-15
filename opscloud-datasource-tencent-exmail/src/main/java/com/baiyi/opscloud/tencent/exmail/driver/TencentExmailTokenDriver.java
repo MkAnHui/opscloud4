@@ -1,6 +1,6 @@
 package com.baiyi.opscloud.tencent.exmail.driver;
 
-import com.baiyi.opscloud.common.config.CachingConfiguration;
+import com.baiyi.opscloud.common.configuration.CachingConfiguration;
 import com.baiyi.opscloud.common.datasource.TencentExmailConfig;
 import com.baiyi.opscloud.tencent.exmail.entity.ExmailToken;
 import com.baiyi.opscloud.tencent.exmail.feign.TencentExmailTokenFeign;
@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class TencentExmailTokenDriver {
 
-    @Cacheable(cacheNames = CachingConfiguration.Repositories.CACHE_2HOURS, key = "#config.exmail.corpId + '_v4_tencent_exmail_token'", unless = "#result == null")
+    @Cacheable(cacheNames = CachingConfiguration.Repositories.CACHE_FOR_2H, key = "#config.exmail.corpId + '_v4_tencent_exmail_token'", unless = "#result == null")
     public ExmailToken getToken(TencentExmailConfig.Tencent config) {
         TencentExmailConfig.Exmail exmail = config.getExmail();
         TencentExmailTokenFeign exmailAPI = Feign.builder()

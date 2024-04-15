@@ -1,8 +1,8 @@
 package com.baiyi.opscloud.common.datasource;
 
-import com.baiyi.opscloud.common.datasource.base.BaseConfig;
+import com.baiyi.opscloud.common.datasource.base.BaseDsConfig;
 import com.google.common.base.Joiner;
-import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -12,15 +12,15 @@ import lombok.NoArgsConstructor;
  * @Date 2021/6/22 5:13 下午
  * @Version 1.0
  */
-@EqualsAndHashCode(callSuper = true)
 @Data
-public class AnsibleConfig extends BaseConfig {
+@EqualsAndHashCode(callSuper = true)
+public class AnsibleConfig extends BaseDsConfig {
 
     private Ansible ansible;
 
     @Data
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class Ansible {
 
         public static final String PRIVATE_KEY = "private_key/id_rsa";

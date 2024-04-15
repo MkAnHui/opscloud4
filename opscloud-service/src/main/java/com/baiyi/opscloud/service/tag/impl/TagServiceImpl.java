@@ -2,9 +2,10 @@ package com.baiyi.opscloud.service.tag.impl;
 
 import com.baiyi.opscloud.common.util.IdUtil;
 import com.baiyi.opscloud.domain.DataTable;
+import com.baiyi.opscloud.domain.constants.BusinessTypeEnum;
 import com.baiyi.opscloud.domain.generator.opscloud.Tag;
 import com.baiyi.opscloud.domain.param.tag.TagParam;
-import com.baiyi.opscloud.mapper.opscloud.TagMapper;
+import com.baiyi.opscloud.mapper.TagMapper;
 import com.baiyi.opscloud.service.tag.TagService;
 import com.baiyi.opscloud.util.SQLUtil;
 import com.github.pagehelper.Page;
@@ -37,7 +38,6 @@ public class TagServiceImpl implements TagService {
         return tagMapper.queryBusinessTagByParam(queryParam);
     }
 
-
     @Override
     public List<Tag> queryTagByBusinessType(Integer businessType) {
         Example example = new Example(Tag.class);
@@ -48,13 +48,21 @@ public class TagServiceImpl implements TagService {
     }
 
     @Override
+    public List<Tag> queryFinOpsTags() {
+        Example example = new Example(Tag.class);
+        Example.Criteria criteria = example.createCriteria();
+        criteria.andLike("tagKey", "$%");
+        return tagMapper.selectByExample(example);
+    }
+
+    @Override
     public void add(Tag tag) {
         tagMapper.insert(tag);
     }
 
     @Override
-    public void update(Tag tag) {
-        tagMapper.updateByPrimaryKey(tag);
+    public void updateByPrimaryKeySelective(Tag tag) {
+        tagMapper.updateByPrimaryKeySelective(tag);
     }
 
     @Override
@@ -72,11 +80,14 @@ public class TagServiceImpl implements TagService {
 
     @Override
     public DataTable<Tag> queryPageByParam(TagParam.TagPageQuery pageQuery) {
-        Page page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
+        Page<?> page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
         Example example = new Example(Tag.class);
         Example.Criteria criteria = example.createCriteria();
         if (IdUtil.isNotEmpty(pageQuery.getBusinessType())) {
             criteria.andEqualTo("businessType", pageQuery.getBusinessType());
+            if (pageQuery.getAppend() != null && pageQuery.getAppend()) {
+                criteria.orEqualTo("businessType", BusinessTypeEnum.COMMON.getType());
+            }
         }
         if (StringUtils.isNotBlank(pageQuery.getTagKey())) {
             criteria.andLike("tagKey", SQLUtil.toLike(pageQuery.getTagKey()));
@@ -85,6 +96,5 @@ public class TagServiceImpl implements TagService {
         List<Tag> data = tagMapper.selectByExample(example);
         return new DataTable<>(data, page.getTotal());
     }
-
 
 }

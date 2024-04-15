@@ -1,15 +1,14 @@
 package com.baiyi.opscloud.domain.param.server;
 
+import com.baiyi.opscloud.domain.constants.BusinessTypeEnum;
 import com.baiyi.opscloud.domain.param.IExtend;
 import com.baiyi.opscloud.domain.param.PageParam;
 import com.baiyi.opscloud.domain.param.SuperPageParam;
-import com.baiyi.opscloud.domain.constants.BusinessTypeEnum;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-
-import javax.validation.constraints.NotNull;
 
 /**
  * @Author baiyi
@@ -19,32 +18,157 @@ import javax.validation.constraints.NotNull;
 public class ServerParam {
 
     @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Schema
+    public static class AddServer {
+
+        @Schema(description = "主键", example = "1")
+        private Integer id;
+
+        @Schema(description = "服务器名称")
+        @NotBlank(message = "服务器名称不能为空")
+        private String name;
+
+        @Schema(description = "显示名称")
+        private String displayName;
+
+        @Schema(description = "服务器组id", example = "1")
+        @NotNull(message = "服务器组不能为空")
+        private Integer serverGroupId;
+
+        @Schema(description = "环境类型", example = "1")
+        @NotNull(message = "环境类型不能为空")
+        private Integer envType;
+
+        @Schema(description = "公网IP")
+        private String publicIp;
+
+        @Schema(description = "私网IP")
+        @NotBlank(message = "私网ip不能为空")
+        private String privateIp;
+
+        @Schema(description = "服务器类型", example = "1")
+        @NotNull(message = "服务器类型不能为空")
+        private Integer serverType;
+
+        @Schema(description = "地区")
+        private String area;
+
+        @Schema(description = "系统类型")
+        private String osType;
+
+        @Schema(description = "序号", example = "1")
+        private Integer serialNumber;
+
+        @Schema(description = "监控状态", example = "1")
+        private Integer monitorStatus;
+
+        @Schema(description = "资源描述")
+        private String comment;
+
+        @Schema(description = "服务器状态", example = "1")
+        private Integer serverStatus;
+
+        @Schema(description = "有效")
+        private Boolean isActive;
+
+        @Schema(description = "资产ID")
+        private Integer assetId;
+
+    }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Schema
+    public static class UpdateServer {
+
+        @Schema(description = "主键", example = "1")
+        private Integer id;
+
+        @Schema(description = "服务器名称")
+        @NotBlank(message = "服务器名称不能为空")
+        private String name;
+
+        @Schema(description = "显示名称")
+        private String displayName;
+
+        @Schema(description = "服务器组id", example = "1")
+        @NotNull(message = "服务器组不能为空")
+        private Integer serverGroupId;
+
+        @Schema(description = "环境类型", example = "1")
+        @NotNull(message = "环境类型不能为空")
+        private Integer envType;
+
+        @Schema(description = "公网IP")
+        private String publicIp;
+
+        @Schema(description = "私网IP")
+        @NotBlank(message = "私网ip不能为空")
+        private String privateIp;
+
+        @Schema(description = "服务器类型", example = "1")
+        @NotNull(message = "服务器类型不能为空")
+        private Integer serverType;
+
+        @Schema(description = "地区")
+        private String area;
+
+        @Schema(description = "系统类型")
+        private String osType;
+
+        @Schema(description = "序号", example = "1")
+        private Integer serialNumber;
+
+        @Schema(description = "监控状态", example = "1")
+        private Integer monitorStatus;
+
+        @Schema(description = "资源描述")
+        private String comment;
+
+        @Schema(description = "服务器状态", example = "1")
+        private Integer serverStatus;
+
+        @Schema(description = "有效")
+        private Boolean isActive;
+
+        @Schema(description = "资产ID")
+        private Integer assetId;
+
+    }
+
+    @Data
     @SuperBuilder(toBuilder = true)
     @EqualsAndHashCode(callSuper = true)
     @NoArgsConstructor
     @AllArgsConstructor
-    @ApiModel
+    @Schema
     public static class ServerPageQuery extends SuperPageParam implements IExtend {
 
-        @ApiModelProperty(value = "关键字查询")
+        @Schema(description = "关键字查询")
         private String queryName;
 
-//        @ApiModelProperty(value = "查询ip")
+//        @Schema(description = "查询ip")
 //        private String queryIp;
 
-        @ApiModelProperty(value = "服务器组id")
+        @Schema(description = "服务器组ID")
         private Integer serverGroupId;
 
-        @ApiModelProperty(value = "环境类型")
+        @Schema(description = "环境类型")
         private Integer envType;
 
-        @ApiModelProperty(value = "有效")
+        @Schema(description = "有效")
         private Boolean isActive;
 
-        @ApiModelProperty(value = "状态")
+        @Schema(description = "状态")
         private Integer serverStatus;
 
-        @ApiModelProperty(value = "标签id")
+        @Schema(description = "监控状态")
+        private Integer monitorStatus;
+
+        @Schema(description = "标签ID")
         private Integer tagId;
 
         private final Integer businessType = BusinessTypeEnum.SERVER.getType();
@@ -58,27 +182,27 @@ public class ServerParam {
     @EqualsAndHashCode(callSuper = true)
     @NoArgsConstructor
     @AllArgsConstructor
-    @ApiModel
+    @Schema
     public static class UserRemoteServerPageQuery extends PageParam implements IExtend {
 
         private Integer userId;
 
-        @ApiModelProperty(value = "关键字查询")
+        @Schema(description = "关键字查询")
         private String queryName;
 
-        @ApiModelProperty(value = "服务器组id")
+        @Schema(description = "服务器组ID")
         private Integer serverGroupId;
 
-        @ApiModelProperty(value = "环境类型")
+        @Schema(description = "环境类型")
         private Integer envType;
 
-        @ApiModelProperty(value = "有效")
+        @Schema(description = "有效")
         private Boolean isActive;
 
-        @ApiModelProperty(value = "状态")
+        @Schema(description = "状态")
         private Integer serverStatus;
 
-        @ApiModelProperty(value = "标签id")
+        @Schema(description = "标签ID")
         private Integer tagId;
 
         private final Integer businessType = BusinessTypeEnum.SERVERGROUP.getType();
@@ -92,17 +216,17 @@ public class ServerParam {
     @EqualsAndHashCode(callSuper = true)
     @NoArgsConstructor
     @AllArgsConstructor
-    @ApiModel
+    @Schema
     public static class UserPermissionServerPageQuery extends SuperPageParam implements IExtend {
 
-        @ApiModelProperty(value = "用户id")
+        @Schema(description = "用户ID")
         @NotNull
         private Integer userId;
 
-        @ApiModelProperty(value = "服务器名")
+        @Schema(description = "服务器名")
         private String name;
 
-        @ApiModelProperty(value = "查询ip")
+        @Schema(description = "查询IP")
         private String queryIp;
 
         private final Integer businessType = BusinessTypeEnum.SERVERGROUP.getType();

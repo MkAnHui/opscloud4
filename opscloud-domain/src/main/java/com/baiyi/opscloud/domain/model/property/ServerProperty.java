@@ -2,10 +2,13 @@ package com.baiyi.opscloud.domain.model.property;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.gson.GsonBuilder;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.util.CollectionUtils;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
@@ -19,10 +22,13 @@ import java.util.stream.Collectors;
  */
 public class ServerProperty {
 
-    @Builder
     @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class Server implements Serializable {
 
+        @Serial
         private static final long serialVersionUID = -4846682649445122975L;
         @Builder.Default
         private String kind = "Server";
@@ -33,8 +39,8 @@ public class ServerProperty {
         @Builder.Default
         private Ansible ansible = Ansible.builder().build();
 
-        public boolean enabledZabbix() {
-            return Optional.ofNullable(this)
+        public boolean zabbixEnabled() {
+            return Optional.of(this)
                     .map(ServerProperty.Server::getZabbix)
                     .map(ServerProperty.Zabbix::getEnabled)
                     .orElse(false);
@@ -42,9 +48,12 @@ public class ServerProperty {
         
     }
 
-    @Builder
     @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class Metadata implements Serializable {
+        @Serial
         private static final long serialVersionUID = 8854978086918993503L;
         @Builder.Default
         private Integer sshPort = 22;
@@ -57,10 +66,13 @@ public class ServerProperty {
 
     }
 
-    @Builder
     @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class Zabbix implements Serializable {
 
+        @Serial
         private static final long serialVersionUID = 5911353965481533349L;
         @Builder.Default
         private Boolean enabled = false;
@@ -71,7 +83,9 @@ public class ServerProperty {
         private List<String> macros;
 
         public List<Macro> toMacros() {
-            if (CollectionUtils.isEmpty(macros)) return Collections.emptyList();
+            if (CollectionUtils.isEmpty(macros)) {
+                return Collections.emptyList();
+            }
             try {
                 return macros.stream().map(e -> new GsonBuilder().create().fromJson(e, Macro.class)).collect(Collectors.toList());
             } catch (Exception e) {
@@ -82,21 +96,27 @@ public class ServerProperty {
     }
 
     @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Macro implements Serializable {
+        @Serial
         private static final long serialVersionUID = -5748446862825981795L;
         private String macro;
         private String value;
         private String description;
     }
 
-    @Builder
     @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class Ansible implements Serializable {
+        @Serial
         private static final long serialVersionUID = -8106749818500817348L;
         @Builder.Default
         private Integer subgroup = 2;
     }
-
 
 }

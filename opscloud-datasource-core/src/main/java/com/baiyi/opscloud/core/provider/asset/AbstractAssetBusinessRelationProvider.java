@@ -19,7 +19,7 @@ import com.baiyi.opscloud.service.business.BusinessAssetRelationService;
 import com.baiyi.opscloud.service.datasource.DsInstanceAssetPropertyService;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -33,6 +33,7 @@ import static com.baiyi.opscloud.common.constants.SingleTaskConstants.SCAN_ASSET
  * @Date 2021/8/2 2:00 下午
  * @Version 1.0
  */
+@SuppressWarnings("rawtypes")
 @Slf4j
 public abstract class AbstractAssetBusinessRelationProvider<T> extends BaseAssetProvider<T> implements IAssetBusinessRelation {
 
@@ -65,8 +66,10 @@ public abstract class AbstractAssetBusinessRelationProvider<T> extends BaseAsset
 
     @Override
     public void scan(DsAssetVO.Asset asset) {
-        IAssetConverter iAssetConvert = AssetConverterFactory.getIAssetConvertByAssetType(getAssetType());
-        if (iAssetConvert == null) return;
+        IAssetConverter iAssetConvert = AssetConverterFactory.getConverterByAssetType(getAssetType());
+        if (iAssetConvert == null) {
+            return;
+        }
         // 获取可转换的业务对象
         List<BusinessTypeEnum> businessTypeEnums = iAssetConvert.getBusinessTypes();
         businessTypeEnums.forEach(t -> bind(t, asset));
@@ -86,7 +89,9 @@ public abstract class AbstractAssetBusinessRelationProvider<T> extends BaseAsset
     }
 
     private void bind(DsAssetVO.Asset asset, BusinessAssetRelationVO.IBusinessAssetRelation iBusinessAssetRelation) {
-        if (iBusinessAssetRelation == null) return;
+        if (iBusinessAssetRelation == null) {
+            return;
+        }
         iBusinessAssetRelation.setAssetId(asset.getId());
         BusinessAssetRelationVO.Relation relation = iBusinessAssetRelation.toBusinessAssetRelation();
         if (businessAssetRelationService.getByUniqueKey(relation) == null) {

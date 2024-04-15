@@ -1,6 +1,7 @@
 package com.baiyi.opscloud.facade.workorder.impl;
 
-import com.baiyi.opscloud.common.util.WorkflowUtil;
+import com.baiyi.opscloud.common.util.PasswordUtil;
+import com.baiyi.opscloud.workorder.util.WorkflowUtil;
 import com.baiyi.opscloud.domain.generator.opscloud.*;
 import com.baiyi.opscloud.domain.vo.workorder.WorkflowVO;
 import com.baiyi.opscloud.facade.workorder.WorkOrderTicketSubscriberFacade;
@@ -11,13 +12,10 @@ import com.baiyi.opscloud.service.workorder.WorkOrderTicketSubscriberService;
 import com.baiyi.opscloud.workorder.constants.NodeTypeConstants;
 import com.baiyi.opscloud.workorder.constants.SubscribeStatusConstants;
 import lombok.RequiredArgsConstructor;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
-
-import static com.baiyi.opscloud.common.config.ThreadPoolTaskConfiguration.TaskPools.CORE;
 
 /**
  * @Author baiyi
@@ -44,7 +42,6 @@ public class WorkOrderTicketSubscriberFacadeImpl implements WorkOrderTicketSubsc
      * @param user
      */
     @Override
-    //@Async(value = CORE)
     public void publish(WorkOrderTicket ticket, User user) {
         createSubscriber(ticket, user, SubscribeStatusConstants.CREATE);
     }
@@ -55,10 +52,9 @@ public class WorkOrderTicketSubscriberFacadeImpl implements WorkOrderTicketSubsc
      * @param ticket
      */
     @Override
-    @Async(value = CORE)
     public void publish(WorkOrderTicket ticket) {
         WorkOrder workOrder = workOrderService.getById(ticket.getWorkOrderId());
-        Map<String, WorkflowVO.Node> nodeMap = WorkflowUtil.toWorkflowNodeMap(workOrder.getWorkflow());
+        Map<String, WorkflowVO.Node> nodeMap = WorkflowUtil.toNodeMap(workOrder.getWorkflow());
         List<WorkOrderTicketNode> ticketNodes = ticketNodeService.queryByWorkOrderTicketId(ticket.getId());
         ticketNodes.forEach(n -> {
             if (nodeMap.containsKey(n.getNodeName())) {
@@ -85,6 +81,8 @@ public class WorkOrderTicketSubscriberFacadeImpl implements WorkOrderTicketSubsc
                 .username(user.getUsername())
                 .subscribeStatus(constants.name())
                 .isActive(true)
+                // 生成64位长度随机Token
+                .token(PasswordUtil.generatorPW(64))
                 .comment(constants.getComment())
                 .build();
         ticketSubscriberService.add(subscriber);

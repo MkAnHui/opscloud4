@@ -1,6 +1,6 @@
 package com.baiyi.opscloud.facade.sys.impl;
 
-import com.baiyi.opscloud.common.exception.common.CommonRuntimeException;
+import com.baiyi.opscloud.common.exception.common.OCException;
 import com.baiyi.opscloud.common.util.BeanCopierUtil;
 import com.baiyi.opscloud.domain.DataTable;
 import com.baiyi.opscloud.domain.param.sys.CredentialParam;
@@ -45,27 +45,25 @@ public class CredentialFacadeImpl implements CredentialFacade {
     }
 
     @Override
-    public void addCredential(CredentialVO.Credential credential) {
-        com.baiyi.opscloud.domain.generator.opscloud.Credential pre = credentialConverter.toDO(credential);
-        credentialService.add(pre);
+    public void addCredential(CredentialParam.Credential credential) {
+        credentialService.add(credentialConverter.to(credential));
     }
 
     @Override
-    public void updateCredential(CredentialVO.Credential credential) {
-        com.baiyi.opscloud.domain.generator.opscloud.Credential pre = credentialConverter.toDO(credential);
-        credentialService.updateBySelective(pre);
+    public void updateCredential(CredentialParam.Credential credential) {
+        credentialService.updateBySelective(credentialConverter.to(credential));
     }
 
     @Override
     public void deleteCredentialById(Integer id) {
         com.baiyi.opscloud.domain.generator.opscloud.Credential credential = credentialService.getById(id);
-        if (credential == null) return;
-        Map<String, ICredentialCustomer> context = CredentialCustomerFactory.getContext();
-        for (String key : context.keySet()) {
-            ICredentialCustomer iCredentialCustomer = context.get(key);
-            if (iCredentialCustomer.hasUsedCredential(id))
-                throw new CommonRuntimeException("该凭据正在使用中！");
+        if (credential == null) {
+            return;
         }
+        Map<String, ICredentialCustomer> context = CredentialCustomerFactory.getContext();
+        context.keySet().stream().map(context::get).filter(iCredentialCustomer -> iCredentialCustomer.hasUsedCredential(id)).forEachOrdered(iCredentialCustomer -> {
+            throw new OCException("该凭据正在使用中！");
+        });
         credentialService.deleteById(id);
     }
 

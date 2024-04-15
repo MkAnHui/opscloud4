@@ -1,24 +1,22 @@
 package com.baiyi.opscloud.facade.auth.impl;
 
 
-import com.baiyi.opscloud.common.exception.auth.AuthRuntimeException;
+import com.baiyi.opscloud.common.base.AccessLevel;
+import com.baiyi.opscloud.common.exception.auth.AuthenticationException;
+import com.baiyi.opscloud.common.holder.SessionHolder;
 import com.baiyi.opscloud.common.util.BeanCopierUtil;
 import com.baiyi.opscloud.domain.DataTable;
 import com.baiyi.opscloud.domain.ErrorEnum;
 import com.baiyi.opscloud.domain.generator.opscloud.*;
 import com.baiyi.opscloud.domain.param.SimpleExtend;
-import com.baiyi.opscloud.domain.param.auth.AuthGroupParam;
-import com.baiyi.opscloud.domain.param.auth.AuthResourceParam;
-import com.baiyi.opscloud.domain.param.auth.AuthRoleParam;
-import com.baiyi.opscloud.domain.param.auth.AuthUserRoleParam;
+import com.baiyi.opscloud.domain.param.auth.*;
 import com.baiyi.opscloud.domain.vo.auth.AuthGroupVO;
 import com.baiyi.opscloud.domain.vo.auth.AuthResourceVO;
-import com.baiyi.opscloud.domain.vo.auth.AuthRoleResourceVO;
 import com.baiyi.opscloud.domain.vo.auth.AuthRoleVO;
 import com.baiyi.opscloud.facade.auth.AuthFacade;
+import com.baiyi.opscloud.facade.user.UserPermissionFacade;
 import com.baiyi.opscloud.packer.auth.AuthGroupPacker;
 import com.baiyi.opscloud.packer.auth.AuthResourcePacker;
-import com.baiyi.opscloud.packer.auth.AuthRolePacker;
 import com.baiyi.opscloud.service.auth.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,8 +41,6 @@ public class AuthFacadeImpl implements AuthFacade {
 
     private final AuthRoleService authRoleService;
 
-    private final AuthRolePacker authRolePacker;
-
     private final AuthGroupService authGroupService;
 
     private final AuthResourceService authResourceService;
@@ -57,27 +53,30 @@ public class AuthFacadeImpl implements AuthFacade {
 
     private final AuthUserRoleService authUserRoleService;
 
+    private final UserPermissionFacade userPermissionFacade;
+
     @Override
     public DataTable<AuthRoleVO.Role> queryRolePage(AuthRoleParam.AuthRolePageQuery pageQuery) {
         DataTable<AuthRole> table = authRoleService.queryPageByParam(pageQuery);
         List<AuthRoleVO.Role> data = BeanCopierUtil.copyListProperties(table.getData(), AuthRoleVO.Role.class);
-        return new DataTable<>(data , table.getTotalNum());
+        return new DataTable<>(data, table.getTotalNum());
     }
 
     @Override
-    public void addRole(AuthRoleVO.Role role) {
+    public void addRole(AuthRoleParam.Role role) {
         authRoleService.add(BeanCopierUtil.copyProperties(role, AuthRole.class));
     }
 
     @Override
-    public void updateRole(AuthRoleVO.Role role) {
+    public void updateRole(AuthRoleParam.Role role) {
         authRoleService.update(BeanCopierUtil.copyProperties(role, AuthRole.class));
     }
 
     @Override
     public void deleteRoleById(int id) {
-        if (authRoleResourceService.countByRoleId(id) != 0)
-            throw new AuthRuntimeException(ErrorEnum.AUTH_ROLE_HAS_USED);
+        if (authRoleResourceService.countByRoleId(id) != 0) {
+            throw new AuthenticationException(ErrorEnum.AUTH_ROLE_HAS_USED);
+        }
         authRoleService.deleteById(id);
     }
 
@@ -90,19 +89,20 @@ public class AuthFacadeImpl implements AuthFacade {
     }
 
     @Override
-    public void addGroup(AuthGroupVO.Group group) {
+    public void addGroup(AuthGroupParam.Group group) {
         authGroupService.add(BeanCopierUtil.copyProperties(group, AuthGroup.class));
     }
 
     @Override
-    public void updateGroup(AuthGroupVO.Group group) {
+    public void updateGroup(AuthGroupParam.Group group) {
         authGroupService.update(BeanCopierUtil.copyProperties(group, AuthGroup.class));
     }
 
     @Override
     public void deleteGroupById(int id) {
-        if (authResourceService.countByGroupId(id) != 0)
-            throw new AuthRuntimeException(ErrorEnum.AUTH_GROUP_HAS_USED);
+        if (authResourceService.countByGroupId(id) != 0) {
+            throw new AuthenticationException(ErrorEnum.AUTH_GROUP_HAS_USED);
+        }
         authGroupService.deleteById(id);
     }
 
@@ -115,7 +115,7 @@ public class AuthFacadeImpl implements AuthFacade {
     }
 
     @Override
-    public void addRoleResource(AuthRoleResourceVO.RoleResource roleResource) {
+    public void addRoleResource(AuthRoleResourceParam.RoleResource roleResource) {
         try {
             authRoleResourceService.add(BeanCopierUtil.copyProperties(roleResource, AuthRoleResource.class));
         } catch (DuplicateKeyException ignored) {
@@ -136,46 +136,72 @@ public class AuthFacadeImpl implements AuthFacade {
     }
 
     @Override
-    public void updateResource(AuthResourceVO.Resource resource) {
+    public void updateResource(AuthResourceParam.Resource resource) {
         authResourceService.update(BeanCopierUtil.copyProperties(resource, AuthResource.class));
     }
 
     @Override
-    public void addResource(AuthResourceVO.Resource resource) {
+    public void addResource(AuthResourceParam.Resource resource) {
         authResourceService.add(BeanCopierUtil.copyProperties(resource, AuthResource.class));
     }
 
     @Override
-    @Transactional(rollbackFor = {AuthRuntimeException.class, Exception.class})
+    @Transactional(rollbackFor = {AuthenticationException.class, Exception.class})
     public void deleteResourceById(int id) {
         authRoleResourceService.deleteByResourceId(id);
         authResourceService.deleteById(id);
     }
 
+    /**
+     * 管理员不能授权比自己访问级别高的角色
+     *
+     * @param updateUserRole
+     */
     @Override
     public void updateUserRole(AuthUserRoleParam.UpdateUserRole updateUserRole) {
+        // 获取当前操作用户的操作权限
+        int accessLevel = userPermissionFacade.getUserAccessLevel(SessionHolder.getUsername());
+        // 至少需要OPS角色才能操作
+        if (accessLevel < AccessLevel.OPS.getLevel()) {
+            return;
+        }
         List<AuthUserRole> roles = authUserRoleService.queryByUsername(updateUserRole.getUsername());
         updateUserRole.getRoleIds().forEach(id -> {
-            if (checkAddUserRole(updateUserRole.getUsername(), roles, id)) {
-                AuthUserRole pre = new AuthUserRole();
-                pre.setUsername(updateUserRole.getUsername());
-                pre.setRoleId(id);
-                authUserRoleService.add(pre);
+            AuthRole authRole = authRoleService.getById(id);
+            // 访问级别不足
+            if (authRole == null || accessLevel < authRole.getAccessLevel()) {
+                return;
             }
+            // 用户已授权
+            if (hasRoleInUser(updateUserRole.getUsername(), roles, id)) {
+                return;
+            }
+            AuthUserRole pre = new AuthUserRole();
+            pre.setUsername(updateUserRole.getUsername());
+            pre.setRoleId(id);
+            authUserRoleService.add(pre);
         });
         roles.forEach(e -> authUserRoleService.deleteById(e.getId()));
     }
 
-    private boolean checkAddUserRole(String username, List<AuthUserRole> roles, Integer roleId) {
+    /**
+     * 迭代器
+     *
+     * @param username
+     * @param roles
+     * @param roleId
+     * @return
+     */
+    private boolean hasRoleInUser(String username, List<AuthUserRole> roles, Integer roleId) {
         Iterator<AuthUserRole> iter = roles.iterator();
         while (iter.hasNext()) {
             AuthUserRole authUserRole = iter.next();
             if (username.equals(authUserRole.getUsername()) && roleId.equals(authUserRole.getRoleId())) {
                 iter.remove();
-                return false;
+                return true;
             }
         }
-        return true;
+        return false;
     }
 
 }

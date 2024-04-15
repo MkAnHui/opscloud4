@@ -19,8 +19,8 @@ import java.util.Date;
  */
 public class AccessKey {
 
-    public static Date toGmtDate(String time) {
-        return TimeUtil.toGmtDate(time, TimeZoneEnum.UTC);
+    public static Date toUtcDate(String time) {
+        return TimeUtil.toDate(time, TimeZoneEnum.UTC);
     }
 
     @Data
@@ -38,7 +38,7 @@ public class AccessKey {
                     .assetKey(this.accessKeyId)
                     .kind("ramAccessKey")
                     .assetType(DsAssetTypeConstants.RAM_ACCESS_KEY.name())
-                    .createdTime(toGmtDate(this.createDate))
+                    .createdTime(toUtcDate(this.createDate))
                     .isActive("Active".equals(this.status))
                     .build();
             return AssetContainerBuilder.newBuilder()

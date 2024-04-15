@@ -11,9 +11,11 @@ import com.baiyi.opscloud.service.user.UserService;
 import com.baiyi.opscloud.workorder.constants.WorkOrderKeyConstants;
 import com.baiyi.opscloud.workorder.query.impl.base.BaseTicketEntryQuery;
 import com.google.common.base.Joiner;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
+
 import java.util.List;
 
 /**
@@ -41,8 +43,8 @@ public class EmployeeResignEntryQuery extends BaseTicketEntryQuery<User> {
     }
 
     @Override
-    protected WorkOrderTicketVO.Entry toEntry(WorkOrderTicketEntryParam.EntryQuery entryQuery, User entry) {
-        return WorkOrderTicketVO.Entry.builder()
+    protected WorkOrderTicketVO.Entry<User> toEntry(WorkOrderTicketEntryParam.EntryQuery entryQuery, User entry) {
+        return WorkOrderTicketVO.Entry.<User>builder()
                 .workOrderTicketId(entryQuery.getWorkOrderTicketId())
                 .name(toName(entry))
                 .entryKey(entry.getUsername())
@@ -55,8 +57,9 @@ public class EmployeeResignEntryQuery extends BaseTicketEntryQuery<User> {
     }
 
     private String toName(User user) {
-        final String name = Joiner.on(":").skipNulls().join(user.getName(), user.getDisplayName(), user.getEmail());
-        return Joiner.on("").join(user.getUsername(), "<", name, ">");
+        String name = StringUtils.isNotBlank(user.getName()) ? user.getName() : null;
+        final String desc = Joiner.on(":").skipNulls().join(name, user.getDisplayName(), user.getEmail());
+        return Joiner.on("").join(user.getUsername(), "<", desc, ">");
     }
 
     @Override

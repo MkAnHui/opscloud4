@@ -1,7 +1,7 @@
 package com.baiyi.opscloud.sshserver.packer;
 
 import com.baiyi.opscloud.common.util.BeanCopierUtil;
-import com.baiyi.opscloud.common.util.SessionUtil;
+import com.baiyi.opscloud.common.holder.SessionHolder;
 import com.baiyi.opscloud.domain.generator.opscloud.ServerGroup;
 import com.baiyi.opscloud.domain.generator.opscloud.UserPermission;
 import com.baiyi.opscloud.domain.param.SimpleExtend;
@@ -39,17 +39,19 @@ public class SshServerPacker {
                 .build();
 
         UserPermission userPermission = permissionService.getByUserPermission(query);
-        if (userPermission != null)
+        if (userPermission != null) {
             iUserPermission.setUserPermission(BeanCopierUtil.copyProperties(userPermission, UserPermissionVO.UserPermission.class));
+        }
     }
 
     public void wrap(ServerVO.Server server) {
         serverPackerDelegate.wrap(server, SimpleExtend.EXTEND);
         ServerGroup group = serverGroupService.getById(server.getServerGroupId());
         ServerGroupVO.ServerGroup serverGroup = BeanCopierUtil.copyProperties(group, ServerGroupVO.ServerGroup.class);
-        serverGroup.setUserId(SessionUtil.getUserId());
+        serverGroup.setUserId(SessionHolder.getUserId());
         wrap(serverGroup);
         server.setServerGroup(serverGroup);
         SimpleServerNameFacade.wrapDisplayName(server);
     }
+
 }

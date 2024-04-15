@@ -1,10 +1,10 @@
 package com.baiyi.opscloud.domain.param.workorder;
 
 import com.baiyi.opscloud.domain.generator.opscloud.WorkOrderTicketEntry;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Map;
 
@@ -19,21 +19,33 @@ public class WorkOrderTicketEntryParam {
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class EntryQuery {
 
-        @ApiModelProperty(value = "数据实例UUID")
+        @Schema(description = "数据实例UUID")
         private String instanceUuid;
 
-        @ApiModelProperty(value = "工单票据ID")
+        @Schema(description = "regionId")
+        private String regionId;
+
+        @Schema(description = "kind")
+        private String kind;
+
+        @Schema(description = "资产类型")
+        private String assetType;
+
+        @Schema(description = "工单票据ID")
         private Integer workOrderTicketId;
 
-        @ApiModelProperty(value = "查询名称")
+        @Schema(description = "查询名称")
         private String queryName;
 
-        @ApiModelProperty(value = "查询条目数量")
+        @Schema(description = "查询条目数量")
         @Builder.Default
         private Integer length = 20;
+
+        @Schema(description = "应用ID")
+        private Integer applicationId;
 
     }
 
@@ -42,9 +54,10 @@ public class WorkOrderTicketEntryParam {
     @Builder
     @AllArgsConstructor
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class TicketEntry extends WorkOrderTicketEntry implements Serializable {
 
+        @Serial
         private static final long serialVersionUID = 7854793943421192263L;
 
         private Map<String, String> properties;

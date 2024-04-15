@@ -17,15 +17,18 @@ public interface TagService {
 
     List<Tag> queryTagByBusinessType(Integer businessType);
 
+    List<Tag> queryFinOpsTags();
+
     Tag getById(Integer id);
 
     void add(Tag tag);
 
-    void update(Tag tag);
+    void updateByPrimaryKeySelective(Tag tag);
 
     void deleteById(Integer id);
 
     Tag getByTagKey(String tagKey);
 
     DataTable<Tag> queryPageByParam(TagParam.TagPageQuery pageQuery);
+
 }

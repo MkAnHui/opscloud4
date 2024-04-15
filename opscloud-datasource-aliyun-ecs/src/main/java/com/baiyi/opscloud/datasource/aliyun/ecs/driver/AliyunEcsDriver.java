@@ -7,9 +7,11 @@ import com.baiyi.opscloud.datasource.aliyun.core.AliyunClient;
 import com.baiyi.opscloud.domain.generator.opscloud.DatasourceInstanceAsset;
 import com.google.common.collect.Lists;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.List;
 
 import static com.baiyi.opscloud.datasource.aliyun.core.SimpleAliyunClient.Query.PAGE_SIZE;
@@ -19,6 +21,7 @@ import static com.baiyi.opscloud.datasource.aliyun.core.SimpleAliyunClient.Query
  * @Date 2021/6/18 9:46 上午
  * @Version 1.0
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class AliyunEcsDriver {
@@ -37,7 +40,7 @@ public class AliyunEcsDriver {
                 describe.setNextToken(nextToken);
             } while (StringUtils.isNotBlank(nextToken));
         } catch (ClientException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
         return instanceList;
     }
@@ -48,7 +51,7 @@ public class AliyunEcsDriver {
             DescribeImagesRequest describe = new DescribeImagesRequest();
             describe.setSysRegionId(regionId);
             describe.setPageSize(PAGE_SIZE);
-            /**
+            /*
              * system：阿里云提供的公共镜像。
              * self：您创建的自定义镜像。
              * others：其他阿里云用户共享给您的镜像。
@@ -66,7 +69,7 @@ public class AliyunEcsDriver {
                 pageNumber++;
             }
         } catch (ClientException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
         return images;
     }
@@ -88,9 +91,22 @@ public class AliyunEcsDriver {
                 pageNumber++;
             }
         } catch (ClientException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
         return securityGroups;
     }
-    
+
+    public List<DescribeDisksResponse.Disk> describeDisks(String regionId, AliyunConfig.Aliyun aliyun, String instanceId) {
+        try {
+            DescribeDisksRequest describe = new DescribeDisksRequest();
+            describe.setSysRegionId(regionId);
+            describe.setInstanceId(instanceId);
+            DescribeDisksResponse response = aliyunClient.getAcsResponse(regionId, aliyun, describe);
+            return response.getDisks();
+        } catch (ClientException e) {
+            log.error(e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
 }

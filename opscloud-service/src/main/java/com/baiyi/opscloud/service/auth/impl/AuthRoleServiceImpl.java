@@ -3,7 +3,7 @@ package com.baiyi.opscloud.service.auth.impl;
 import com.baiyi.opscloud.domain.DataTable;
 import com.baiyi.opscloud.domain.generator.opscloud.AuthRole;
 import com.baiyi.opscloud.domain.param.auth.AuthRoleParam;
-import com.baiyi.opscloud.mapper.opscloud.AuthRoleMapper;
+import com.baiyi.opscloud.mapper.AuthRoleMapper;
 import com.baiyi.opscloud.service.auth.AuthRoleService;
 import com.baiyi.opscloud.util.SQLUtil;
 import com.github.pagehelper.Page;
@@ -41,7 +41,7 @@ public class AuthRoleServiceImpl implements AuthRoleService {
 
     @Override
     public DataTable<AuthRole> queryPageByParam(AuthRoleParam.AuthRolePageQuery pageQuery) {
-        Page page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
+        Page<?> page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
         Example example = new Example(AuthRole.class);
         if (StringUtils.isNotBlank(pageQuery.getRoleName())) {
             Example.Criteria criteria = example.createCriteria();
@@ -71,4 +71,5 @@ public class AuthRoleServiceImpl implements AuthRoleService {
     public int getRoleAccessLevelByUsername(String username) {
         return authRoleMapper.getRoleAccessLevelByUsername(username);
     }
+
 }

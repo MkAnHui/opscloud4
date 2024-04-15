@@ -1,22 +1,21 @@
 package com.baiyi.opscloud.util;
 
 import com.baiyi.opscloud.algorithm.ServerPack;
-import com.baiyi.opscloud.common.config.CachingConfiguration;
+import com.baiyi.opscloud.common.configuration.CachingConfiguration;
 import com.baiyi.opscloud.common.util.BeanCopierUtil;
 import com.baiyi.opscloud.domain.generator.opscloud.Server;
 import com.baiyi.opscloud.domain.generator.opscloud.ServerGroup;
 import com.baiyi.opscloud.domain.param.SimpleExtend;
 import com.baiyi.opscloud.domain.vo.server.ServerTreeVO;
 import com.baiyi.opscloud.domain.vo.server.ServerVO;
-import com.baiyi.opscloud.facade.server.SimpleServerNameFacade;
 import com.baiyi.opscloud.packer.server.ServerPacker;
-import com.baiyi.opscloud.service.business.BusinessPropertyHelper;
+import com.baiyi.opscloud.service.business.BizPropertyHelper;
 import com.google.common.base.Joiner;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -32,7 +31,7 @@ public class ServerTreeUtil {
     @Resource
     private ServerPacker serverPacker;
 
-    @Cacheable(cacheNames = CachingConfiguration.Repositories.CACHE_1WEEK, key = "'server_tree_severgroupid_' + #serverGroup.id", unless = "#result == null")
+    @Cacheable(cacheNames = CachingConfiguration.Repositories.CACHE_FOR_1W, key = "'server_tree_severgroupid_' + #serverGroup.id", unless = "#result == null")
     public ServerTreeVO.Tree wrap(ServerGroup serverGroup, Map<String, List<ServerPack>> serverGroupMap) {
         List<ServerTreeVO.Tree> children = serverGroupMap.keySet().stream()
                 .map(subName -> ServerTreeVO.Tree.builder()
@@ -49,7 +48,7 @@ public class ServerTreeUtil {
                 .build();
     }
 
-    @CacheEvict(cacheNames = CachingConfiguration.Repositories.CACHE_1WEEK, key = "'server_tree_severgroupid_' + #serverGroupId")
+    @CacheEvict(cacheNames = CachingConfiguration.Repositories.CACHE_FOR_1W, key = "'server_tree_severgroupid_' + #serverGroupId")
     public void evictWrap(Integer serverGroupId) {
     }
 
@@ -58,34 +57,39 @@ public class ServerTreeUtil {
     }
 
     private ServerTreeVO.Tree apply(ServerPack serverPack) {
-        String serverName = SimpleServerNameFacade.toName(serverPack.getServer(), serverPack.getEnv());
+        String serverName = serverPack.getServer().getDisplayName();
         ServerVO.Server vo = BeanCopierUtil.copyProperties(serverPack.getServer(), ServerVO.Server.class);
         serverPacker.wrap(vo, SimpleExtend.EXTEND);
         return ServerTreeVO.Tree.builder()
                 .id(serverName)
                 .disabled(isDisabled(serverPack.getServer()))
                 .server(vo)
-                .label(Joiner.on(":").join(serverName, BusinessPropertyHelper.getManageIp(serverPack)))
+                .label(Joiner.on(":").join(serverName, BizPropertyHelper.getManageIp(serverPack)))
                 .build();
     }
 
     private boolean isDisabled(Server server) {
-        if (!server.getIsActive()) return true;
+        if (!server.getIsActive()) {
+            return true;
+        }
         return "Windows".equalsIgnoreCase(server.getOsType());
     }
 
     public void wrap(Map<String, String> serverTreeHostPatternMap, Map<String, List<Server>> serverGroupMap) {
         serverGroupMap.forEach((k, v) ->
-                v.forEach(s -> serverTreeHostPatternMap.put(SimpleServerNameFacade.toServerName(s), s.getPrivateIp()))
+                v.forEach(s -> serverTreeHostPatternMap.put(s.getDisplayName(), s.getPrivateIp()))
         );
     }
 
     public int getServerGroupMapSize(Map<String, List<ServerPack>> serverGroupMap) {
-        if (serverGroupMap.isEmpty())
+        if (serverGroupMap.isEmpty()) {
             return 0;
+        }
         int size = 0;
-        for (String key : serverGroupMap.keySet())
+        for (String key : serverGroupMap.keySet()) {
             size += serverGroupMap.get(key).size();
+        }
         return size;
     }
+
 }

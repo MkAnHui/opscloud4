@@ -6,7 +6,7 @@ import com.baiyi.opscloud.domain.annotation.BusinessType;
 import com.baiyi.opscloud.domain.generator.opscloud.UserPermission;
 import com.baiyi.opscloud.domain.constants.BusinessTypeEnum;
 import com.baiyi.opscloud.domain.constants.EventActionTypeEnum;
-import com.baiyi.opscloud.mapper.opscloud.UserPermissionMapper;
+import com.baiyi.opscloud.mapper.UserPermissionMapper;
 import com.baiyi.opscloud.service.user.UserPermissionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +19,7 @@ import java.util.List;
  * @Date 2021/5/26 5:39 下午
  * @Version 1.0
  */
+@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @BusinessType(BusinessTypeEnum.USER_PERMISSION)
 @Service
 @RequiredArgsConstructor
@@ -72,13 +73,20 @@ public class UserPermissionServiceImpl implements UserPermissionService {
     public int countByBusiness(UserPermission userPermission) {
         Example example = new Example(UserPermission.class);
         Example.Criteria criteria = example.createCriteria();
-        if (IdUtil.isNotEmpty(userPermission.getUserId()))
+        if (IdUtil.isNotEmpty(userPermission.getUserId())) {
             criteria.andEqualTo("userId", userPermission.getUserId());
+        }
         criteria.andEqualTo("businessType", userPermission.getBusinessType())
                 .andEqualTo("businessId", userPermission.getBusinessId());
         return permissionMapper.selectCountByExample(example);
     }
 
+    /**
+     * 查询授权不展示离职用户
+     *
+     * @param userPermission
+     * @return
+     */
     @Override
     public List<UserPermission> queryByBusiness(UserPermission userPermission) {
         Example example = new Example(UserPermission.class);
@@ -103,6 +111,11 @@ public class UserPermissionServiceImpl implements UserPermissionService {
         Example.Criteria criteria = example.createCriteria();
         criteria.andEqualTo("userId", userId);
         return permissionMapper.selectByExample(example);
+    }
+
+    @Override
+    public int statTotal(int businessType) {
+        return permissionMapper.statTotal(businessType);
     }
 
 }

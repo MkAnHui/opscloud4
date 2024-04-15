@@ -1,6 +1,7 @@
 package com.baiyi.opscloud.factory.credential;
 
 import com.baiyi.opscloud.factory.credential.base.ICredentialCustomer;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -17,6 +18,7 @@ public class CredentialCustomerFactory {
     private CredentialCustomerFactory() {
     }
 
+    @Getter
     private static final Map<String, ICredentialCustomer> context = new ConcurrentHashMap<>();
 
     public static ICredentialCustomer getByBeanName(String beanName) {
@@ -24,16 +26,12 @@ public class CredentialCustomerFactory {
     }
 
     public static void register(ICredentialCustomer bean) {
-        log.info("CredentialCustomerFactory注册: beanName = {}", bean.getBeanName());
         context.put(bean.getBeanName(), bean);
+        log.debug("CredentialCustomerFactory Registered: beanName={}", bean.getBeanName());
     }
 
     public static int countByCredentialId(int credentialId) {
         return context.keySet().stream().mapToInt(k -> context.get(k).countByCredentialId(credentialId)).sum();
-    }
-
-    public static Map<String, ICredentialCustomer> getContext() {
-        return context;
     }
 
 }

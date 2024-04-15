@@ -1,17 +1,17 @@
 package com.baiyi.opscloud.datasource.manager;
 
-import com.baiyi.opscloud.domain.constants.DsInstanceTagConstants;
 import com.baiyi.opscloud.common.constants.enums.DsTypeEnum;
-import com.baiyi.opscloud.datasource.business.accountGroup.AccountGroupProviderFactory;
+import com.baiyi.opscloud.datasource.business.account.AccountGroupHandlerFactory;
 import com.baiyi.opscloud.datasource.manager.base.BaseManager;
 import com.baiyi.opscloud.datasource.manager.base.IManager;
+import com.baiyi.opscloud.domain.base.BaseBusiness;
+import com.baiyi.opscloud.domain.constants.TagConstants;
 import com.baiyi.opscloud.domain.generator.opscloud.DatasourceInstance;
 import com.baiyi.opscloud.domain.generator.opscloud.User;
 import com.baiyi.opscloud.domain.generator.opscloud.UserGroup;
-import com.baiyi.opscloud.domain.base.BaseBusiness;
-import com.github.xiaoymin.knife4j.core.util.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 
@@ -36,7 +36,7 @@ public class DsAccountGroupManager extends BaseManager implements IManager<UserG
 
     @Override
     protected String getTag() {
-        return DsInstanceTagConstants.ACCOUNT.getTag();
+        return TagConstants.ACCOUNT.getTag();
     }
 
     @Override
@@ -46,7 +46,7 @@ public class DsAccountGroupManager extends BaseManager implements IManager<UserG
             log.info("{} 数据源账户组管理: 无可用实例", this.getClass().getSimpleName());
             return;
         }
-        instances.forEach(e -> AccountGroupProviderFactory.getIAccountGroupByInstanceType(e.getInstanceType()).create(e, userGroup));
+        instances.forEach(e -> AccountGroupHandlerFactory.getIAccountGroupByInstanceType(e.getInstanceType()).create(e, userGroup));
     }
 
     @Override
@@ -66,7 +66,7 @@ public class DsAccountGroupManager extends BaseManager implements IManager<UserG
             log.info("{} 数据源账户组管理: 无可用实例", this.getClass().getSimpleName());
             return;
         }
-        instances.forEach(e -> AccountGroupProviderFactory.getIAccountGroupByInstanceType(e.getInstanceType()).grant(e, user, businessResource));
+        instances.forEach(e -> AccountGroupHandlerFactory.getIAccountGroupByInstanceType(e.getInstanceType()).grant(e, user, businessResource));
     }
 
     @Override
@@ -76,7 +76,7 @@ public class DsAccountGroupManager extends BaseManager implements IManager<UserG
             log.info("{} 数据源账户组管理: 无可用实例", this.getClass().getSimpleName());
             return;
         }
-        instances.forEach(e -> AccountGroupProviderFactory.getIAccountGroupByInstanceType(e.getInstanceType()).revoke(e, user, businessResource));
+        instances.forEach(e -> AccountGroupHandlerFactory.getIAccountGroupByInstanceType(e.getInstanceType()).revoke(e, user, businessResource));
     }
 
 }

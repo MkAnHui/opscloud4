@@ -14,6 +14,9 @@ import java.util.Arrays;
 @Getter
 public enum OrderTicketPhaseCodeConstants {
 
+    /**
+     * 工单状态码
+     */
     NEW("NEW", "新建"),
     TOAUDIT("TOAUDIT", "工单申请中！"),
     APPROVED("APPROVED", "工单审批通过！"),
@@ -34,4 +37,5 @@ public enum OrderTicketPhaseCodeConstants {
     public static OrderTicketPhaseCodeConstants getEnum(String phase) {
         return Arrays.stream(OrderTicketPhaseCodeConstants.values()).filter(phaseCodeConstants -> phaseCodeConstants.getPhase().equals(phase)).findFirst().orElse(null);
     }
+
 }

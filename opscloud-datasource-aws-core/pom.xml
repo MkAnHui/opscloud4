@@ -11,10 +11,9 @@
 
     <artifactId>opscloud-datasource-aws-core</artifactId>
 
-    <properties>
-        <maven.compiler.source>8</maven.compiler.source>
-        <maven.compiler.target>8</maven.compiler.target>
-    </properties>
+<!--    <properties>-->
+<!--        <aws-java-sdk.version>1.12.565</aws-java-sdk.version>-->
+<!--    </properties>-->
 
     <dependencies>
 

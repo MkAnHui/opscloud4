@@ -10,9 +10,19 @@ import com.baiyi.opscloud.domain.vo.auth.LogVO;
  */
 public interface UserAuthFacade {
 
-    void tryUserHasResourceAuthorize(String token, String resourceName);
+    /**
+     * 验证用户是否有资源授权
+     * @param token
+     * @param resourceName
+     */
+    void verifyUserHasResourcePermissionWithToken(String token, String resourceName);
 
-    void tryUserHasResourceAuthorizeByAccessToken(String accessToken, String resourceName);
+    /**
+     *  验证用户是否有资源授权
+     * @param accessToken
+     * @param resourceName
+     */
+    void verifyUserHasResourcePermissionWithAccessToken(String accessToken, String resourceName);
 
     /**
      * 用户登录认证
@@ -20,6 +30,8 @@ public interface UserAuthFacade {
      * @return
      */
     LogVO.Login login(LoginParam.Login loginParam);
+
+    LogVO.Login platformLogin(LoginParam.PlatformLogin loginParam);
 
     /**
      * 用户登出

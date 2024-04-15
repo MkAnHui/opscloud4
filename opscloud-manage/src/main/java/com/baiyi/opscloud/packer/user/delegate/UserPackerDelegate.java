@@ -2,6 +2,7 @@ package com.baiyi.opscloud.packer.user.delegate;
 
 import com.baiyi.opscloud.common.annotation.TagsWrapper;
 import com.baiyi.opscloud.common.util.BeanCopierUtil;
+import com.baiyi.opscloud.common.util.ExtendUtil;
 import com.baiyi.opscloud.domain.generator.opscloud.AccessToken;
 import com.baiyi.opscloud.domain.param.IExtend;
 import com.baiyi.opscloud.domain.param.SimpleExtend;
@@ -10,7 +11,7 @@ import com.baiyi.opscloud.domain.vo.user.UserVO;
 import com.baiyi.opscloud.packer.auth.AuthRolePacker;
 import com.baiyi.opscloud.packer.user.UserAccessTokenPacker;
 import com.baiyi.opscloud.packer.user.UserCredentialPacker;
-import com.baiyi.opscloud.packer.user.am.AmPacker;
+import com.baiyi.opscloud.packer.user.am.AccessManagementPacker;
 import com.baiyi.opscloud.service.user.AccessTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -34,12 +35,15 @@ public class UserPackerDelegate {
 
     private final UserAccessTokenPacker userAccessTokenPacker;
 
-    private final AmPacker amPacker;
+    private final AccessManagementPacker amPacker;
 
     private final AccessTokenService accessTokenService;
 
     @TagsWrapper
     public void wrap(UserVO.User user, IExtend iExtend) {
+        if (!ExtendUtil.isExtend(iExtend)) {
+            return;
+        }
         authRolePacker.wrap(user);
         userCredentialPacker.wrap(user);
         wrap(user);

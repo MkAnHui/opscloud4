@@ -1,7 +1,7 @@
 package com.baiyi.opscloud.domain.vo.user;
 
 import com.baiyi.opscloud.domain.vo.sys.MenuVO;
-import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,11 +19,12 @@ public class UIVO {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    @ApiModel
+    @Schema
     @Builder
     public static class UIInfo {
 
         private List<MenuVO.Menu> menuInfo;
 
     }
+
 }

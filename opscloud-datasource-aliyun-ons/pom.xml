@@ -12,8 +12,8 @@
     <artifactId>opscloud-datasource-aliyun-ons</artifactId>
 
     <properties>
-        <maven.compiler.source>8</maven.compiler.source>
-        <maven.compiler.target>8</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
     </properties>
 
     <dependencies>
@@ -32,8 +32,15 @@
         <dependency>
             <groupId>com.aliyun</groupId>
             <artifactId>aliyun-java-sdk-ons</artifactId>
-            <version>3.1.6</version>
+            <version>3.2.3</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.aliyun</groupId>
+            <artifactId>rocketmq20220801</artifactId>
+            <version>1.1.0</version>
+        </dependency>
+
 
     </dependencies>
 

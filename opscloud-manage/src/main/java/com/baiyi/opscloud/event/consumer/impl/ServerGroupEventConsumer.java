@@ -1,6 +1,6 @@
 package com.baiyi.opscloud.event.consumer.impl;
 
-import com.baiyi.opscloud.common.helper.TopicHelper;
+import com.baiyi.opscloud.common.helper.topic.TopicHelper;
 import com.baiyi.opscloud.datasource.ansible.ServerGroupingAlgorithm;
 import com.baiyi.opscloud.datasource.manager.DsServerGroupManager;
 import com.baiyi.opscloud.domain.generator.opscloud.ServerGroup;
@@ -31,7 +31,7 @@ public class ServerGroupEventConsumer extends AbstractEventConsumer<ServerGroup>
     }
 
     @Override
-    protected void preHandle(NoticeEvent noticeEvent) {
+    protected void preHandle(NoticeEvent<ServerGroup> noticeEvent) {
         ServerGroup eventData = toEventData(noticeEvent.getMessage());
         serverGroupingAlgorithm.evictGrouping(eventData.getId());
         serverGroupingAlgorithm.evictIntactGrouping(eventData.getId(),true);
@@ -41,13 +41,13 @@ public class ServerGroupEventConsumer extends AbstractEventConsumer<ServerGroup>
     }
 
     @Override
-    protected void onCreateMessage(NoticeEvent noticeEvent) {
+    protected void onCreatedMessage(NoticeEvent<ServerGroup> noticeEvent) {
         ServerGroup eventData = toEventData(noticeEvent.getMessage());
         dsServerGroupManager.create(eventData);
     }
 
     @Override
-    protected void onUpdateMessage(NoticeEvent noticeEvent) {
+    protected void onUpdatedMessage(NoticeEvent<ServerGroup> noticeEvent) {
         ServerGroup eventData = toEventData(noticeEvent.getMessage());
         dsServerGroupManager.update(eventData);
     }

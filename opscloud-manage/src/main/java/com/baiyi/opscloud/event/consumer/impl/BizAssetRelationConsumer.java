@@ -20,23 +20,26 @@ public class BizAssetRelationConsumer extends AbstractEventConsumer<BusinessAsse
 
     @Override
     public String getEventType() {
-        return BusinessTypeEnum.BUSINESS_ASSET_RELATION.getName();
+        return BusinessTypeEnum.BUSINESS_ASSET_RELATION.name();
     }
 
     @Override
-    protected void preHandle(NoticeEvent noticeEvent) {
+    protected void preHandle(NoticeEvent<BusinessAssetRelation> noticeEvent) {
+        // TODO
     }
 
     @Override
-    protected void onCreateMessage(NoticeEvent noticeEvent) {
+    protected void onCreatedMessage(NoticeEvent<BusinessAssetRelation> noticeEvent) {
+        // TODO
     }
 
     @Override
-    protected void onUpdateMessage(NoticeEvent noticeEvent) {
+    protected void onUpdatedMessage(NoticeEvent<BusinessAssetRelation> noticeEvent) {
+        // TODO
     }
 
     @Override
-    protected void onDeleteMessage(NoticeEvent noticeEvent) {
+    protected void onDeletedMessage(NoticeEvent<BusinessAssetRelation> noticeEvent) {
         BusinessAssetRelation eventData = toEventData(noticeEvent.getMessage());
         if (eventData.getBusinessType() == BusinessTypeEnum.USER.getType()) {
             employeeResignConsumer.consume(eventData);

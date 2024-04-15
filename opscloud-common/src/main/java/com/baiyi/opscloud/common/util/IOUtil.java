@@ -2,6 +2,7 @@ package com.baiyi.opscloud.common.util;
 
 
 import com.baiyi.opscloud.common.base.Global;
+import com.baiyi.opscloud.common.holder.SessionHolder;
 import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -42,12 +43,12 @@ public class IOUtil {
             mkdir(dir);
             if (StringUtils.isNotBlank(dir) && StringUtils.isNotBlank(context)) {
                 File file = new File(new File(dir), fileName);
-                /**为了为防止context在远程客户端使用HttpClient传输时乱码，对方采用UTF-8发送，这里写入时也采用UTF-8*/
+                // 为了为防止context在远程客户端使用HttpClient传输时乱码，对方采用UTF-8发送，这里写入时也采用UTF-8
                 FileUtils.write(file, context, StandardCharsets.UTF_8);
                 result = true;
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
         return result;
     }
@@ -69,7 +70,7 @@ public class IOUtil {
                 feedback = FileUtils.readFileToString(file, "utf8");
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
         return feedback;
     }
@@ -79,6 +80,7 @@ public class IOUtil {
         try {
             FileUtils.forceMkdir(file);
         } catch (IOException e) {
+            log.error(e.getMessage());
         }
     }
 
@@ -89,7 +91,7 @@ public class IOUtil {
      * @param path
      */
     public static void writeFile(String body, String path) {
-        log.info("Write file : path = {}", path);
+        log.info("Write file: path={}", path);
 
         if (StringUtils.isEmpty(path)) {
             log.error("WriteFile path is null !");
@@ -99,18 +101,24 @@ public class IOUtil {
         mkdir(getPath(path));
         File file = new File(path);
         try (FileWriter fw = new FileWriter(file)) {
-            fw.write(body);//将字符串写入到指定的路径下的文件中
+            //将字符串写入到指定的路径下的文件中
+            fw.write(body);
         } catch (Exception e) {
+            log.error(e.getMessage());
             throw new RuntimeException(e);
         }
     }
 
     public static Long fileSize(String path) {
-        if (StringUtils.isEmpty(path)) {
+        try {
+            if (StringUtils.isEmpty(path)) {
+                return 0L;
+            }
+            File file = new File(path);
+            return file.length();
+        } catch (Exception e) {
             return 0L;
         }
-        File file = new File(path);
-        return file.length();
     }
 
     /**
@@ -128,7 +136,7 @@ public class IOUtil {
             writer.write(body);
             writer.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
     }
 
@@ -141,24 +149,26 @@ public class IOUtil {
     public static String readFile(String path) {
         try (
                 FileReader reader = new FileReader(path);
-                BufferedReader bufferedReader = new BufferedReader(reader);
+                BufferedReader bufferedReader = new BufferedReader(reader)
         ) {
-            StringBuffer buffer = new StringBuffer();
+            StringBuilder buffer = new StringBuilder();
             String tmp;
             while ((tmp = bufferedReader.readLine()) != null) {
                 buffer.append(tmp);
-                buffer.append(System.getProperty("line.separator"));
+                buffer.append(System.lineSeparator());
             }
             return buffer.toString();
         } catch (Exception e) {
-            //  throw new RuntimeException(e);
+            log.error(e.getMessage());
             return null;
         }
     }
 
     public static String getPath(String path) {
-        if (path == null || path.equals("")) return "";
-        String[] a = path.split("\\/");
+        if (path == null || path.isEmpty()) {
+            return "";
+        }
+        String[] a = path.split("/");
         path = path.replace(a[a.length - 1], "");
         return path;
     }
@@ -170,7 +180,7 @@ public class IOUtil {
      * @return
      */
     public static boolean delFile(String path) {
-        log.info(SessionUtil.getUsername() + " del file " + path);
+        log.info(SessionHolder.getUsername() + " del file " + path);
 
         File file = new File(path);
         if (file.exists() && file.isFile()) {

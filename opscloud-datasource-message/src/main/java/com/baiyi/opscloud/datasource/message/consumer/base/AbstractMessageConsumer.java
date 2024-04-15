@@ -1,6 +1,6 @@
 package com.baiyi.opscloud.datasource.message.consumer.base;
 
-import com.baiyi.opscloud.core.factory.DsConfigHelper;
+import com.baiyi.opscloud.core.factory.DsConfigManager;
 import com.baiyi.opscloud.datasource.message.consumer.IMessageConsumer;
 import com.baiyi.opscloud.datasource.message.consumer.MessageConsumerFactory;
 import com.baiyi.opscloud.domain.generator.opscloud.DatasourceConfig;
@@ -9,7 +9,7 @@ import com.baiyi.opscloud.service.business.BusinessAssetRelationService;
 import com.baiyi.opscloud.service.datasource.DsInstanceAssetService;
 import org.springframework.beans.factory.InitializingBean;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * @Author baiyi
@@ -19,7 +19,7 @@ import javax.annotation.Resource;
 public abstract class AbstractMessageConsumer<T> implements IMessageConsumer, InitializingBean {
 
     @Resource
-    protected DsConfigHelper dsConfigHelper;
+    protected DsConfigManager dsConfigManager;
 
     @Resource
     protected BusinessAssetRelationService businessAssetRelationService;
@@ -30,11 +30,12 @@ public abstract class AbstractMessageConsumer<T> implements IMessageConsumer, In
     protected abstract T buildConfig(DatasourceInstance instance);
 
     protected DatasourceConfig getConfig(DatasourceInstance instance) {
-        return dsConfigHelper.getConfigById(instance.getConfigId());
+        return dsConfigManager.getConfigById(instance.getConfigId());
     }
 
     @Override
     public void afterPropertiesSet() throws Exception {
         MessageConsumerFactory.register(this);
     }
+
 }

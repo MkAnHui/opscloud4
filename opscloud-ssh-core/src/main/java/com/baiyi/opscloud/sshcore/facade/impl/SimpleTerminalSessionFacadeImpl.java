@@ -5,18 +5,26 @@ import com.baiyi.opscloud.domain.generator.opscloud.TerminalSession;
 import com.baiyi.opscloud.domain.generator.opscloud.TerminalSessionInstance;
 import com.baiyi.opscloud.service.terminal.TerminalSessionInstanceService;
 import com.baiyi.opscloud.service.terminal.TerminalSessionService;
+import com.baiyi.opscloud.sshcore.audit.ServerCommandAudit;
 import com.baiyi.opscloud.sshcore.config.TerminalConfigurationProperties;
 import com.baiyi.opscloud.sshcore.facade.SimpleTerminalSessionFacade;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.retry.RetryException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @Author baiyi
  * @Date 2021/7/21 2:34 下午
  * @Version 1.0
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SimpleTerminalSessionFacadeImpl implements SimpleTerminalSessionFacade {
@@ -27,8 +35,11 @@ public class SimpleTerminalSessionFacadeImpl implements SimpleTerminalSessionFac
 
     private final TerminalSessionInstanceService terminalSessionInstanceService;
 
+    private final ServerCommandAudit serverCommandAudit;
+
     @Override
-    public void closeTerminalSessionInstance(TerminalSessionInstance terminalSessionInstance){
+    public void closeTerminalSessionInstance(TerminalSessionInstance terminalSessionInstance) {
+        serverCommandAudit.recordCommand(terminalSessionInstance);
         terminalSessionInstance.setCloseTime((new Date()));
         terminalSessionInstance.setInstanceClosed(true);
         terminalSessionInstance.setOutputSize(IOUtil.fileSize(terminalConfig.buildAuditLogPath(terminalSessionInstance.getSessionId(), terminalSessionInstance.getInstanceId())));
@@ -36,8 +47,16 @@ public class SimpleTerminalSessionFacadeImpl implements SimpleTerminalSessionFac
     }
 
     @Override
-    public void closeTerminalSessionInstance(TerminalSession terminalSession, String instanceId) {
+    @Retryable(retryFor = RetryException.class, maxAttempts = 4, backoff = @Backoff(delay = 2000, multiplier = 1.5))
+    public void closeTerminalSessionInstance(TerminalSession terminalSession, String instanceId) throws RetryException {
         TerminalSessionInstance terminalSessionInstance = terminalSessionInstanceService.getByUniqueKey(terminalSession.getSessionId(), instanceId);
+        if (terminalSessionInstance == null) {
+            log.error("实例未完成初始化用户就退出了: sessionId={}, instanceId={}", terminalSession.getSessionId(), instanceId);
+            throw new RetryException("实例未完成初始化用户就退出了: sessionId=" + terminalSession.getSessionId());
+        }
+        if (terminalSessionInstance.getInstanceClosed()) {
+            return;
+        }
         closeTerminalSessionInstance(terminalSessionInstance);
     }
 
@@ -47,7 +66,6 @@ public class SimpleTerminalSessionFacadeImpl implements SimpleTerminalSessionFac
         terminalSession.setSessionClosed(true);
         terminalSessionService.update(terminalSession);
     }
-
 
     @Override
     public void recordTerminalSessionInstance(TerminalSessionInstance terminalSessionInstance) {
@@ -62,6 +80,21 @@ public class SimpleTerminalSessionFacadeImpl implements SimpleTerminalSessionFac
     @Override
     public TerminalSession getTerminalSessionBySessionId(String sessionId) {
         return terminalSessionService.getBySessionId(sessionId);
+    }
+
+    @Override
+    public void closeTerminalSessionById(int id) {
+        TerminalSession terminalSession = terminalSessionService.getById(id);
+        if (terminalSession.getSessionClosed()) {
+            return;
+        }
+        List<TerminalSessionInstance> instances = terminalSessionInstanceService.queryBySessionId(terminalSession.getSessionId());
+        if (!CollectionUtils.isEmpty(instances)) {
+            for (TerminalSessionInstance instance : instances) {
+                closeTerminalSessionInstance(instance);
+            }
+        }
+        closeTerminalSession(terminalSession);
     }
 
 }

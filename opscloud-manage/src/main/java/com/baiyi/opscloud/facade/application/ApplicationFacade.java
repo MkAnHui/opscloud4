@@ -16,19 +16,20 @@ public interface ApplicationFacade {
 
     DataTable<ApplicationVO.Application> queryApplicationPage(ApplicationParam.ApplicationPageQuery pageQuery);
 
-    DataTable<ApplicationVO.Application> queryApplicationPageByWebTerminal(UserBusinessPermissionParam.UserBusinessPermissionPageQuery pageQuery);
+    DataTable<ApplicationVO.Application> queryMyApplicationPage(UserBusinessPermissionParam.UserBusinessPermissionPageQuery pageQuery);
 
     DataTable<ApplicationResourceVO.Resource> previewApplicationResourcePage(ApplicationResourceParam.ResourcePageQuery pageQuery);
 
     ApplicationVO.Application getApplicationById(Integer id);
 
-    void addApplication(ApplicationVO.Application application);
+    void addApplication(ApplicationParam.AddApplication addApplication);
 
-    void updateApplication(ApplicationVO.Application application);
+    void updateApplication(ApplicationParam.UpdateApplication updateApplication);
 
     void deleteApplication(Integer id);
 
-    void bindApplicationResource(ApplicationResourceVO.Resource resource);
+    void bindApplicationResource(ApplicationResourceParam.Resource resource);
 
     void unbindApplicationResource(Integer id);
+
 }

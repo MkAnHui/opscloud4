@@ -3,6 +3,7 @@ package com.baiyi.opscloud.service.terminal;
 import com.baiyi.opscloud.domain.DataTable;
 import com.baiyi.opscloud.domain.generator.opscloud.TerminalSessionInstanceCommand;
 import com.baiyi.opscloud.domain.param.terminal.TerminalSessionInstanceCommandParam;
+import com.baiyi.opscloud.domain.vo.base.ReportVO;
 
 import java.util.List;
 
@@ -18,4 +19,16 @@ public interface TerminalSessionInstanceCommandService {
     List<TerminalSessionInstanceCommand> queryByInstanceId(Integer terminalSessionInstanceId);
 
     DataTable<TerminalSessionInstanceCommand> queryTerminalSessionInstanceCommandPage(TerminalSessionInstanceCommandParam.InstanceCommandPageQuery pageQuery);
+
+    /**
+     * 统计会话实例命令数量
+     * @param terminalSessionInstanceId
+     * @return
+     */
+    int countByTerminalSessionInstanceId(Integer terminalSessionInstanceId);
+
+    List<ReportVO.Report> statByMonth();
+
+    int statTotal();
+
 }

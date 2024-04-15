@@ -13,9 +13,12 @@ public interface ServerAccountFacade {
 
     DataTable<ServerAccountVO.Account> queryServerAccountPage(ServerAccountParam.ServerAccountPageQuery pageQuery);
 
-    void addServerAccount(ServerAccountVO.Account account);
+    void addServerAccount(ServerAccountParam.ServerAccount serverAccount);
 
-    void updateServerAccount(ServerAccountVO.Account account);
+    void updateServerAccount(ServerAccountParam.ServerAccount account);
 
     void updateServerAccountPermission(ServerAccountParam.UpdateServerAccountPermission updatePermission);
+
+    void deleteServerAccountById(Integer id);
+
 }

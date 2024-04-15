@@ -1,23 +1,115 @@
 Welcome to the opscloud wiki!
 
-# OpsCloud4.0 IaC基础架构即代码
-<img src="https://img.shields.io/badge/version-4.0.8-brightgreen.svg"></img>
-<img src="https://img.shields.io/badge/java-8-brightgreen.svg"></img> 
-<img src="https://img.shields.io/badge/springboot-2.4.13-brightgreen.svg"></img> 
-<img src="https://img.shields.io/badge/mysql-8-brightgreen.svg"></img> 
 
-<br>
+## Thanks to JetBrains
+<a href="https://www.jetbrains.com" target="_blank">
+  <img src="https://opscloud-res.oss-cn-hangzhou.aliyuncs.com/opscloud4/jetbrains-logos/jetbrains-variant-2.svg" alt=""/>
+</a>
 
-### 项目语言&仓库
-+ 服务端Java, github.com/ixrjog/opscloud4
-+ 前端Vue, github.com/ixrjog/opscloud4-web
+> Thanks JetBrains to support the project providing such great IDE.
 
-### 开发环境
-+ MacBook M1 PRO / macOS Monterey
-+ IntelliJ IDEA 2021.3.2 (Ultimate Edition)
-+ WebStorm 2021.3.2
+![GitHub Stats Card](https://github-readme-stats.vercel.app/api?username=ixrjog&show_icons=true&theme=onedark)
 
-<img src="https://opscloud4-res.oss-cn-hangzhou.aliyuncs.com/help/login_1.png"></img>
+## OpsCloud4 云上运维
+<img src="https://img.shields.io/badge/Version-4.6.0-brightgreen.svg"></img>
+<img src="https://img.shields.io/badge/OpenJDK-21-brightgreen.svg"></img> 
+<img src="https://img.shields.io/badge/SpringBoot-3.2.0-brightgreen.svg"></img> 
+<img src="https://img.shields.io/badge/MySQL-8-brightgreen.svg"></img>
+<br/>
+[![Security Status](https://www.murphysec.com/platform3/v31/badge/1683749365419687936.svg)](https://www.murphysec.com/console/report/1656107048332996608/1683749365419687936)
+<br/>
+
+## 架构图
+<img src="https://opscloud4-res.oss-cn-hangzhou.aliyuncs.com/github/4.5.0/opscloud4_2.svg" width="600" alt=""/>
+
+## Code repository
++ Backend
+  + [https://github.com/ixrjog/opscloud4](https://github.com/ixrjog/opscloud4)
++ Frontend
+  + [https://github.com/ixrjog/opscloud4-web](https://github.com/ixrjog/opscloud4-web)
+
+## Database
++ [v4.6.0 opscloud4-github.sql](https://opscloud4-web.oss-eu-west-1.aliyuncs.com/package/4.6.0/opscloud4-github.sql)
+
+## 登录信息
++ username:baiyi
++ password:空密码
+  
+## 开发环境
++ OpenJDK 21
++ node-v16.13.0
++ MacBook M1
++ IntelliJ IDEA 2023
++ WebStorm 2023
+
+## Leo持续交付
+
++ 构建
+
+<img src="https://opscloud4-res.oss-cn-hangzhou.aliyuncs.com/help/leo/leo-8.png" width="830"></img>
+
++ 部署
+
+<img src="https://opscloud4-res.oss-cn-hangzhou.aliyuncs.com/help/leo/leo-9.png" width="830"></img>
+<img src="https://opscloud4-res.oss-cn-hangzhou.aliyuncs.com/help/leo/leo-6.png" width="830"></img>
+
++ 规则配置（封网）
+
+<img src="https://opscloud4-res.oss-cn-hangzhou.aliyuncs.com/help/leo/leo-10.png" width="830"></img>
+
++ 任务配置
+
+<img src="https://opscloud4-res.oss-cn-hangzhou.aliyuncs.com/help/leo/leo-5.png" width="830"></img>
+
+## 容器堡垒机（集成:Leo持续交付版本信息,多可用区部署可视化）
+<img src="https://opscloud4-res.oss-cn-hangzhou.aliyuncs.com/github/4.5.1/kt-1.png" width="830"></img>
+
+## 主要功能
++ Leo持续交付（Kubernetes）
+  + 全冗余架构，多Jenkins引擎且无状态
+  + 权限控制/封网策略
+  + 分组（蓝/绿），金丝雀部署；可视化发布过程
++ 多实例动态数据源，万物皆资产
++ 堡垒机
+  + 服务器Web终端
+    + 多服务器同时连接+命令同步、会话复制、会话心跳
+    + 支持ED25519、RSA密钥
+  + KubernetesWeb终端
+    + 多容器同时登录+命令同步、容器日志、会话心跳 
+  + SSH-Server
+    + 原生SSH协议实现，支持ED25519密钥
+    + 简化用户登录，自动关联用户GitLab账户公钥
+    + 支持服务器、容器登录
+```mermaid
+flowchart LR
+    A[User] -->|SSH:22| B{SLB}
+    B-->|TCP:2222| C[Opscloud Server] 
+    B-->|TCP:2222| D[Opscloud Server] 
+    
+    E[User] -->|ssh ed25519 | F{{SSH-Server}}
+    F-->|ssh ed25519| G[Linux] 
+```
++ 服务器批量任务
+  + Ansible Playbook
+  + 单服务器多线程实现，任务日志更加清晰
++ RBAC,MFA(OTP)
++ 集群架构
+  + 实例健康检查接口 /api/instance/health/lb-check (GET) 
+  + 分布式调度任务(Quartz)、定时任务分布式锁(Shedlock)、任务并发锁(Redis)
+  + 高性能、可伸缩、高可用性
++ 标签驱动、事件驱动 
++ API文档
+  + example.com/doc.html
+  + API Token
+
+## Services & Ports
+
+| service    | protocol | port | startup parameter     |
+|------------|----------|------|-----------------------|
+| web        | http     | 8080 | --server.port=8080    |
+| ssh-server | ssh      | 2222 | --ssh.shell.port=2222 |
+
+## 功能截图
 
 <table>
 <tr>
@@ -81,38 +173,12 @@ Welcome to the opscloud wiki!
 </tr>
 </table>
 
-
-
-#### <span style="color:green">平台演示视频1</span>
+## <span style="color:green">平台演示视频1</span>
 <video src="https://opscloud-res.oss-cn-hangzhou.aliyuncs.com/opscloud4/video/opscloud4-1.mov" width="400px" height="300px" controls="controls"></video>
 
-#### 核心功能
-+ 事件驱动
-+ 万物皆资产
-  + 多实例支持
-  + 多云支持（阿里云，AWS）
-+ 运维工单 
-+ 堡垒机
-  + 远程桌面RDP,VNC(需安装apache-guacamole)
-  + Web终端（支持多开，会话复制，命令同步）
-  + SSH-Server(命令行终端)
-    + 支持RSA-4096bit,ED25519密钥 
-    + 支持用户关联Gitlab账户中配置的公钥，无需配置即可登录
-    + 展示服务器环境，标签，授权账户
-    + 支持Kubernetes容器登录（容器堡垒机）
-    + 支持查看Kubernetes容器日志
-    + 以事件驱动的主动式堡垒机（通过事件ID登录服务器）
-+ 剧本任务
-+ RBAC,MFA(OTP)
-+ 集群架构
-
-### 帮助文档
+## 帮助文档
 
 <a style="color:#2b669a" href="https://www.kancloud.cn/ixrjog/opscloud4/2361886" target="_blank">传送门:https://www.kancloud.cn/ixrjog/opscloud4/2361886</a>
 
-### Thanks to JetBrains
-<a href="https://www.jetbrains.com" target="_blank">
-  <img src="https://opscloud-res.oss-cn-hangzhou.aliyuncs.com/opscloud4/jetbrains-logos/jetbrains-variant-2.svg"></img>
-</a>
-
-> Thanks JetBrains to support the project providing such great IDE.
+## 交流群
+Q群: 630913972

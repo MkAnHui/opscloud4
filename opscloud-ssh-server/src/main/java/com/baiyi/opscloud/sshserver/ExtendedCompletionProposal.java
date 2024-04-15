@@ -16,20 +16,16 @@
 
 package com.baiyi.opscloud.sshserver;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.shell.CompletionProposal;
 
 /**
  * Extended completion proposal to be able to set complete attribute of proposal
  */
+@Setter
+@Getter
 public class ExtendedCompletionProposal extends CompletionProposal {
-
-    public boolean isComplete() {
-        return complete;
-    }
-
-    public void setComplete(boolean complete) {
-        this.complete = complete;
-    }
 
     /**
      * If should add space after proposed proposal
@@ -48,22 +44,4 @@ public class ExtendedCompletionProposal extends CompletionProposal {
         this.complete = complete;
     }
 
-    public boolean equals(final Object o) {
-        if (o == this) return true;
-        if (!(o instanceof ExtendedCompletionProposal)) return false;
-        final ExtendedCompletionProposal other = (ExtendedCompletionProposal) o;
-        if (!other.canEqual((Object) this)) return false;
-        return this.isComplete() == other.isComplete();
-    }
-
-    protected boolean canEqual(final Object other) {
-        return other instanceof ExtendedCompletionProposal;
-    }
-
-    public int hashCode() {
-        final int PRIME = 59;
-        int result = 1;
-        result = result * PRIME + (this.isComplete() ? 79 : 97);
-        return result;
-    }
 }

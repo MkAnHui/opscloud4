@@ -2,12 +2,12 @@ package com.baiyi.opscloud.domain.vo.event;
 
 import com.baiyi.opscloud.domain.vo.base.BaseVO;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -21,37 +21,38 @@ public class EventVO {
     @EqualsAndHashCode(callSuper = true)
     @Data
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class Event extends BaseVO implements Serializable {
 
+        @Serial
         private static final long serialVersionUID = -1509640973227933L;
 
         private Integer id;
 
-        @ApiModelProperty(value = "数据源实例uuid")
+        @Schema(description = "数据源实例UUID")
         private String instanceUuid;
 
-        @ApiModelProperty(value = "事件id")
+        @Schema(description = "事件ID")
         private String eventId;
 
-        @ApiModelProperty(value = "事件id描述")
+        @Schema(description = "事件ID描述")
         private String eventIdDesc;
 
-        @ApiModelProperty(value = "严重性级别")
+        @Schema(description = "严重性级别")
         private Integer priority;
 
-        @ApiModelProperty(value = "严重类型")
+        @Schema(description = "严重类型")
         private String severityType;
 
-        @ApiModelProperty(value = "最后更改其状态的时间")
+        @Schema(description = "最后更改其状态的时间")
         @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
         private Date lastchangeTime;
 
-        @ApiModelProperty(value = "过期时间")
+        @Schema(description = "过期时间")
         @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
         private Date expiredTime;
 
-        @ApiModelProperty(value = "事件信息")
+        @Schema(description = "事件信息")
         private String eventMessage;
 
     }

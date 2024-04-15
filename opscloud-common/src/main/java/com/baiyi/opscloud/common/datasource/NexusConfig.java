@@ -1,7 +1,7 @@
 package com.baiyi.opscloud.common.datasource;
 
-import com.baiyi.opscloud.common.datasource.base.BaseConfig;
-import io.swagger.annotations.ApiModel;
+import com.baiyi.opscloud.common.datasource.base.BaseDsConfig;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -13,9 +13,9 @@ import java.util.List;
  * @Date 2021/8/5 5:47 下午
  * @Version 1.0
  */
-@EqualsAndHashCode(callSuper = true)
 @Data
-public class NexusConfig extends BaseConfig {
+@EqualsAndHashCode(callSuper = true)
+public class NexusConfig extends BaseDsConfig {
 
     private Nexus nexus;
 
@@ -26,7 +26,7 @@ public class NexusConfig extends BaseConfig {
 
     @Data
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class Nexus {
 
         private String version;
@@ -34,18 +34,18 @@ public class NexusConfig extends BaseConfig {
         private String user;
         private String password;
 
-        private List<Repository> repositories; // 需要同步的仓库列表
-
-        private List<String> filter; // 保留扩展名资产
+        @Schema(description = "需要同步的仓库列表")
+        private List<Repository> repositories;
+        @Schema(description = "保留扩展名资产")
+        private List<String> filter;
     }
 
     @Data
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class Repository {
         private String name;
         private String kind;
     }
 
 }
-

@@ -9,8 +9,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
-import static com.baiyi.opscloud.common.config.ThreadPoolTaskConfiguration.TaskPools.CORE;
-
 /**
  * 工单通知助手
  *
@@ -23,18 +21,18 @@ import static com.baiyi.opscloud.common.config.ThreadPoolTaskConfiguration.TaskP
 @Component
 public class TicketNoticeHelper {
 
-    public static final Map<String, Consumer<WorkOrderTicket>> context = new ConcurrentHashMap<>();
+    public static final Map<String, Consumer<WorkOrderTicket>> CONTEXT = new ConcurrentHashMap<>();
 
     /**
      * 发送通知
      *
      * @param ticket
      */
-    @Async(CORE)
+    @Async
     public void send(WorkOrderTicket ticket) {
         final String phase = ticket.getTicketPhase();
-        if (context.containsKey(phase)) {
-            context.get(phase).accept(ticket);
+        if (CONTEXT.containsKey(phase)) {
+            CONTEXT.get(phase).accept(ticket);
         }
     }
 

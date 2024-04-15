@@ -25,8 +25,7 @@ import java.util.List;
 /**
  * Extended input which takes in account special characters
  */
-public class ExtendedInput
-        implements Input {
+public class ExtendedInput implements Input {
 
     public static final String PIPE = "|";
 
@@ -82,5 +81,5 @@ public class ExtendedInput
         }
         return firstIndex;
     }
-}
 
+}

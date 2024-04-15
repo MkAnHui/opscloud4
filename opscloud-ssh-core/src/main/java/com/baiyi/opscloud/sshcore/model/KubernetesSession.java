@@ -23,7 +23,6 @@ import java.io.PrintStream;
 @NoArgsConstructor
 public class KubernetesSession {
 
-
     private String sessionId;
     /**
      * 服务器唯一id
@@ -41,7 +40,9 @@ public class KubernetesSession {
     private static SessionOutput sessionOutput;
 
     public void resize(KubernetesMessage.Resize resizeMessage) {
-        if (this.execWatch == null) return;
+        if (this.execWatch == null) {
+            return;
+        }
         execWatch.resize(resizeMessage.getCols(), resizeMessage.getRows());
     }
 
@@ -52,4 +53,5 @@ public class KubernetesSession {
     public SessionOutput getSessionOutput() {
         return KubernetesSession.sessionOutput;
     }
+
 }

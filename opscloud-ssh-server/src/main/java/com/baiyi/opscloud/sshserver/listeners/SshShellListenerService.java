@@ -28,7 +28,7 @@ import java.util.List;
 @Slf4j
 public class SshShellListenerService {
 
-    private List<SshShellListener> listeners;
+    private final List<SshShellListener> listeners;
 
     public SshShellListenerService(List<SshShellListener> listeners) {
         this.listeners = listeners == null ? new ArrayList<>() : listeners;
@@ -54,6 +54,15 @@ public class SshShellListenerService {
     }
 
     /**
+     * Session destroyed
+     *
+     * @param channelSession ssh channel session
+     */
+    public void onSessionDestroyed(ChannelSession channelSession) {
+        notify(new SshShellEvent(SshShellEventType.SESSION_DESTROYED, channelSession));
+    }
+
+    /**
      * Session stopped with error
      *
      * @param channelSession ssh channel session
@@ -63,12 +72,13 @@ public class SshShellListenerService {
     }
 
     private void notify(SshShellEvent event) {
-        for (SshShellListener listener : this.listeners) {
+        this.listeners.forEach(listener -> {
             try {
                 listener.onEvent(event);
             } catch (RuntimeException e) {
                 log.error("Unable to execute onSessionStarted on listener : {}", listener.getClass().getName(), e);
             }
-        }
+        });
     }
+
 }

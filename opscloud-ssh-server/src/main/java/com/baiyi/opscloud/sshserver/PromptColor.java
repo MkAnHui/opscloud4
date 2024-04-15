@@ -16,14 +16,14 @@
 
 package com.baiyi.opscloud.sshserver;
 
-import lombok.Getter;
-import lombok.Setter;
-
 /**
  * Map enum color to jline ones
  */
 public enum PromptColor {
 
+    /**
+     * Color
+     */
     BLACK(0),
     RED(1),
     GREEN(2),
@@ -32,18 +32,8 @@ public enum PromptColor {
     MAGENTA(5),
     CYAN(6),
     WHITE(7),
-    BRIGHT(8),
-    COLOR64(64),
-    COLOR128(128),
-    COLOR129(129),
-    COLOR130(130),
-    COLOR131(131),
-    COLOR132(132),
-    COLOR250(250)
-    ;
+    BRIGHT(8);
 
-    @Getter
-    @Setter
     private final int value;
 
     PromptColor(int value) {
@@ -53,4 +43,5 @@ public enum PromptColor {
     public int toJlineAttributedStyle() {
         return value;
     }
+
 }

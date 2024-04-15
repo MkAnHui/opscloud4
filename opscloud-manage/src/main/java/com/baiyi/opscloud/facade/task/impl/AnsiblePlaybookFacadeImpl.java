@@ -8,7 +8,6 @@ import com.baiyi.opscloud.domain.generator.opscloud.AnsiblePlaybook;
 import com.baiyi.opscloud.domain.param.ansible.AnsiblePlaybookParam;
 import com.baiyi.opscloud.domain.vo.ansible.AnsiblePlaybookVO;
 import com.baiyi.opscloud.facade.task.AnsiblePlaybookFacade;
-import com.baiyi.opscloud.packer.task.AnsiblePlaybookPacker;
 import com.baiyi.opscloud.service.ansible.AnsiblePlaybookService;
 import com.baiyi.opscloud.util.PlaybookUtil;
 import lombok.RequiredArgsConstructor;
@@ -27,8 +26,6 @@ public class AnsiblePlaybookFacadeImpl implements AnsiblePlaybookFacade {
 
     private final AnsiblePlaybookService ansiblePlaybookService;
 
-    private final AnsiblePlaybookPacker ansiblePlaybookPacker;
-
     @Override
     public DataTable<AnsiblePlaybookVO.Playbook> queryAnsiblePlaybookPage(AnsiblePlaybookParam.AnsiblePlaybookPageQuery pageQuery) {
         DataTable<AnsiblePlaybook> table = ansiblePlaybookService.queryPageByParam(pageQuery);
@@ -39,14 +36,14 @@ public class AnsiblePlaybookFacadeImpl implements AnsiblePlaybookFacade {
     }
 
     @Override
-    public void updateAnsiblePlaybook(AnsiblePlaybookVO.Playbook playbook) {
+    public void updateAnsiblePlaybook(AnsiblePlaybookParam.Playbook playbook) {
         AnsiblePlaybook ansiblePlaybook = BeanCopierUtil.copyProperties(playbook, AnsiblePlaybook.class);
         ansiblePlaybookService.update(ansiblePlaybook);
         writeFilePlaybook(ansiblePlaybook);
     }
 
     @Override
-    public void addAnsiblePlaybook(AnsiblePlaybookVO.Playbook playbook) {
+    public void addAnsiblePlaybook(AnsiblePlaybookParam.Playbook playbook) {
         playbook.setPlaybookUuid(IdUtil.buildUUID());
         AnsiblePlaybook ansiblePlaybook = BeanCopierUtil.copyProperties(playbook, AnsiblePlaybook.class);
         ansiblePlaybookService.add(ansiblePlaybook);
@@ -62,4 +59,5 @@ public class AnsiblePlaybookFacadeImpl implements AnsiblePlaybookFacade {
     public void deleteAnsiblePlaybookById(int id) {
         ansiblePlaybookService.deleteById(id);
     }
+
 }

@@ -3,21 +3,20 @@ package com.baiyi.opscloud.datasource.aliyun.provider;
 import com.baiyi.opscloud.common.annotation.SingleTask;
 import com.baiyi.opscloud.common.constants.enums.DsTypeEnum;
 import com.baiyi.opscloud.common.datasource.AliyunConfig;
+import com.baiyi.opscloud.core.comparer.AssetComparer;
 import com.baiyi.opscloud.core.factory.AssetProviderFactory;
 import com.baiyi.opscloud.core.model.DsInstanceContext;
 import com.baiyi.opscloud.core.provider.asset.BaseAssetProvider;
-import com.baiyi.opscloud.core.util.AssetUtil;
 import com.baiyi.opscloud.datasource.aliyun.dms.driver.AliyunDmsTenantDriver;
 import com.baiyi.opscloud.datasource.aliyun.dms.driver.AliyunDmsUserDriver;
 import com.baiyi.opscloud.datasource.aliyun.dms.entity.DmsUser;
 import com.baiyi.opscloud.datasource.aliyun.provider.push.AliyunDmsUserPushHelper;
-import com.baiyi.opscloud.domain.generator.opscloud.DatasourceConfig;
-import com.baiyi.opscloud.domain.generator.opscloud.DatasourceInstanceAsset;
 import com.baiyi.opscloud.domain.constants.DsAssetTypeConstants;
+import com.baiyi.opscloud.domain.generator.opscloud.DatasourceConfig;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -45,7 +44,6 @@ public class AliyunDmsUserProvider extends BaseAssetProvider<DmsUser.User> {
     public void pullAsset(int dsInstanceId) {
         doPull(dsInstanceId);
     }
-
     /**
      * 同步资产
      *
@@ -62,11 +60,11 @@ public class AliyunDmsUserProvider extends BaseAssetProvider<DmsUser.User> {
                     .map(AliyunConfig.Aliyun::getDms)
                     .map(AliyunConfig.Dms::getTid)
                     .orElse(AliyunDmsTenantDriver.getTenant(aliyun).getTid());
-            users.forEach(r -> {
+            users.forEach(dmsUser -> {
                 try {
-                    AliyunDmsUserDriver.registerUser(aliyun, tid, r);
+                    AliyunDmsUserDriver.registerUser(aliyun, tid, dmsUser);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    log.error("注册用户错误: nickName={}, {}", dmsUser.nickName, e.getMessage());
                 }
             });
             this.doPull(dsInstanceId);
@@ -76,14 +74,12 @@ public class AliyunDmsUserProvider extends BaseAssetProvider<DmsUser.User> {
     }
 
     private AliyunConfig.Aliyun buildConfig(DatasourceConfig dsConfig) {
-        return dsConfigHelper.build(dsConfig, AliyunConfig.class).getAliyun();
+        return dsConfigManager.build(dsConfig, AliyunConfig.class).getAliyun();
     }
 
     @Override
-    protected boolean equals(DatasourceInstanceAsset asset, DatasourceInstanceAsset preAsset) {
-        if (!AssetUtil.equals(preAsset.getName(), asset.getName()))
-            return false;
-        return true;
+    protected AssetComparer getAssetComparer() {
+        return AssetComparer.COMPARE_NAME;
     }
 
     @Override
@@ -96,6 +92,7 @@ public class AliyunDmsUserProvider extends BaseAssetProvider<DmsUser.User> {
                     .orElse(AliyunDmsTenantDriver.getTenant(aliyun).getTid());
             return AliyunDmsUserDriver.listUser(aliyun, tid);
         } catch (Exception e) {
+            log.error("获取条目错误: {}", e.getMessage());
         }
         return Collections.emptyList();
     }
@@ -116,4 +113,3 @@ public class AliyunDmsUserProvider extends BaseAssetProvider<DmsUser.User> {
     }
 
 }
-

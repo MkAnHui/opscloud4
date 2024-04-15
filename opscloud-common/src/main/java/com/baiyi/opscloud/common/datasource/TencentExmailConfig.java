@@ -1,7 +1,7 @@
 package com.baiyi.opscloud.common.datasource;
 
-import com.baiyi.opscloud.common.datasource.base.BaseConfig;
-import io.swagger.annotations.ApiModel;
+import com.baiyi.opscloud.common.datasource.base.BaseDsConfig;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -11,22 +11,22 @@ import lombok.NoArgsConstructor;
  * @Date 2021/10/12 3:07 下午
  * @Version 1.0
  */
-@EqualsAndHashCode(callSuper = true)
 @Data
-public class TencentExmailConfig extends BaseConfig {
+@EqualsAndHashCode(callSuper = true)
+public class TencentExmailConfig extends BaseDsConfig {
 
     private Tencent tencent;
 
     @Data
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class Tencent {
         private Exmail exmail;
     }
 
     @Data
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class Exmail {
         private String apiUrl;
         private String corpId;
@@ -35,4 +35,3 @@ public class TencentExmailConfig extends BaseConfig {
     }
 
 }
-

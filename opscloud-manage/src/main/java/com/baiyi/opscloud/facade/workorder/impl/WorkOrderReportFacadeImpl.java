@@ -32,19 +32,26 @@ public class WorkOrderReportFacadeImpl implements WorkOrderReportFacade {
 
     @Override
     public WorkOrderReportVO.MonthReport queryTicketReportByMonth() {
-        List<String> dateCatList = ticketService.queryReportByMonth(-1)
+        List<String> dateCatList = ticketService.statByMonth(-1)
                 .stream().map(WorkOrderReportVO.Report::getCName).collect(Collectors.toList());
         return WorkOrderReportVO.MonthReport.builder()
-                .dateCatList(dateCatList)
-                .nameStatistics(queryWorkorderNameStatistics())
+                .dateCat(dateCatList)
+                .nameCat(queryWorkOrderNameStatistics())
                 .build();
     }
 
-    private Map<String, List<Integer>> queryWorkorderNameStatistics() {
+    private Map<String, WorkOrderReportVO.MonthStatistics> queryWorkOrderNameStatistics() {
         List<WorkOrder> workorderList = workOrderService.queryAll();
-        return workorderList.stream().collect(Collectors.toMap(WorkOrder::getName,
-                e -> ticketService.queryReportByMonth(e.getId()).stream().map(WorkOrderReportVO.Report::getValue).collect(Collectors.toList()),
-                (k1, k2) -> k1));
-
+        return workorderList.stream().collect(
+                Collectors.toMap(WorkOrder::getName,
+                        e -> WorkOrderReportVO.MonthStatistics.builder()
+                                .values(ticketService.statByMonth(e.getId())
+                                        .stream()
+                                        .map(WorkOrderReportVO.Report::getValue)
+                                        .collect(Collectors.toList()))
+                                .color(workOrderService.getById(e.getId()).getColor())
+                                .build()
+                        , (k1, k2) -> k1));
     }
+
 }

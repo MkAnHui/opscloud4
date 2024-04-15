@@ -1,16 +1,17 @@
 package com.baiyi.opscloud.facade.user.impl;
 
+import com.baiyi.opscloud.common.exception.common.OCException;
 import com.baiyi.opscloud.common.util.BeanCopierUtil;
 import com.baiyi.opscloud.domain.DataTable;
 import com.baiyi.opscloud.domain.annotation.AssetBusinessRelation;
 import com.baiyi.opscloud.domain.annotation.AssetBusinessUnbindRelation;
 import com.baiyi.opscloud.domain.annotation.BusinessType;
 import com.baiyi.opscloud.domain.annotation.TagClear;
+import com.baiyi.opscloud.domain.constants.BusinessTypeEnum;
 import com.baiyi.opscloud.domain.generator.opscloud.UserGroup;
 import com.baiyi.opscloud.domain.generator.opscloud.UserPermission;
 import com.baiyi.opscloud.domain.param.user.UserBusinessPermissionParam;
 import com.baiyi.opscloud.domain.param.user.UserGroupParam;
-import com.baiyi.opscloud.domain.constants.BusinessTypeEnum;
 import com.baiyi.opscloud.domain.vo.user.UserGroupVO;
 import com.baiyi.opscloud.domain.vo.user.UserVO;
 import com.baiyi.opscloud.facade.user.UserGroupFacade;
@@ -61,15 +62,17 @@ public class UserGroupFacadeImpl implements UserGroupFacade, IUserBusinessPermis
     }
 
     @Override
-    @AssetBusinessRelation // 资产绑定业务对象
-    public void addUserGroup(UserGroupVO.UserGroup userGroup) {
+    @AssetBusinessRelation
+    public void addUserGroup(UserGroupParam.UserGroup userGroup) {
         userGroupService.add(BeanCopierUtil.copyProperties(userGroup, UserGroup.class));
     }
 
     @Override
-    public void updateUserGroup(UserGroupVO.UserGroup userGroup) {
+    public void updateUserGroup(UserGroupParam.UserGroup userGroup) {
         UserGroup pre = userGroupService.getById(userGroup.getId());
-        if (pre == null) return;
+        if (pre == null) {
+            return;
+        }
         pre.setAllowOrder(userGroup.getAllowOrder());
         pre.setComment(userGroup.getComment());
         pre.setSource(userGroup.getSource());
@@ -77,8 +80,8 @@ public class UserGroupFacadeImpl implements UserGroupFacade, IUserBusinessPermis
     }
 
     @Override
-    @TagClear// 清除标签
-    @AssetBusinessUnbindRelation(type = BusinessTypeEnum.USERGROUP) // 解除资产绑定
+    @TagClear
+    @AssetBusinessUnbindRelation(type = BusinessTypeEnum.USERGROUP)
     public void deleteUserGroupById(Integer id) {
         // 检查组成员
         UserPermission userPermission = UserPermission.builder()
@@ -86,8 +89,9 @@ public class UserGroupFacadeImpl implements UserGroupFacade, IUserBusinessPermis
                 .businessType(BusinessTypeEnum.USERGROUP.getType())
                 .build();
         List<UserPermission> userPermissions = userPermissionService.queryByBusiness(userPermission);
-        if (!CollectionUtils.isEmpty(userPermissions))
-            throw new RuntimeException("必须删除用户组中的用户！");
+        if (!CollectionUtils.isEmpty(userPermissions)) {
+            throw new OCException("必须删除用户组中的用户！");
+        }
         userGroupService.deleteById(id);
     }
 

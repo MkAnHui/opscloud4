@@ -39,7 +39,7 @@ public class AliyunOnsRocketMqTopicDriver {
 
     public OnsRocketMqTopic.Topic getTopic(String regionId, AliyunConfig.Aliyun aliyun, String instanceId, String topic) throws ClientException {
         List<OnsRocketMqTopic.Topic> list = listTopic(regionId, aliyun, instanceId, topic);
-        return CollectionUtils.isEmpty(list) ? null : list.get(0);
+        return CollectionUtils.isEmpty(list) ? null : list.getFirst();
     }
 
     /**
@@ -61,8 +61,9 @@ public class AliyunOnsRocketMqTopicDriver {
             request.setTopic(topic);
         }
         OnsTopicListResponse response = aliyunClient.getAcsResponse(regionId, aliyun, request);
-        if (response == null || CollectionUtils.isEmpty(response.getData()))
+        if (response == null || CollectionUtils.isEmpty(response.getData())) {
             return Collections.emptyList();
+        }
         return response.getData().stream().map(e -> {
             OnsRocketMqTopic.Topic t = BeanCopierUtil.copyProperties(e, OnsRocketMqTopic.Topic.class);
             t.setRegionId(regionId);
@@ -86,7 +87,7 @@ public class AliyunOnsRocketMqTopicDriver {
         request.setRemark(topic.getRemark());
         request.setMessageType(topic.getMessageType());
         OnsTopicCreateResponse response = aliyunClient.getAcsResponse(regionId, aliyun, request);
-        log.info("创建阿里云ONS-Topic: requestId = {}, topic = {}", response.getRequestId(), topic);
+        log.info("创建阿里云ONS-Topic: requestId={}, topic={}", response.getRequestId(), topic);
     }
 
 }

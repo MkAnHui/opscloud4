@@ -1,17 +1,15 @@
 package com.baiyi.opscloud.domain.param.user;
 
-import com.baiyi.opscloud.domain.constants.DsInstanceTagConstants;
+import com.baiyi.opscloud.domain.constants.BusinessTypeEnum;
+import com.baiyi.opscloud.domain.constants.TagConstants;
 import com.baiyi.opscloud.domain.param.IExtend;
 import com.baiyi.opscloud.domain.param.IFilterTag;
 import com.baiyi.opscloud.domain.param.PageParam;
 import com.baiyi.opscloud.domain.param.SuperPageParam;
-import com.baiyi.opscloud.domain.constants.BusinessTypeEnum;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-
-import javax.validation.constraints.NotNull;
 
 /**
  * @Author baiyi
@@ -21,33 +19,54 @@ import javax.validation.constraints.NotNull;
 public class UserBusinessPermissionParam {
 
     @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Schema
+    public static class UserBusinessPermission {
+
+        @NotNull(message = "用户ID不能为空")
+        private Integer userId;
+
+        @NotNull(message = "业务类型不能为空")
+        private Integer businessType;
+
+        @NotNull(message = "业务id不能为空")
+        private Integer businessId;
+
+    }
+
+    @Data
     @SuperBuilder(toBuilder = true)
     @EqualsAndHashCode(callSuper = true)
     @AllArgsConstructor
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class UserBusinessPermissionPageQuery extends SuperPageParam implements IExtend {
 
-        @ApiModelProperty(value = "查询名称")
+        private int businessType;
+
+        @Schema(description = "查询名称")
         private String queryName;
 
-        @ApiModelProperty(value = "用户id")
-//        @NotNull(message = "用户id不能为空")
+        @Schema(description = "应用ID")
+        private Integer applicationId;
+
+        @Schema(description = "用户ID")
         private Integer userId;
 
-        @ApiModelProperty(value = "是否授权")
+        @Schema(description = "是否授权")
         @NotNull(message = "是否授权选项不能为空")
         @Builder.Default
         private Boolean authorized = true;
 
-        @ApiModelProperty(value = "是否管理员")
+        @Schema(description = "是否管理员")
         @Builder.Default
         private Boolean admin = false;
 
         @Builder.Default
         private Boolean extend = false;
 
-        private int businessType;
     }
 
     @Data
@@ -55,39 +74,36 @@ public class UserBusinessPermissionParam {
     @EqualsAndHashCode(callSuper = true)
     @AllArgsConstructor
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class BusinessPermissionUserPageQuery extends PageParam implements IFilterTag, IExtend {
 
-        @ApiModelProperty(value = "查询用户")
+        @Schema(description = "查询用户")
         private String queryName;
 
-        @ApiModelProperty(value = "是否授权")
+        @Schema(description = "是否授权")
         @NotNull(message = "是否授权选项不能为空")
         @Builder.Default
         private Boolean authorized = true;
 
         private Boolean extend;
 
-        @ApiModelProperty(value = "业务对象类型")
-        @NotNull(message = "业务对象类型不能为空")
+        @Schema(description = "业务对象类型")
         private int businessType;
 
-        @ApiModelProperty(value = "业务对象ID")
-        @NotNull(message = "业务对象ID不能为空")
+        @Schema(description = "业务对象ID")
         private int businessId;
 
-        private final String FILTER_SYSTEM_TAG = DsInstanceTagConstants.SYSTEM.getTag();
+        private final String FILTER_SYSTEM_TAG = TagConstants.SYSTEM.getTag();
 
-        @ApiModelProperty(value = "过滤系统标签对象")
+        @Schema(description = "过滤系统标签对象")
         private Boolean filterTag;
 
     }
 
-
     @Data
     @EqualsAndHashCode(callSuper = true)
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class UserPermissionServerGroupPageQuery extends UserBusinessPermissionPageQuery {
 
         private final int businessType = BusinessTypeEnum.SERVERGROUP.getType();
@@ -97,10 +113,11 @@ public class UserBusinessPermissionParam {
     @Data
     @EqualsAndHashCode(callSuper = true)
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class UserPermissionGroupPageQuery extends UserBusinessPermissionPageQuery {
 
         private final int businessType = BusinessTypeEnum.USERGROUP.getType();
 
     }
+
 }

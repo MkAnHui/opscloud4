@@ -15,11 +15,11 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class ZabbixRequestBuilder {
 
-    private static final AtomicInteger nextId = new AtomicInteger(1);
+    private static final AtomicInteger NEXT_ID = new AtomicInteger(1);
 
     private final ZabbixRequest.DefaultRequest request = ZabbixRequest.DefaultRequest.builder().build();
 
-    private final ZabbixRequest.Filter filter = ZabbixRequest.Filter.builder().build();
+    //private final ZabbixRequest.Filter filter = ZabbixRequest.Filter.builder().build();
 
     private ZabbixRequestBuilder() {
     }
@@ -30,7 +30,7 @@ public class ZabbixRequestBuilder {
 
     public ZabbixRequest.DefaultRequest build() {
         if (request.getId() == null) {
-            request.setId(nextId.getAndIncrement());
+            request.setId(NEXT_ID.getAndIncrement());
         }
         return request;
     }
@@ -50,8 +50,9 @@ public class ZabbixRequestBuilder {
     public ZabbixRequestBuilder putParamSkipEmpty(String key, Object value) {
         if (value != null && !org.springframework.util.ObjectUtils.isEmpty(value) && !StringUtils.isEmpty(key)) {
             String str = JSONUtil.writeValueAsString(value);
-            if (str.equals("{}") || str.equals("[]") || str.equals("\"\""))
+            if (str.equals("{}") || str.equals("[]") || str.equals("\"\"")) {
                 return this;
+            }
             request.putParam(key, value);
         }
         return this;
@@ -86,4 +87,5 @@ public class ZabbixRequestBuilder {
         request.setId(id);
         return this;
     }
+
 }

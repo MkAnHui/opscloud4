@@ -26,11 +26,16 @@ import java.util.List;
  */
 @Slf4j
 public class GrepPostProcessor
-        implements PostProcessor<String> {
+        implements PostProcessor<String, String> {
 
     @Override
     public String getName() {
         return "grep";
+    }
+
+    @Override
+    public String getDescription() {
+        return "Find pattern in result lines";
     }
 
     @Override
@@ -45,7 +50,7 @@ public class GrepPostProcessor
                     sb.append(line).append("\n");
                 }
             }
-            return sb.toString().isEmpty() ? sb.toString() : sb.toString().substring(0, sb.toString().length() - 1);
+            return sb.toString().isEmpty() ? sb.toString() : sb.substring(0, sb.toString().length() - 1);
         }
     }
 

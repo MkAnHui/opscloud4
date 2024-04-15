@@ -1,24 +1,24 @@
 package com.baiyi.opscloud.algorithm;
 
 import com.baiyi.opscloud.common.base.Global;
+import com.baiyi.opscloud.common.util.StringFormatter;
 import com.baiyi.opscloud.domain.generator.opscloud.Env;
 import com.baiyi.opscloud.domain.generator.opscloud.Server;
 import com.baiyi.opscloud.domain.generator.opscloud.ServerGroup;
 import com.baiyi.opscloud.domain.model.property.ServerProperty;
-import com.baiyi.opscloud.service.business.BusinessPropertyHelper;
+import com.baiyi.opscloud.service.business.BizPropertyHelper;
 import com.baiyi.opscloud.service.server.ServerService;
 import com.baiyi.opscloud.service.sys.EnvService;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import jakarta.annotation.Resource;
 import org.apache.commons.lang3.time.FastDateFormat;
 import org.springframework.util.CollectionUtils;
 
-import javax.annotation.Resource;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * @Author baiyi
@@ -34,7 +34,7 @@ public abstract class BaseAlgorithm {
     private EnvService envService;
 
     @Resource
-    private BusinessPropertyHelper businessPropertyHelper;
+    private BizPropertyHelper businessPropertyHelper;
 
     protected ServerProperty.Server getBusinessProperty(ServerGroup serverGroup) {
         return businessPropertyHelper.getServerGroupProperty(serverGroup.getId());
@@ -58,9 +58,11 @@ public abstract class BaseAlgorithm {
 
     private Map<String, List<ServerPack>> groupingByEnv(ServerGroup serverGroup, List<Server> serverList) {
         Map<String, List<ServerPack>> map = Maps.newHashMap();
-        if (CollectionUtils.isEmpty(serverList)) return map;
-        List<ServerPack> serverPacks = serverList.stream().map(this::toServerPack).collect(Collectors.toList());
-        for (ServerPack e : serverPacks) {
+        if (CollectionUtils.isEmpty(serverList)) {
+            return map;
+        }
+        List<ServerPack> serverPacks = serverList.stream().map(this::toServerPack).toList();
+        serverPacks.forEach(e -> {
             String groupingName = toSubgroupName(serverGroup, e.getEnv());
             if (map.containsKey(groupingName)) {
                 map.get(groupingName).add(e);
@@ -69,7 +71,7 @@ public abstract class BaseAlgorithm {
                 list.add(e);
                 map.put(groupingName, list);
             }
-        }
+        });
         return map;
     }
 
@@ -81,15 +83,14 @@ public abstract class BaseAlgorithm {
                 .build();
     }
 
-
     protected String toSubgroupName(ServerGroup serverGroup, Env env) {
         return Joiner.on("-").join(serverGroup.getName().replace("group_", ""), env.getEnvName());
     }
 
     public String getHeadInfo() {
         FastDateFormat fastDateFormat = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss");
-        return Joiner.on(" ").join("#", Global.CREATED_BY, "on", fastDateFormat.format(new Date()), "\n\n");
+        String headInfoTpl = "# {} on {}\n\n";
+        return StringFormatter.arrayFormat(headInfoTpl, Global.CREATED_BY, fastDateFormat.format(new Date()));
     }
-
 
 }

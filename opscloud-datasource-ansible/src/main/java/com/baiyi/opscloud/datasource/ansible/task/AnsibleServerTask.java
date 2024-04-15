@@ -1,14 +1,14 @@
 package com.baiyi.opscloud.datasource.ansible.task;
 
+import com.baiyi.opscloud.common.base.AnsibleResult;
+import com.baiyi.opscloud.common.base.ServerTaskStatusEnum;
+import com.baiyi.opscloud.common.base.ServerTaskStopType;
+import com.baiyi.opscloud.common.util.NewTimeUtil;
 import com.baiyi.opscloud.datasource.ansible.TaskStatus;
 import com.baiyi.opscloud.datasource.ansible.exception.TaskTimeoutException;
 import com.baiyi.opscloud.datasource.ansible.executor.TaskExecutor;
 import com.baiyi.opscloud.datasource.ansible.executor.TaskExecutorBuilder;
 import com.baiyi.opscloud.datasource.ansible.recorder.TaskLogStorehouse;
-import com.baiyi.opscloud.common.base.AnsibleResult;
-import com.baiyi.opscloud.common.base.ServerTaskStatusEnum;
-import com.baiyi.opscloud.common.base.ServerTaskStopType;
-import com.baiyi.opscloud.common.util.TimeUtil;
 import com.baiyi.opscloud.domain.generator.opscloud.ServerTaskMember;
 import com.baiyi.opscloud.service.task.ServerTaskMemberService;
 import lombok.extern.slf4j.Slf4j;
@@ -28,17 +28,20 @@ import java.util.Date;
 @Slf4j
 public class AnsibleServerTask implements Runnable {
 
-    public static final Long MAX_TIMEOUT = TimeUtil.minuteTime * 100;
+    public static final Long MAX_TIMEOUT = NewTimeUtil.MINUTE_TIME * 100;
 
-    private ServerTaskMember serverTaskMember;
+    private final ServerTaskMember serverTaskMember;
 
-    private CommandLine commandLine;
+    private final CommandLine commandLine;
 
-    private String taskUuid; // 任务uuid
+    /**
+     * 任务UUID
+     */
+    private final String taskUuid;
 
-    private ServerTaskMemberService serverTaskMemberService;
+    private final ServerTaskMemberService serverTaskMemberService;
 
-    private TaskLogStorehouse taskLogStorehouse;
+    private final TaskLogStorehouse taskLogStorehouse;
 
     public interface ExitValues {
         int OK = 0;
@@ -58,9 +61,10 @@ public class AnsibleServerTask implements Runnable {
 
     private void watching(TaskExecutor taskExecutor, DefaultExecuteResultHandler resultHandler) throws InterruptedException {
         // 启动时间
-        Long startTaskTime = new Date().getTime();
+        long startTaskTime = System.currentTimeMillis();
         while (true) {
-            resultHandler.waitFor(TimeUtil.secondTime); // 等待执行
+            // 等待执行
+            resultHandler.waitFor(NewTimeUtil.SECOND_TIME);
             // 执行日志
             taskLogStorehouse.recorderLog(taskUuid, serverTaskMember, taskExecutor);
             // 任务结束
@@ -74,7 +78,8 @@ public class AnsibleServerTask implements Runnable {
                 return;
             } else {
                 // 判断任务是否需要终止或超时
-                if (TimeUtil.checkTimeout(startTaskTime, MAX_TIMEOUT)) {
+                if (NewTimeUtil.isTimeout(startTaskTime, MAX_TIMEOUT)) {
+                    log.warn("Ansible task timeout: startTaskTime={}, maxTimeout={}", startTaskTime, MAX_TIMEOUT);
                     taskExecutor.killedProcess(); // kill
                     taskLogStorehouse.recorderLog(taskUuid, serverTaskMember, taskExecutor);
                     throw new TaskTimeoutException();
@@ -87,26 +92,26 @@ public class AnsibleServerTask implements Runnable {
     public void run() {
         try {
             final DefaultExecuteResultHandler resultHandler = new DefaultExecuteResultHandler();
-            TaskExecutor taskExecutor = TaskExecutorBuilder.build(MAX_TIMEOUT); // 任务执行器
+            // 任务执行器
+            TaskExecutor taskExecutor = TaskExecutorBuilder.build(MAX_TIMEOUT);
             taskExecutor.execute(commandLine, resultHandler);
-            resultHandler.waitFor(TimeUtil.secondTime * 5);
+            resultHandler.waitFor(NewTimeUtil.SECOND_TIME * 5);
             // 修改任务状态
             if (serverTaskMember.getTaskStatus().equals(ServerTaskStatusEnum.QUEUE.name())) {
                 serverTaskMember.setStartTime(new Date());
                 serverTaskMember.setTaskStatus(ServerTaskStatusEnum.EXECUTING.name());
                 serverTaskMemberService.update(serverTaskMember);
-                log.info("任务启动信息! taskUuid = {} , serverTaskMemberId = {} , taskStatus = {}", taskUuid, serverTaskMember.getId(), serverTaskMember.getTaskStatus());
+                log.info("任务启动: taskUuid={}, serverTaskMemberId={}, taskStatus={}", taskUuid, serverTaskMember.getId(), serverTaskMember.getTaskStatus());
             }
             watching(taskExecutor, resultHandler);
         } catch (TaskTimeoutException e) {
-            e.printStackTrace();
             TaskStatus taskStatus = TaskStatus.builder()
                     .stopType(ServerTaskStopType.TIMEOUT_STOP.getType())
                     .taskResult("TIMEOUT")
                     .build();
             save(taskStatus);
         } catch (ExecuteException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
             TaskStatus taskStatus = TaskStatus.builder()
                     .stopType(ServerTaskStopType.ERROR_STOP.getType())
                     .exitValue(e.getExitValue())
@@ -115,7 +120,7 @@ public class AnsibleServerTask implements Runnable {
             save(taskStatus);
         } catch (InterruptedException | IOException e) {
             // 日志流转码错误 暂不处理
-            e.printStackTrace();
+            log.warn(e.getMessage());
         }
     }
 
@@ -136,8 +141,9 @@ public class AnsibleServerTask implements Runnable {
         serverTaskMember.setStopType(taskStatus.getStopType());
         serverTaskMember.setTaskStatus(taskStatus.getTaskStatus());
         serverTaskMember.setEndTime(new Date());
-        if (!StringUtils.isEmpty(taskStatus.getTaskResult()))
+        if (!StringUtils.isEmpty(taskStatus.getTaskResult())) {
             serverTaskMember.setTaskResult(taskStatus.getTaskResult());
+        }
         serverTaskMemberService.update(serverTaskMember);
     }
 

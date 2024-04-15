@@ -8,7 +8,7 @@ import com.baiyi.opscloud.sshcore.audit.InstanceCommandBuilder;
 import io.netty.util.AsciiString;
 import org.junit.jupiter.api.Test;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
@@ -30,7 +30,7 @@ public class AuditRecordHandlerTest extends BaseUnit {
     private static final String REGEX = "\\u001b.*\\$?";
 
     @Test
-    void dddddd(){
+    void dddddd() {
         String cmd = "\u001B]0;xincheng@account-gray-1:~\u0007[xincheng@account-gray-1 ~]$ pwd";
         boolean isInput = Pattern.matches(".*]?[$|#].*", cmd);
         System.err.println(isInput);
@@ -38,25 +38,31 @@ public class AuditRecordHandlerTest extends BaseUnit {
 
 
     @Test
-    void ddd(){
-        testPodLog("273ce35a-f3a9-4f35-8a68-1a98f275c04d","data-urc-dev-deployment-56bf5cbc77-pl5cx#DEFAULT_CONTAINER#2423457befc448e3b14cb0c2f3f23376");
-   }
+    void podCommandTest() {
+        testPodLog("06806244-f90f-4e19-8a1d-55f5b0ebc6a2", "account-dev-deployment-785f5657df-nj6t7#DEFAULT_CONTAINER#4558a7dabeb8420a952e1838bc6cf5e8");
+        print("-------------------------------------");
+        testPodLog("28362479-a559-46a2-a303-9a53a1b8b869", "merchant-gateway-dev-74fccbc689-hnr5b#merchant-gateway-dev");
+    }
 
-   // \u001b
-   // private static final String INPUT_REGEX = "#";
+    // \u001b
+    // private static final String INPUT_REGEX = "#";
 
-    private void testPodLog(String sessionId, String instanceId){
-      String path =  terminalConfig.buildAuditLogPath(sessionId, instanceId);
+    private static final String BS_REGEX = ".?\b\\u001b\\[J";
+
+    private void testPodLog(String sessionId, String instanceId) {
+        String path = terminalConfig.buildAuditLogPath(sessionId, instanceId);
         String str;
         try {
             LineNumberReader reader = new LineNumberReader(new FileReader(path));
             while ((str = reader.readLine()) != null) {
                 if (!str.isEmpty()) {
-                    boolean isInput = Pattern.matches(".*# \\u001b.*", str);
+                    boolean isInput = Pattern.matches(".*# \\u001b?.*", str);
                     if (isInput) {
-                        System.out.println("匹配行 : " + str);
+                        print("匹配行 : " + str);
+                        String cmd = str.replaceFirst(".*# \\u001b?[\\[J]?", "");
+                        print("取命令 : " + cmd);
                     } else {
-                        System.out.println("未匹配到行 : " + str);
+                        print("未匹配到行 : " + str);
                     }
                 }
             }
@@ -64,7 +70,6 @@ public class AuditRecordHandlerTest extends BaseUnit {
             e.printStackTrace();
         }
     }
-
 
     // InstanceCommandBuilder
 
@@ -85,13 +90,12 @@ public class AuditRecordHandlerTest extends BaseUnit {
                                     .input(str)
                                     .build();
                             builder = InstanceCommandBuilder.newBuilder(command);
-                        }else{
+                        } else {
 
                         }
-
-                        System.out.println("匹配行 : " + str);
+                        print("匹配行 : " + str);
                     } else {
-                        System.out.println("未匹配到行 : " + str);
+                        print("未匹配到行 : " + str);
                     }
                 }
             }
@@ -111,14 +115,11 @@ public class AuditRecordHandlerTest extends BaseUnit {
             LineNumberReader reader = new LineNumberReader(new FileReader(commanderLogPath));
             while ((str = reader.readLine()) != null) {
                 if (!str.isEmpty()) {
-
-                        System.err.println(str);
-                        str = str.replaceAll("\\p{C}","");
-                     //   str = str.replaceFirst(".?\\x7f", ""); // 退格处理
-                        System.err.println(str);
-
-
-                   // IOUtil.appendFile(str + "\r\n", fmtCommanderLogPath);
+                    print(str);
+                    str = str.replaceAll("\\p{C}", "");
+                    //   str = str.replaceFirst(".?\\x7f", ""); // 退格处理
+                    print(str);
+                    // IOUtil.appendFile(str + "\r\n", fmtCommanderLogPath);
                 }
             }
         } catch (IOException e) {

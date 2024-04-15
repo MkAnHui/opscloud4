@@ -1,10 +1,11 @@
 package com.baiyi.opscloud.aspect;
 
-import com.baiyi.opscloud.common.exception.common.CommonRuntimeException;
+import com.baiyi.opscloud.common.exception.common.OCException;
 import com.baiyi.opscloud.domain.annotation.BusinessType;
 import com.baiyi.opscloud.domain.annotation.TagClear;
 import com.baiyi.opscloud.domain.constants.BusinessTypeEnum;
 import com.baiyi.opscloud.service.tag.BusinessTagService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -12,8 +13,6 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.Resource;
 
 /**
  * 清理业务对象标签
@@ -25,20 +24,22 @@ import javax.annotation.Resource;
 @Slf4j
 @Aspect
 @Component
+@RequiredArgsConstructor
 public class TagClearAspect {
 
-    @Resource
-    private BusinessTagService businessTagService;
+    private final BusinessTagService businessTagService;
 
     @Pointcut(value = "@annotation(com.baiyi.opscloud.domain.annotation.TagClear)")
     public void annotationPoint() {
     }
 
     @Around("@annotation(tagClear)")
-    public Object around(ProceedingJoinPoint joinPoint, TagClear tagClear) throws CommonRuntimeException {
+    public Object around(ProceedingJoinPoint joinPoint, TagClear tagClear) throws OCException {
         MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
-        String[] params = methodSignature.getParameterNames();// 获取参数名称
-        Object[] args = joinPoint.getArgs();// 获取参数值
+        // 获取参数名称
+        String[] params = methodSignature.getParameterNames();
+        // 获取参数值
+        Object[] args = joinPoint.getArgs();
         if (params != null && params.length != 0) {
             Integer businessId = Integer.valueOf(args[0].toString());
             if (tagClear.value() == BusinessTypeEnum.COMMON) {
@@ -54,15 +55,13 @@ public class TagClearAspect {
         try {
             return joinPoint.proceed();
         } catch (Throwable e) {
-            throw new CommonRuntimeException(e.getMessage());
+            throw new OCException(e.getMessage());
         }
-
     }
 
     private void doClear(Integer businessType, Integer businessId) {
-        log.info("清除业务标签: businessType = {} , businessId = {}", businessType, businessId);
+        log.info("清除业务标签: businessType={}, businessId={}", businessType, businessId);
         businessTagService.deleteByBusinessTypeAndId(businessType, businessId);
     }
-
 
 }

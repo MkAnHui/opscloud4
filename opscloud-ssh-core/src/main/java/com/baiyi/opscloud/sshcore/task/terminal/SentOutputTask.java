@@ -28,17 +28,20 @@
 package com.baiyi.opscloud.sshcore.task.terminal;
 
 import com.baiyi.opscloud.common.util.JSONUtil;
+import com.baiyi.opscloud.common.util.NewTimeUtil;
 import com.baiyi.opscloud.sshcore.model.SessionOutput;
 import com.baiyi.opscloud.sshcore.util.SessionOutputUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 
-import javax.websocket.Session;
+import jakarta.websocket.Session;
+
+import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  * class to send output to web socket client
+ * @author liangjian
  */
 @Slf4j
 public class SentOutputTask implements Runnable {
@@ -53,7 +56,6 @@ public class SentOutputTask implements Runnable {
 
     @Override
     public void run() {
-        log.info("SentOutputTask 启动 sessionId = {}", sessionId);
         try {
             while (session.isOpen()) {
                 List<SessionOutput> outputList = SessionOutputUtil.getOutput(sessionId);
@@ -61,11 +63,10 @@ public class SentOutputTask implements Runnable {
                     String jsonStr = JSONUtil.writeValueAsString(outputList);
                     session.getBasicRemote().sendText(jsonStr);
                 }
-                TimeUnit.MILLISECONDS.sleep(25L);
+                NewTimeUtil.millisecondsSleep(25L);
             }
-            log.info("SentOutputTask 结束 sessionId = {}", sessionId);
-        } catch (Exception ex) {
-            log.error(ex.toString(), ex);
+        } catch (IOException ignored) {
         }
     }
+    
 }

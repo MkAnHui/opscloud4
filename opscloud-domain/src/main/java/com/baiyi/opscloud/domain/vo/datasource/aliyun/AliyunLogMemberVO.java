@@ -2,15 +2,14 @@ package com.baiyi.opscloud.domain.vo.datasource.aliyun;
 
 import com.baiyi.opscloud.domain.generator.opscloud.ServerGroup;
 import com.baiyi.opscloud.domain.vo.base.BaseVO;
-import com.baiyi.opscloud.domain.vo.base.ShowTime;
+import com.baiyi.opscloud.domain.vo.base.ReadableTime;
 import com.baiyi.opscloud.domain.vo.env.EnvVO;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -24,14 +23,15 @@ public class AliyunLogMemberVO {
     @EqualsAndHashCode(callSuper = true)
     @Data
     @NoArgsConstructor
-    @ApiModel
-    public static class LogMember extends BaseVO implements ShowTime.IAgo, EnvVO.IEnv {
+    @Schema
+    public static class LogMember extends BaseVO implements ReadableTime.IAgo, EnvVO.IEnv {
 
         private AliyunLogVO.Log log;
 
         private ServerGroup serverGroup;
 
-        private ArrayList<String> machineList; // IP列表
+        @Schema(description = "IP列表")
+        private ArrayList<String> machineList;
 
         private EnvVO.Env env;
 
@@ -39,17 +39,14 @@ public class AliyunLogMemberVO {
 
         private Integer id;
 
-        @NotNull(message = "必须指定日志服务id")
         private Integer aliyunLogId;
 
-        @NotNull(message = "必须指定服务器组id")
         private Integer serverGroupId;
 
         private String serverGroupName;
 
         private String topic;
 
-        @NotNull(message = "必须指定环境")
         private Integer envType;
 
         private String comment;
@@ -63,4 +60,5 @@ public class AliyunLogMemberVO {
         }
 
     }
+
 }

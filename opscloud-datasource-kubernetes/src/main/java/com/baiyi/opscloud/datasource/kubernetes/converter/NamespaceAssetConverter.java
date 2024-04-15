@@ -18,19 +18,20 @@ import java.util.Date;
  */
 public class NamespaceAssetConverter {
 
-    public static Date toGmtDate(String time) {
-        return TimeUtil.toGmtDate(time, TimeZoneEnum.UTC);
+    public static Date toUtcDate(String time) {
+        return TimeUtil.toDate(time, TimeZoneEnum.UTC);
     }
 
     public static AssetContainer toAssetContainer(DatasourceInstance dsInstance, Namespace entity) {
         DatasourceInstanceAsset asset = DatasourceInstanceAsset.builder()
                 .instanceUuid(dsInstance.getUuid())
-                .assetId(entity.getMetadata().getUid()) // 资产id
+                // 资产id
+                .assetId(entity.getMetadata().getUid())
                 .name(entity.getMetadata().getName())
                 .assetKey(entity.getMetadata().getName())
                 .kind(entity.getKind())
                 .assetType(DsAssetTypeConstants.KUBERNETES_NAMESPACE.name())
-                .createdTime(toGmtDate(entity.getMetadata().getCreationTimestamp()))
+                .createdTime(toUtcDate(entity.getMetadata().getCreationTimestamp()))
                 .build();
 
         return AssetContainerBuilder.newBuilder()

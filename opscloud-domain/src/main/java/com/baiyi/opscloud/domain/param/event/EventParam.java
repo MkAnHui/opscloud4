@@ -2,8 +2,7 @@ package com.baiyi.opscloud.domain.param.event;
 
 import com.baiyi.opscloud.domain.param.IExtend;
 import com.baiyi.opscloud.domain.param.SuperPageParam;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -19,16 +18,16 @@ public class EventParam {
     @EqualsAndHashCode(callSuper = true)
     @NoArgsConstructor
     @AllArgsConstructor
-    @ApiModel
+    @Schema
     public static class UserPermissionEventPageQuery extends SuperPageParam implements IExtend {
 
-        @ApiModelProperty(value = "用户id")
+        @Schema(description = "用户ID")
         private Integer userId;
 
-        @ApiModelProperty(value = "查询名称")
+        @Schema(description = "查询名称")
         private String name;
 
-        @ApiModelProperty(value = "业务类型")
+        @Schema(description = "业务类型")
         private Integer businessType;
 
         @Builder.Default
@@ -40,4 +39,5 @@ public class EventParam {
         private String eventType;
 
     }
+
 }

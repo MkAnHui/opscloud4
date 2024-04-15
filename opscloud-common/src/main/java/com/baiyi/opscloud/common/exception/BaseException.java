@@ -1,9 +1,12 @@
 package com.baiyi.opscloud.common.exception;
 
+import com.baiyi.opscloud.common.util.StringFormatter;
 import com.baiyi.opscloud.domain.ErrorEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+
+import java.io.Serial;
 
 /**
  * @Author baiyi
@@ -15,12 +18,18 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public abstract class BaseException extends RuntimeException {
 
+    @Serial
     private static final long serialVersionUID = -6758520149628532498L;
 
     private Integer code;
 
     public BaseException(String message) {
         super(message);
+        this.code = 10000;
+    }
+
+    public BaseException(String message, Object... var2) {
+        super(StringFormatter.arrayFormat(message, var2));
         this.code = 10000;
     }
 

@@ -18,12 +18,14 @@ public class CredentialTemplateDictBuilder {
     }
 
     public CredentialTemplateDictBuilder putParam(String name, String value) {
-        if (!StringUtils.isEmpty(value))
+        if (!StringUtils.isEmpty(value)) {
             credentialTemplateDict.put(name, value);
+        }
         return this;
     }
 
     public SimpleDict build() {
         return credentialTemplateDict;
     }
+
 }

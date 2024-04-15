@@ -3,11 +3,10 @@ package com.baiyi.opscloud.domain.param.task;
 import com.baiyi.opscloud.domain.param.IExtend;
 import com.baiyi.opscloud.domain.param.PageParam;
 import com.baiyi.opscloud.domain.vo.server.ServerVO;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
-import javax.validation.constraints.NotNull;
 import java.util.List;
 
 /**
@@ -22,47 +21,47 @@ public class ServerTaskParam {
     @EqualsAndHashCode(callSuper = true)
     @NoArgsConstructor
     @AllArgsConstructor
-    @ApiModel
+    @Schema
     public static class ServerTaskPageQuery extends PageParam implements IExtend {
 
-        @ApiModelProperty(value = "关键字查询")
+        @Schema(description = "关键字查询")
         private String queryName;
 
-        @ApiModelProperty(value = "任务是否完成")
+        @Schema(description = "任务是否完成")
         private Boolean finalized;
 
         private Boolean extend;
 
     }
 
-
     @Data
     @Builder
-    @ApiModel
+    @Schema
     public static class SubmitServerTask {
 
-        @ApiModelProperty(value = "执行实例")
+        @Schema(description = "执行实例")
         @NotNull(message = "必须指定Ansible实例")
         private String instanceUuid;
 
-        @ApiModelProperty(value = "任务uuid(幂等)")
+        @Schema(description = "任务UUID(幂等)")
         @NotNull(message = "必须指定任务uuid")
         private String taskUuid;
 
-        @ApiModelProperty(value = "剧本id", example = "1")
+        @Schema(description = "剧本ID", example = "1")
         @NotNull(message = "必须指定任务剧本")
         private Integer ansiblePlaybookId;
 
-        @ApiModelProperty(value = "任务类型")
+        @Schema(description = "任务类型")
         private String taskType;
 
         private String vars;
 
         private String tags;
 
-        @ApiModelProperty(value = "执行任务的服务器列表")
+        @Schema(description = "执行任务的服务器列表")
         @NotNull(message = "必须指定执行任务的服务器列表")
         private List<ServerVO.Server> servers;
 
     }
+
 }

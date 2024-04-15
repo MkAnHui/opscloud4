@@ -3,7 +3,7 @@ package com.baiyi.opscloud.service.datasource.impl;
 import com.baiyi.opscloud.domain.DataTable;
 import com.baiyi.opscloud.domain.generator.opscloud.AliyunLog;
 import com.baiyi.opscloud.domain.param.datasource.AliyunLogParam;
-import com.baiyi.opscloud.mapper.opscloud.AliyunLogMapper;
+import com.baiyi.opscloud.mapper.AliyunLogMapper;
 import com.baiyi.opscloud.service.datasource.AliyunLogService;
 import com.baiyi.opscloud.util.SQLUtil;
 import com.github.pagehelper.Page;
@@ -28,12 +28,13 @@ public class AliyunLogServiceImpl implements AliyunLogService {
 
     @Override
     public DataTable<AliyunLog> queryAliyunLogByParam(AliyunLogParam.AliyunLogPageQuery pageQuery) {
-        Page page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
+        Page<?> page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
         Example example = new Example(AliyunLog.class);
         Example.Criteria criteria = example.createCriteria();
         criteria.andEqualTo("datasourceInstanceId", pageQuery.getInstanceId());
-        if (StringUtils.isNotBlank(pageQuery.getQueryName()))
+        if (StringUtils.isNotBlank(pageQuery.getQueryName())) {
             criteria.andLike("comment", SQLUtil.toLike(pageQuery.getQueryName()));
+        }
         List<AliyunLog> data = aliyunLogMapper.selectByExample(example);
         return new DataTable<>(data, page.getTotal());
     }

@@ -4,9 +4,10 @@ import com.baiyi.opscloud.domain.annotation.DesensitizedField;
 import com.baiyi.opscloud.domain.constants.SensitiveTypeEnum;
 import com.baiyi.opscloud.domain.vo.base.BaseVO;
 import com.baiyi.opscloud.domain.vo.base.ISecret;
-import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 /**
@@ -25,10 +26,11 @@ public class CredentialVO {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    @ApiModel
+    @Schema
     @Builder
     public static class Credential extends BaseVO implements ISecret, Serializable {
 
+        @Serial
         private static final long serialVersionUID = -8663845116665600709L;
         private Integer id;
         private String title;
@@ -54,4 +56,5 @@ public class CredentialVO {
         }
 
     }
+
 }

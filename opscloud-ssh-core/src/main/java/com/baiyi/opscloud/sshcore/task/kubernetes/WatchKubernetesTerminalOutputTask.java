@@ -16,11 +16,12 @@ public class WatchKubernetesTerminalOutputTask extends AbstractSshChannelOutputT
 
     public WatchKubernetesTerminalOutputTask(SessionOutput sessionOutput, ByteArrayOutputStream baos) {
         setSessionOutput(sessionOutput);
-        setBaos(baos);
+        setOutputStream(baos);
     }
 
     @Override
     public void write(char[] buf, int off, int len) {
         SessionOutputUtil.addToOutput(getSessionOutput().getSessionId(), getSessionOutput().getInstanceId(), buf, off, len);
     }
+
 }

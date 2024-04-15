@@ -1,7 +1,6 @@
 package com.baiyi.opscloud.domain.vo.tag;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
 
@@ -14,26 +13,26 @@ import java.util.Set;
  */
 public class BusinessTagVO {
 
-
     @Data
     @Builder
-    @ApiModel
+    @Schema
     public static class BusinessTag {
 
-        @ApiModelProperty(value = "业务类型", example = "1")
+        @Schema(description = "业务类型", example = "1")
         private Integer businessType;
 
-        @ApiModelProperty(value = "业务id(优先级高)", example = "1")
+        @Schema(description = "业务ID(优先级高)", example = "1")
         private Integer businessId;
 
-        @ApiModelProperty(value = "业务ids(优先级低)", example = "1")
+        @Schema(description = "业务IDs(优先级低)", example = "1")
         private Set<Integer> businessIds;
 
-        @ApiModelProperty(value = "标签id", example = "1")
+        @Schema(description = "标签ID", example = "1")
         private Integer tagId;
 
-        @ApiModelProperty(value = "标签key")
+        @Schema(description = "标签key")
         private Set<Integer> tagIds;
 
     }
+
 }

@@ -1,14 +1,19 @@
 package com.baiyi.opscloud.packer.application;
 
+import com.baiyi.opscloud.common.annotation.BizDocWrapper;
+import com.baiyi.opscloud.common.annotation.BizUserWrapper;
+import com.baiyi.opscloud.common.annotation.TagsWrapper;
 import com.baiyi.opscloud.common.util.BeanCopierUtil;
 import com.baiyi.opscloud.domain.constants.DsAssetTypeConstants;
 import com.baiyi.opscloud.domain.generator.opscloud.ApplicationResource;
+import com.baiyi.opscloud.domain.generator.opscloud.LeoJob;
 import com.baiyi.opscloud.domain.param.IExtend;
 import com.baiyi.opscloud.domain.vo.application.ApplicationResourceVO;
 import com.baiyi.opscloud.domain.vo.application.ApplicationVO;
+import com.baiyi.opscloud.domain.vo.leo.LeoJobVO;
 import com.baiyi.opscloud.packer.IWrapper;
-import com.baiyi.opscloud.packer.business.BusinessPermissionUserPacker;
 import com.baiyi.opscloud.service.application.ApplicationResourceService;
+import com.baiyi.opscloud.service.leo.LeoJobService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -27,29 +32,41 @@ public class ApplicationPacker implements IWrapper<ApplicationVO.Application> {
 
     private final ApplicationResourceService applicationResourceService;
 
-    private final BusinessPermissionUserPacker businessPermissionUserPacker;
-
     private final ApplicationResourcePacker resourcePacker;
 
-    private final ApplicationResourceInstancePacker applicationResourceInstancePacker;
+    private final ApplicationResourceDsInstancePacker applicationResourceInstancePacker;
+
+    private final LeoJobService leoJobService;
 
     @Override
+    @TagsWrapper
+    @BizDocWrapper
+    @BizUserWrapper
     public void wrap(ApplicationVO.Application application, IExtend iExtend) {
-        if (!iExtend.getExtend()) return;
+        if (!iExtend.getExtend()) {
+            return;
+        }
         List<ApplicationResource> applicationResourceList = applicationResourceService.queryByApplication(application.getId());
-        List<ApplicationResourceVO.Resource> resources = BeanCopierUtil.copyListProperties(applicationResourceList, ApplicationResourceVO.Resource.class);
+        List<ApplicationResourceVO.Resource> resources = BeanCopierUtil.copyListProperties(applicationResourceList, ApplicationResourceVO.Resource.class).stream()
+                .peek(resourcePacker::wrapProperties)
+                .toList();
         resources.forEach(applicationResourceInstancePacker::wrap);
         Map<String, List<ApplicationResourceVO.Resource>> resourcesMap = resources.stream()
                 .collect(Collectors.groupingBy(ApplicationResourceVO.Resource::getResourceType));
         application.setResourceMap(resourcesMap);
-        businessPermissionUserPacker.wrap(application);
+        // LeoJob
+        List<LeoJob> jobs = leoJobService.queryJobWithApplicationId(application.getId());
+        application.setLeoJobs(BeanCopierUtil.copyListProperties(jobs, LeoJobVO.Job.class));
     }
 
     /**
-     * wrapByKubernetes
+     * 包装Kubernetes
+     *
      * @param application
      */
     @Override
+    @TagsWrapper(extend = true)
+    @BizDocWrapper(extend = true)
     public void wrap(ApplicationVO.Application application) {
         List<ApplicationResource> resources = applicationResourceService.queryByApplication(application.getId(), DsAssetTypeConstants.KUBERNETES_DEPLOYMENT.name());
         List<ApplicationResourceVO.Resource> data = BeanCopierUtil.copyListProperties(resources, ApplicationResourceVO.Resource.class).stream()

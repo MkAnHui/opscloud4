@@ -54,11 +54,11 @@ public class ZabbixV5ProblemDriver {
 
     public List<ZabbixProblem.Problem> list(ZabbixConfig.Zabbix config, List<SeverityType> severityTypes) {
         ZabbixRequest.DefaultRequest request = ZabbixRequestBuilder.builder()
-                /**
+                /*
                  * true - 仅返回被抑制问题;
                  * false - 返回问题在正常状态。
                  */
-                /**
+                /*
                  * 只返回给定事件严重程度的问题。仅当对象是触发器时才应用。
                  */
                 .putParam("severities", severityTypes.stream().map(SeverityType::getType).collect(Collectors.toList()))
@@ -81,9 +81,10 @@ public class ZabbixV5ProblemDriver {
                 .putParam("eventids", eventId)
                 .build();
         ZabbixProblem.QueryProblemResponse response = queryHandle(config, request);
-        if (CollectionUtils.isEmpty(response.getResult()))
+        if (CollectionUtils.isEmpty(response.getResult())) {
             throw new RuntimeException("ZabbixProblem不存在");
-        return response.getResult().get(0);
+        }
+        return response.getResult().getFirst();
     }
 
     public ZabbixProblem.Problem getByTriggerId(ZabbixConfig.Zabbix config, String triggerId) {
@@ -95,8 +96,10 @@ public class ZabbixV5ProblemDriver {
                 .putParam("sortorder", "DESC")
                 .build();
         ZabbixProblem.QueryProblemResponse response = queryHandle(config, request);
-        if (CollectionUtils.isEmpty(response.getResult()))
+        if (CollectionUtils.isEmpty(response.getResult())) {
             throw new RuntimeException("ZabbixProblem不存在");
-        return response.getResult().get(0);
+        }
+        return response.getResult().getFirst();
     }
+
 }

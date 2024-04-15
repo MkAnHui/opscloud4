@@ -1,17 +1,15 @@
 package com.baiyi.opscloud.domain.param.server;
 
 import com.baiyi.opscloud.domain.base.IAllowOrder;
+import com.baiyi.opscloud.domain.constants.BusinessTypeEnum;
 import com.baiyi.opscloud.domain.param.IExtend;
 import com.baiyi.opscloud.domain.param.PageParam;
 import com.baiyi.opscloud.domain.param.SuperPageParam;
-import com.baiyi.opscloud.domain.constants.BusinessTypeEnum;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 
 /**
  * @Author baiyi
@@ -21,17 +19,65 @@ import javax.validation.constraints.NotNull;
 public class ServerGroupParam {
 
     @Data
+    @Schema
+    public static class AddServerGroup {
+
+        @Schema(description = "主键", example = "1")
+        private Integer id;
+
+        @Schema(description = "组名称")
+        @NotBlank(message = "组名称不能为空")
+        private String name;
+
+        @Schema(description = "组类型", example = "1")
+        @NotNull(message = "组类型不能为空")
+        private Integer serverGroupTypeId;
+
+        @Schema(description = "是否支持工单")
+        @NotNull(message = "是否支持工单不能为空")
+        private Boolean allowOrder;
+
+        @Schema(description = "资源描述")
+        private String comment;
+
+    }
+
+    @Data
+    @Schema
+    public static class UpdateServerGroup {
+
+        @Schema(description = "主键", example = "1")
+        private Integer id;
+
+        @Schema(description = "组名称")
+        @NotBlank(message = "组名称不能为空")
+        private String name;
+
+        @Schema(description = "组类型", example = "1")
+        @NotNull(message = "组类型不能为空")
+        private Integer serverGroupTypeId;
+
+        @Schema(description = "是否支持工单")
+        @NotNull(message = "是否支持工单不能为空")
+        private Boolean allowOrder;
+
+        @Schema(description = "资源描述")
+        private String comment;
+
+    }
+
+    @Data
     @SuperBuilder(toBuilder = true)
     @EqualsAndHashCode(callSuper = true)
     @NoArgsConstructor
     @AllArgsConstructor
-    @ApiModel
+    @Schema
     public static class ServerGroupPageQuery extends SuperPageParam implements IExtend, IAllowOrder {
 
-        @ApiModelProperty(value = "组名")
+        @Schema(description = "组名")
         private String name;
 
-        @ApiModelProperty(value = "组类型")
+        @Schema(description = "组类型")
         private Integer serverGroupTypeId;
 
         private Boolean extend;
@@ -43,17 +89,17 @@ public class ServerGroupParam {
     @Data
     @EqualsAndHashCode(callSuper = true)
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class UserPermissionServerGroupPageQuery extends PageParam implements IExtend {
 
-        @ApiModelProperty(value = "组名")
+        @Schema(description = "组名")
         private String queryName;
 
-        @ApiModelProperty(value = "用户id")
-        @NotNull(message = "用户id不能为空")
+        @Schema(description = "用户ID")
+        @NotNull(message = "用户ID不能为空")
         private Integer userId;
 
-        @ApiModelProperty(value = "是否授权")
+        @Schema(description = "是否授权")
         @NotNull(message = "是否授权选项不能为空")
         private Boolean authorized;
 
@@ -65,15 +111,15 @@ public class ServerGroupParam {
 
     @Data
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class UserServerTreeQuery {
 
         private Integer userId;
 
-        @ApiModelProperty(value = "查询名称")
+        @Schema(description = "查询名称")
         private String name;
 
-        @ApiModelProperty(value = "服务器组类型", example = "1")
+        @Schema(description = "服务器组类型", example = "1")
         private Integer serverGroupTypeId;
 
         private Boolean isAdmin;
@@ -86,17 +132,16 @@ public class ServerGroupParam {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    @ApiModel
+    @Schema
     public static class ServerGroupEnvHostPatternQuery {
 
-        @ApiModelProperty(value = "环境类型")
+        @Schema(description = "环境类型")
         private Integer envType;
 
-        @ApiModelProperty(value = "服务器组名称")
+        @Schema(description = "服务器组名称")
         @NotBlank
         private String serverGroupName;
 
     }
-
 
 }

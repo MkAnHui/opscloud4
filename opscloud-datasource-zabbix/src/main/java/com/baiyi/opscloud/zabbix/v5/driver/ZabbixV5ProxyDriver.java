@@ -1,8 +1,8 @@
 package com.baiyi.opscloud.zabbix.v5.driver;
 
-import com.baiyi.opscloud.common.config.CachingConfiguration;
+import com.baiyi.opscloud.common.configuration.CachingConfiguration;
 import com.baiyi.opscloud.common.datasource.ZabbixConfig;
-import com.baiyi.opscloud.zabbix.v5.driver.base.AbstractZabbixV5ProxyDrive;
+import com.baiyi.opscloud.zabbix.v5.driver.base.AbstractZabbixV5ProxyDriver;
 import com.baiyi.opscloud.zabbix.v5.entity.ZabbixHost;
 import com.baiyi.opscloud.zabbix.v5.entity.ZabbixProxy;
 import com.baiyi.opscloud.zabbix.v5.request.ZabbixRequest;
@@ -23,7 +23,7 @@ import org.springframework.util.CollectionUtils;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class ZabbixV5ProxyDriver extends AbstractZabbixV5ProxyDrive {
+public class ZabbixV5ProxyDriver extends AbstractZabbixV5ProxyDriver {
 
     /**
      * 查询Zabbix代理
@@ -32,7 +32,7 @@ public class ZabbixV5ProxyDriver extends AbstractZabbixV5ProxyDrive {
      * @param hostname 代理的名称
      * @return
      */
-    @Cacheable(cacheNames = CachingConfiguration.Repositories.CACHE_2HOURS, key = "#config.url + '_v5_proxy_name_' + #hostname", unless = "#result == null")
+    @Cacheable(cacheNames = CachingConfiguration.Repositories.CACHE_FOR_2H, key = "#config.url + '_v5_proxy_name_' + #hostname", unless = "#result == null")
     public ZabbixProxy.Proxy getProxy(ZabbixConfig.Zabbix config, String hostname) {
         ZabbixRequest.Filter filter = ZabbixFilterBuilder.builder()
                 .putEntry("host", hostname)
@@ -44,11 +44,12 @@ public class ZabbixV5ProxyDriver extends AbstractZabbixV5ProxyDrive {
         if (CollectionUtils.isEmpty(response.getResult())) {
             return null;
         }
-        return response.getResult().get(0);
+        return response.getResult().getFirst();
     }
 
     /**
      * 更新主机的代理配置
+     *
      * @param config
      * @param host
      * @param proxy
@@ -60,7 +61,7 @@ public class ZabbixV5ProxyDriver extends AbstractZabbixV5ProxyDrive {
                 .build();
         ZabbixProxy.UpdateProxyResponse response = updateHandle(config, request);
         if (CollectionUtils.isEmpty(response.getResult().getProxyids())) {
-            log.error("更新Zabbix主机名称失败: host = {} , proxy = {}", host.getHost(), proxy.getHost());
+            log.error("Update Zabbix Host Proxy error: host={}, proxy={}", host.getHost(), proxy.getHost());
         }
     }
 

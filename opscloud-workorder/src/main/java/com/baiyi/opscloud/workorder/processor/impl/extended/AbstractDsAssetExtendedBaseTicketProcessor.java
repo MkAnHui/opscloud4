@@ -1,8 +1,8 @@
 package com.baiyi.opscloud.workorder.processor.impl.extended;
 
-import com.baiyi.opscloud.common.datasource.base.BaseConfig;
+import com.baiyi.opscloud.common.datasource.base.BaseDsConfig;
 import com.baiyi.opscloud.common.util.JSONUtil;
-import com.baiyi.opscloud.core.factory.DsConfigHelper;
+import com.baiyi.opscloud.core.factory.DsConfigManager;
 import com.baiyi.opscloud.datasource.facade.DsInstanceFacade;
 import com.baiyi.opscloud.domain.base.IAssetType;
 import com.baiyi.opscloud.domain.base.IInstanceType;
@@ -17,7 +17,7 @@ import com.baiyi.opscloud.workorder.exception.TicketVerifyException;
 import com.baiyi.opscloud.workorder.processor.impl.base.BaseTicketProcessor;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * @Author baiyi
@@ -25,16 +25,17 @@ import javax.annotation.Resource;
  * @Version 1.0
  */
 @Slf4j
-public abstract class AbstractDsAssetExtendedBaseTicketProcessor<T, C extends BaseConfig> extends BaseTicketProcessor<T> implements IInstanceType, IAssetType {
+public abstract class AbstractDsAssetExtendedBaseTicketProcessor<T, C extends BaseDsConfig> extends BaseTicketProcessor<T>
+        implements IInstanceType, IAssetType {
 
     @Resource
     protected DsInstanceAssetService dsInstanceAssetService;
 
     @Resource
-    protected DsConfigHelper dsConfigHelper;
+    protected DsConfigManager dsConfigManager;
 
     @Resource
-    protected DsInstanceFacade dsInstanceFacade;
+    protected DsInstanceFacade<T> dsInstanceFacade;
 
     @Resource
     private WorkOrderTicketService workOrderTicketService;
@@ -46,11 +47,12 @@ public abstract class AbstractDsAssetExtendedBaseTicketProcessor<T, C extends Ba
     protected DatasourceInstanceAsset getAsset(DatasourceInstanceAsset queryParam) throws TicketVerifyException {
         try {
             DatasourceInstanceAsset asset = dsInstanceAssetService.getByUniqueKey(queryParam);
-            if (asset == null)
-                throw new TicketVerifyException("校验工单条目失败: 授权资产不存在!");
+            if (asset == null) {
+                throw new TicketVerifyException("校验工单条目失败: 授权资产不存在！");
+            }
             return asset;
         } catch (Exception e) {
-            throw new TicketVerifyException("查询授权资产错误: " + e.getMessage());
+            throw new TicketVerifyException("查询授权资产错误: {}", e.getMessage());
         }
     }
 
@@ -58,8 +60,10 @@ public abstract class AbstractDsAssetExtendedBaseTicketProcessor<T, C extends Ba
 
     @Override
     protected void process(WorkOrderTicketEntry ticketEntry, T entry) throws TicketProcessException {
-        processHandle(ticketEntry, entry); // 处理
-        pullAsset(ticketEntry, entry); // 同步资产
+        // 处理
+        processHandle(ticketEntry, entry);
+        // 同步资产
+        pullAsset(ticketEntry, entry);
     }
 
     /**
@@ -70,21 +74,21 @@ public abstract class AbstractDsAssetExtendedBaseTicketProcessor<T, C extends Ba
      * @return
      */
     protected C getDsConfig(WorkOrderTicketEntry ticketEntry, Class<C> targetClass) {
-        DatasourceConfig datasourceConfig = dsConfigHelper.getConfigByInstanceUuid(ticketEntry.getInstanceUuid());
-        return dsConfigHelper.build(datasourceConfig, targetClass);
+        DatasourceConfig datasourceConfig = dsConfigManager.getConfigByInstanceUuid(ticketEntry.getInstanceUuid());
+        return dsConfigManager.build(datasourceConfig, targetClass);
     }
 
     /**
      * 更新资产
      *
-     * @param ticketEntry`
+     * @param ticketEntry
      * @param entry
      */
     protected void pullAsset(WorkOrderTicketEntry ticketEntry, T entry) {
         try {
             dsInstanceFacade.pullAsset(ticketEntry.getInstanceUuid(), getAssetType(), entry);
         } catch (Exception e) {
-            log.error("推送数据源资产失败: instanceUuid = {} , entry = {}", ticketEntry.getInstanceUuid(), JSONUtil.writeValueAsString(entry));
+            log.error("推送数据源资产失败: instanceUuid={}, entry={}", ticketEntry.getInstanceUuid(), JSONUtil.writeValueAsString(entry));
         }
     }
 

@@ -1,7 +1,7 @@
 package com.baiyi.opscloud.service.application.impl;
 
 import com.baiyi.opscloud.domain.generator.opscloud.ApplicationResource;
-import com.baiyi.opscloud.mapper.opscloud.ApplicationResourceMapper;
+import com.baiyi.opscloud.mapper.ApplicationResourceMapper;
 import com.baiyi.opscloud.service.application.ApplicationResourceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,11 +14,17 @@ import java.util.List;
  * @Date 2021/7/13 9:30 上午
  * @Version 1.0
  */
+@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @Service
 @RequiredArgsConstructor
 public class ApplicationResourceServiceImpl implements ApplicationResourceService {
 
     private final ApplicationResourceMapper applicationResourceMapper;
+
+    @Override
+    public ApplicationResource getById(Integer id) {
+        return applicationResourceMapper.selectByPrimaryKey(id);
+    }
 
     @Override
     public void add(ApplicationResource applicationResource) {
@@ -31,7 +37,7 @@ public class ApplicationResourceServiceImpl implements ApplicationResourceServic
     }
 
     @Override
-    public void delete(Integer id) {
+    public void deleteById(Integer id) {
         applicationResourceMapper.deleteByPrimaryKey(id);
     }
 
@@ -59,6 +65,8 @@ public class ApplicationResourceServiceImpl implements ApplicationResourceServic
         Example.Criteria criteria = example.createCriteria();
         criteria.andEqualTo("applicationId", applicationId)
                 .andEqualTo("resourceType", resourceType);
+        // 分组排序
+        example.orderBy("name");
         return applicationResourceMapper.selectByExample(example);
     }
 
@@ -80,4 +88,14 @@ public class ApplicationResourceServiceImpl implements ApplicationResourceServic
                 .andEqualTo("businessId", businessId);
         return applicationResourceMapper.selectByExample(example);
     }
+
+    @Override
+    public List<ApplicationResource> queryByResource(String name, String resourceType) {
+        Example example = new Example(ApplicationResource.class);
+        Example.Criteria criteria = example.createCriteria();
+        criteria.andEqualTo("name", name)
+                .andEqualTo("resourceType", resourceType);
+        return applicationResourceMapper.selectByExample(example);
+    }
+
 }

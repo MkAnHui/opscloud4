@@ -1,6 +1,6 @@
 package com.baiyi.opscloud.facade.sys.impl;
 
-import com.baiyi.opscloud.common.exception.common.CommonRuntimeException;
+import com.baiyi.opscloud.common.exception.common.OCException;
 import com.baiyi.opscloud.common.util.BeanCopierUtil;
 import com.baiyi.opscloud.common.util.HostUtil;
 import com.baiyi.opscloud.domain.DataTable;
@@ -40,6 +40,8 @@ public class InstanceFacadeImpl implements InstanceFacade, InitializingBean {
 
     private final RegisteredInstancePacker registeredInstancePacker;
 
+    private static final InetAddress INET_ADDRESS = getInetAddress();
+
     public interface HealthStatus {
         String OK = "OK";
         String ERROR = "ERROR";
@@ -59,16 +61,18 @@ public class InstanceFacadeImpl implements InstanceFacade, InitializingBean {
     @Override
     public void setRegisteredInstanceActive(int id) {
         Instance instance = instanceService.getById(id);
-        if (instance == null) return;
+        if (instance == null) {
+            return;
+        }
         if (instance.getIsActive()) {
             List<Instance> instanceList = instanceService.listActiveInstance();
             if (instanceList.size() <= 1) {
-                throw new CommonRuntimeException("至少保留一个可用实例");
+                throw new OCException("至少保留一个可用实例");
             }
         }
         instance.setIsActive(!instance.getIsActive());
         instanceService.update(instance);
-        log.info("用户修改注册实例: isActive = {}", instance.getIsActive());
+        log.info("用户修改注册实例: isActive={}", instance.getIsActive());
     }
 
     @Override
@@ -77,24 +81,31 @@ public class InstanceFacadeImpl implements InstanceFacade, InitializingBean {
         return HealthStatus.OK.equals(health.getStatus());
     }
 
-    @Override
-    public InstanceVO.Health checkHealth() {
+    private static InetAddress getInetAddress() {
         try {
-            InetAddress inetAddress = HostUtil.getInetAddress();
-            Instance instance = instanceService.getByHostIp(inetAddress.getHostAddress());
-            if (instance == null)
-                return buildHealth(HealthStatus.ERROR);
-            if (instance.getIsActive()) {
-                return buildHealth(HealthStatus.OK);
-            } else {
-                return buildHealth(HealthStatus.INACTIVE);
-            }
+            return HostUtil.getInetAddress();
         } catch (UnknownHostException ignored) {
-            return buildHealth(HealthStatus.ERROR);
+            return null;
         }
     }
 
-    private InstanceVO.Health buildHealth(String status) {
+    @Override
+    public InstanceVO.Health checkHealth() {
+        if (InstanceFacadeImpl.INET_ADDRESS == null) {
+            return buildHealthWithStatus(HealthStatus.ERROR);
+        }
+        Instance instance = instanceService.getByHostIp(InstanceFacadeImpl.INET_ADDRESS.getHostAddress());
+        if (instance == null) {
+            return buildHealthWithStatus(HealthStatus.ERROR);
+        }
+        if (instance.getIsActive()) {
+            return buildHealthWithStatus(HealthStatus.OK);
+        } else {
+            return buildHealthWithStatus(HealthStatus.INACTIVE);
+        }
+    }
+
+    private InstanceVO.Health buildHealthWithStatus(String status) {
         return InstanceVO.Health.builder()
                 .status(status)
                 .isHealth(status.equals(HealthStatus.OK))
@@ -105,10 +116,14 @@ public class InstanceFacadeImpl implements InstanceFacade, InitializingBean {
      * 注册Opscloud实例
      */
     private void register() throws UnknownHostException {
-        if (!ENV_PROD.equals(env)) return;
+        if (!ENV_PROD.equals(env)) {
+            return;
+        }
         InetAddress inetAddress = HostUtil.getInetAddress();
         // 已存在
-        if (instanceService.getByHostIp(inetAddress.getHostAddress()) != null) return;
+        if (instanceService.getByHostIp(inetAddress.getHostAddress()) != null) {
+            return;
+        }
         Instance instance = Instance.builder()
                 .hostIp(inetAddress.getHostAddress())
                 .hostname(inetAddress.getHostName())

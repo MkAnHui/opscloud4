@@ -4,7 +4,7 @@ import com.baiyi.opscloud.common.annotation.EventPublisher;
 import com.baiyi.opscloud.domain.generator.opscloud.BusinessProperty;
 import com.baiyi.opscloud.domain.generator.opscloud.BusinessTag;
 import com.baiyi.opscloud.domain.constants.EventActionTypeEnum;
-import com.baiyi.opscloud.mapper.opscloud.BusinessPropertyMapper;
+import com.baiyi.opscloud.mapper.BusinessPropertyMapper;
 import com.baiyi.opscloud.service.business.BusinessPropertyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -54,7 +54,7 @@ public class BusinessPropertyServiceImpl implements BusinessPropertyService {
     }
 
     @Override
-    public void deleteByBusinessTypeAndId(Integer businessType, Integer businessId) {
+    public void deleteByUniqueKey(Integer businessType, Integer businessId) {
         Example example = new Example(BusinessTag.class);
         Example.Criteria criteria = example.createCriteria();
         criteria.andEqualTo("businessType", businessType);

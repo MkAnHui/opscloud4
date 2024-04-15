@@ -12,7 +12,7 @@ import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.Optional;
 import java.util.Set;
 
@@ -35,7 +35,7 @@ public abstract class AbstractDingtalkAssetProvider<T> extends AbstractAssetBusi
     }
 
     private DingtalkConfig.Dingtalk buildConfig(DatasourceConfig dsConfig) {
-        return dsConfigHelper.build(dsConfig, DingtalkConfig.class).getDingtalk();
+        return dsConfigManager.build(dsConfig, DingtalkConfig.class).getDingtalk();
     }
 
     protected Set<Long> queryDeptSubIds(DsInstanceContext dsInstanceContext) {
@@ -60,7 +60,7 @@ public abstract class AbstractDingtalkAssetProvider<T> extends AbstractAssetBusi
                 queryDeptIdSet.addAll(departmentSubIdResponse.getResult().getDeptIdList());
             }
         }
-        log.info("子部门Id列表: size = {}", subIdSet.size());
+        log.info("子部门ID列表: size={}", subIdSet.size());
         return subIdSet;
     }
 

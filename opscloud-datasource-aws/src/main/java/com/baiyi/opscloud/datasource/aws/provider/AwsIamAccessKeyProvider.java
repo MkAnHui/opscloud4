@@ -3,6 +3,8 @@ package com.baiyi.opscloud.datasource.aws.provider;
 import com.baiyi.opscloud.common.annotation.SingleTask;
 import com.baiyi.opscloud.common.constants.enums.DsTypeEnum;
 import com.baiyi.opscloud.common.datasource.AwsConfig;
+import com.baiyi.opscloud.core.comparer.AssetComparer;
+import com.baiyi.opscloud.core.comparer.AssetComparerBuilder;
 import com.baiyi.opscloud.core.factory.AssetProviderFactory;
 import com.baiyi.opscloud.core.model.DsInstanceContext;
 import com.baiyi.opscloud.core.provider.annotation.ChildProvider;
@@ -14,7 +16,7 @@ import com.baiyi.opscloud.domain.generator.opscloud.DatasourceConfig;
 import com.baiyi.opscloud.domain.generator.opscloud.DatasourceInstanceAsset;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.List;
 
 import static com.baiyi.opscloud.common.constants.SingleTaskConstants.PULL_AWS_IAM_ACCESS_KEY;
@@ -41,12 +43,14 @@ public class AwsIamAccessKeyProvider extends AbstractAssetChildProvider<IamAcces
     }
 
     private AwsConfig.Aws buildConfig(DatasourceConfig dsConfig) {
-        return dsConfigHelper.build(dsConfig, AwsConfig.class).getAws();
+        return dsConfigManager.build(dsConfig, AwsConfig.class).getAws();
     }
 
     @Override
-    protected boolean equals(DatasourceInstanceAsset asset, DatasourceInstanceAsset preAsset) {
-        return preAsset.getIsActive().equals(asset.getIsActive());
+    protected AssetComparer getAssetComparer() {
+        return AssetComparerBuilder.newBuilder()
+                .compareOfActive()
+                .build();
     }
 
     @Override

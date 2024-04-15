@@ -1,5 +1,6 @@
 package com.baiyi.opscloud.common.util;
 
+import com.baiyi.opscloud.common.exception.common.OCException;
 import com.google.common.collect.MapMaker;
 import org.springframework.cglib.beans.BeanCopier;
 import org.springframework.util.CollectionUtils;
@@ -18,7 +19,7 @@ public class BeanCopierUtil {
     private BeanCopierUtil() {
     }
 
-    private static final Map<String, BeanCopier> beanCopierMap = new MapMaker().initialCapacity(32).concurrencyLevel(32).makeMap();
+    private static final Map<String, BeanCopier> BEAN_COPIER_MAP = new MapMaker().initialCapacity(32).concurrencyLevel(32).makeMap();
 
     /**
      * bean 对象copy
@@ -33,18 +34,19 @@ public class BeanCopierUtil {
 
         String beanKey = generateKey(source.getClass(), targetClass);
         BeanCopier copier;
-        if (!beanCopierMap.containsKey(beanKey)) {
+        if (!BEAN_COPIER_MAP.containsKey(beanKey)) {
             copier = BeanCopier.create(source.getClass(), targetClass, false);
-            beanCopierMap.put(beanKey, copier);
+            BEAN_COPIER_MAP.put(beanKey, copier);
         } else {
-            copier = beanCopierMap.get(beanKey);
+            copier = BEAN_COPIER_MAP.get(beanKey);
         }
 
         T targetObject;
         try {
-            targetObject = targetClass.newInstance();
+            // targetObject = targetClass.newInstance();
+            targetObject = targetClass.getDeclaredConstructor().newInstance();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new OCException(e.getMessage());
         }
 
         copier.copy(source, targetObject, null);
@@ -69,7 +71,8 @@ public class BeanCopierUtil {
 
             T targetObject;
             try {
-                targetObject = targetClass.newInstance();
+                // targetObject = targetClass.newInstance();
+                targetObject = targetClass.getDeclaredConstructor().newInstance();
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -93,11 +96,11 @@ public class BeanCopierUtil {
         }
         String beanKey = generateKey(source.getClass(), target.getClass());
         BeanCopier copier;
-        if (!beanCopierMap.containsKey(beanKey)) {
+        if (!BEAN_COPIER_MAP.containsKey(beanKey)) {
             copier = BeanCopier.create(source.getClass(), target.getClass(), false);
-            beanCopierMap.put(beanKey, copier);
+            BEAN_COPIER_MAP.put(beanKey, copier);
         } else {
-            copier = beanCopierMap.get(beanKey);
+            copier = BEAN_COPIER_MAP.get(beanKey);
         }
         copier.copy(source, target, null);
 
@@ -106,6 +109,5 @@ public class BeanCopierUtil {
     private static String generateKey(Class<?> class1, Class<?> class2) {
         return class1.toString() + class2.toString();
     }
-
 
 }

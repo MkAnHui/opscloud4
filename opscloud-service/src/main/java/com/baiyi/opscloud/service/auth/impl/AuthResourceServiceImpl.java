@@ -4,7 +4,7 @@ import com.baiyi.opscloud.common.util.IdUtil;
 import com.baiyi.opscloud.domain.DataTable;
 import com.baiyi.opscloud.domain.generator.opscloud.AuthResource;
 import com.baiyi.opscloud.domain.param.auth.AuthResourceParam;
-import com.baiyi.opscloud.mapper.opscloud.AuthResourceMapper;
+import com.baiyi.opscloud.mapper.AuthResourceMapper;
 import com.baiyi.opscloud.service.auth.AuthResourceService;
 import com.baiyi.opscloud.util.SQLUtil;
 import com.github.pagehelper.Page;
@@ -29,7 +29,7 @@ public class AuthResourceServiceImpl implements AuthResourceService {
 
     @Override
     public DataTable<AuthResource> queryRoleBindResourcePageByParam(AuthResourceParam.RoleBindResourcePageQuery pageQuery) {
-        Page page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
+        Page<?> page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
         List<AuthResource> data = pageQuery.getBind() ? authResourceMapper.queryRoleBindResourceByParam(pageQuery)
                 : authResourceMapper.queryRoleUnbindResourceByParam(pageQuery);
         return new DataTable<>(data, page.getTotal());
@@ -89,4 +89,5 @@ public class AuthResourceServiceImpl implements AuthResourceService {
     public void deleteById(int id) {
         authResourceMapper.deleteByPrimaryKey(id);
     }
+
 }

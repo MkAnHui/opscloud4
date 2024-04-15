@@ -4,24 +4,25 @@ import com.aliyuncs.exceptions.ClientException;
 import com.baiyi.opscloud.common.annotation.SingleTask;
 import com.baiyi.opscloud.common.constants.enums.DsTypeEnum;
 import com.baiyi.opscloud.common.datasource.AliyunConfig;
+import com.baiyi.opscloud.core.comparer.AssetComparer;
+import com.baiyi.opscloud.core.comparer.AssetComparerBuilder;
 import com.baiyi.opscloud.core.factory.AssetProviderFactory;
 import com.baiyi.opscloud.core.model.DsInstanceContext;
 import com.baiyi.opscloud.core.provider.annotation.ChildProvider;
 import com.baiyi.opscloud.core.provider.asset.AbstractAssetChildProvider;
-import com.baiyi.opscloud.core.util.AssetUtil;
 import com.baiyi.opscloud.datasource.aliyun.ons.driver.AliyunOnsRocketMqInstanceDriver;
 import com.baiyi.opscloud.datasource.aliyun.ons.driver.AliyunOnsRocketMqTopicDriver;
-import com.baiyi.opscloud.datasource.aliyun.util.AliyunRegionIdUtil;
-import com.baiyi.opscloud.domain.generator.opscloud.DatasourceConfig;
-import com.baiyi.opscloud.domain.generator.opscloud.DatasourceInstanceAsset;
-import com.baiyi.opscloud.domain.constants.DsAssetTypeConstants;
-import com.google.common.collect.Lists;
 import com.baiyi.opscloud.datasource.aliyun.ons.entity.OnsInstance;
 import com.baiyi.opscloud.datasource.aliyun.ons.entity.OnsRocketMqTopic;
+import com.baiyi.opscloud.datasource.aliyun.util.AliyunRegionIdUtil;
+import com.baiyi.opscloud.domain.constants.DsAssetTypeConstants;
+import com.baiyi.opscloud.domain.generator.opscloud.DatasourceConfig;
+import com.baiyi.opscloud.domain.generator.opscloud.DatasourceInstanceAsset;
+import com.google.common.collect.Lists;
+import jakarta.annotation.Resource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import javax.annotation.Resource;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -53,18 +54,16 @@ public class AliyunOnsRocketMqTopicProvider extends AbstractAssetChildProvider<O
     }
 
     private AliyunConfig.Aliyun buildConfig(DatasourceConfig dsConfig) {
-        return dsConfigHelper.build(dsConfig, AliyunConfig.class).getAliyun();
+        return dsConfigManager.build(dsConfig, AliyunConfig.class).getAliyun();
     }
 
     @Override
-    protected boolean equals(DatasourceInstanceAsset asset, DatasourceInstanceAsset preAsset) {
-        if (!AssetUtil.equals(preAsset.getName(), asset.getName()))
-            return false;
-        if (!AssetUtil.equals(preAsset.getAssetKey2(), asset.getAssetKey2()))
-            return false;
-        if (!AssetUtil.equals(preAsset.getDescription(), asset.getDescription()))
-            return false;
-        return true;
+    protected AssetComparer getAssetComparer() {
+        return AssetComparerBuilder.newBuilder()
+                .compareOfName()
+                .compareOfKey2()
+                .compareOfDescription()
+                .build();
     }
 
     @Override
@@ -79,11 +78,11 @@ public class AliyunOnsRocketMqTopicProvider extends AbstractAssetChildProvider<O
                     instances.forEach(instance -> {
                         try {
                             entities.addAll(aliyunOnsRocketMqTopicDriver.listTopic(regionId, aliyun, instance.getInstanceId()));
-                        } catch (ClientException e) {
+                        } catch (ClientException ignored) {
                         }
                     });
                 }
-            } catch (ClientException e) {
+            } catch (ClientException ignored) {
             }
         });
         return entities;
@@ -115,4 +114,3 @@ public class AliyunOnsRocketMqTopicProvider extends AbstractAssetChildProvider<O
     }
 
 }
-

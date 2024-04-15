@@ -1,8 +1,8 @@
 package com.baiyi.opscloud.zabbix.v5.driver;
 
-import com.baiyi.opscloud.common.config.CachingConfiguration;
+import com.baiyi.opscloud.common.configuration.CachingConfiguration;
 import com.baiyi.opscloud.common.datasource.ZabbixConfig;
-import com.baiyi.opscloud.zabbix.v5.driver.base.AbstractZabbixV5ActionDrive;
+import com.baiyi.opscloud.zabbix.v5.driver.base.AbstractZabbixV5ActionDriver;
 import com.baiyi.opscloud.zabbix.v5.entity.ZabbixAction;
 import com.baiyi.opscloud.zabbix.v5.entity.ZabbixHostGroup;
 import com.baiyi.opscloud.zabbix.v5.entity.ZabbixUserGroup;
@@ -30,18 +30,18 @@ import java.util.Map;
  */
 @Slf4j
 @Component
-public class ZabbixV5ActionDriver extends AbstractZabbixV5ActionDrive {
+public class ZabbixV5ActionDriver extends AbstractZabbixV5ActionDriver {
 
-    @CacheEvict(cacheNames = CachingConfiguration.Repositories.CACHE_1DAY, key = "#config.url + '_v5_action_name_' + #actionName")
+    @CacheEvict(cacheNames = CachingConfiguration.Repositories.CACHE_FOR_1D, key = "#config.url + '_v5_action_name_' + #actionName")
     public void evictActionByName(ZabbixConfig.Zabbix config, String actionName) {
-        log.info("清除ZabbixAction缓存 : name = {}", actionName);
+        log.info("Evict cache with Zabbix Action: actionName={}", actionName);
     }
 
     /**
      * @param actionName Report problems to users_{name}
      * @return
      */
-    @Cacheable(cacheNames = CachingConfiguration.Repositories.CACHE_1DAY, key = "#config.url + '_v5_action_name_' + #actionName", unless = "#result == null")
+    @Cacheable(cacheNames = CachingConfiguration.Repositories.CACHE_FOR_1D, key = "#config.url + '_v5_action_name_' + #actionName", unless = "#result == null")
     public ZabbixAction.Action getActionByName(ZabbixConfig.Zabbix config, String actionName) {
         ZabbixRequest.DefaultRequest request = ZabbixRequestBuilder.builder()
                 .putParam("output", "extend")
@@ -51,9 +51,10 @@ public class ZabbixV5ActionDriver extends AbstractZabbixV5ActionDrive {
                         .build())
                 .build();
         ZabbixAction.QueryActionResponse response = queryHandle(config, request);
-        if (CollectionUtils.isEmpty(response.getResult()))
+        if (CollectionUtils.isEmpty(response.getResult())) {
             return null;
-        return response.getResult().get(0);
+        }
+        return response.getResult().getFirst();
     }
 
     public void create(ZabbixConfig.Zabbix config, String actionName, String usergrpName) {
@@ -63,7 +64,8 @@ public class ZabbixV5ActionDriver extends AbstractZabbixV5ActionDrive {
                 .putParam("eventsource", 0)
                 .putParam("status", 0)
                 .putParam("esc_period", "10m")
-                .putParam("operations", buildOperations(config, usergrpName)) // 操作
+                // 操作
+                .putParam("operations", buildOperations(config, usergrpName))
                 .filter(ZabbixFilterBuilder.builder()
                         .putEntry("evaltype", 1)
                         .putEntry("conditions", ConditionsBuilder.build(hostGroup.getGroupid()))
@@ -71,7 +73,7 @@ public class ZabbixV5ActionDriver extends AbstractZabbixV5ActionDrive {
                 .build();
         ZabbixAction.CreateActionResponse response = createHandle(config, request);
         if (CollectionUtils.isEmpty(response.getResult().getActionids())) {
-            log.error("创建ZabbixAction失败: name = {}", actionName);
+            log.error("Create Zabbix Action error: actionName={}", actionName);
         }
     }
 
@@ -96,13 +98,15 @@ public class ZabbixV5ActionDriver extends AbstractZabbixV5ActionDrive {
     }
 
     public void delete(ZabbixConfig.Zabbix config, ZabbixAction.Action action) {
-        if (action == null) return;
+        if (action == null) {
+            return;
+        }
         ZabbixRequest.DeleteRequest request = ZabbixRequest.DeleteRequest.builder()
                 .params(new String[]{action.getActionid()})
                 .build();
         ZabbixAction.DeleteActionResponse response = deleteHandle(config, request);
         if (CollectionUtils.isEmpty(response.getResult().getActionids())) {
-            log.error("删除ZabbixAction失败: actionid = {}", action.getActionid());
+            log.error("Delete Zabbix Action error: actionid={}", action.getActionid());
         }
     }
 

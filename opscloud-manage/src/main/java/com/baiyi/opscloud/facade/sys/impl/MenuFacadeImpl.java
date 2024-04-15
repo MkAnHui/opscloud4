@@ -1,7 +1,7 @@
 package com.baiyi.opscloud.facade.sys.impl;
 
-import com.baiyi.opscloud.common.exception.common.CommonRuntimeException;
-import com.baiyi.opscloud.common.util.SessionUtil;
+import com.baiyi.opscloud.common.exception.common.OCException;
+import com.baiyi.opscloud.common.holder.SessionHolder;
 import com.baiyi.opscloud.domain.ErrorEnum;
 import com.baiyi.opscloud.domain.generator.opscloud.AuthRoleMenu;
 import com.baiyi.opscloud.domain.generator.opscloud.Menu;
@@ -44,44 +44,41 @@ public class MenuFacadeImpl implements MenuFacade {
     @Override
     public void saveMenu(MenuParam.MenuSave param) {
         List<Menu> menuList = menuPacker.toDOList(param.getMenuList());
-        if (!validMenuList(menuList))
-            throw new CommonRuntimeException(ErrorEnum.MENU_CONTENT_EMPTY);
+        if (!validMenuList(menuList)) {
+            throw new OCException(ErrorEnum.MENU_CONTENT_EMPTY);
+        }
         menuList.forEach(menu -> {
             menu.setSeq(menuList.indexOf(menu));
-            if (menu.getId() == null)
+            if (menu.getId() == null) {
                 menuService.add(menu);
-            else
+            } else {
                 menuService.update(menu);
+            }
         });
     }
 
     private Boolean validMenuList(List<Menu> menuList) {
-        return menuList.stream().allMatch(x ->
-                StringUtils.isNotBlank(x.getIcon())
-                        && StringUtils.isNotBlank(x.getTitle())
-        );
+        return menuList.stream().allMatch(x -> StringUtils.isNotBlank(x.getIcon()) && StringUtils.isNotBlank(x.getTitle()));
     }
 
     @Override
     public void saveMenuChild(MenuParam.MenuChildSave param) {
         List<MenuChild> menuChildList = menuPacker.toChildDOList(param.getMenuChildList());
-        if (!validMenuChildList(menuChildList))
-            throw new CommonRuntimeException(ErrorEnum.MENU_CHILD_CONTENT_EMPTY);
+        if (!validMenuChildList(menuChildList)) {
+            throw new OCException(ErrorEnum.MENU_CHILD_CONTENT_EMPTY);
+        }
         menuChildList.forEach(menuChild -> {
             menuChild.setSeq(menuChildList.indexOf(menuChild));
-            if (menuChild.getId() == null)
+            if (menuChild.getId() == null) {
                 menuChildService.add(menuChild);
-            else
+            } else {
                 menuChildService.update(menuChild);
+            }
         });
     }
 
     private Boolean validMenuChildList(List<MenuChild> menuChildList) {
-        return menuChildList.stream().allMatch(x ->
-                StringUtils.isNotBlank(x.getTitle())
-                        && StringUtils.isNotBlank(x.getIcon())
-                        && StringUtils.isNotBlank(x.getPath())
-        );
+        return menuChildList.stream().allMatch(x -> StringUtils.isNotBlank(x.getTitle()) && StringUtils.isNotBlank(x.getIcon()) && StringUtils.isNotBlank(x.getPath()));
     }
 
     @Override
@@ -99,8 +96,9 @@ public class MenuFacadeImpl implements MenuFacade {
     @Override
     public void delMenuById(Integer id) {
         List<MenuChild> menuChildList = menuChildService.listByMenuId(id);
-        if (!CollectionUtils.isEmpty(menuChildList))
-            throw new CommonRuntimeException(ErrorEnum.MENU_CHILD_IS_NOT_EMPTY);
+        if (!CollectionUtils.isEmpty(menuChildList)) {
+            throw new OCException(ErrorEnum.MENU_CHILD_IS_NOT_EMPTY);
+        }
         menuService.del(id);
     }
 
@@ -115,7 +113,7 @@ public class MenuFacadeImpl implements MenuFacade {
     }
 
     @Override
-    @Transactional(rollbackFor = {CommonRuntimeException.class, Exception.class})
+    @Transactional(rollbackFor = {OCException.class, Exception.class})
     public void saveAuthRoleMenu(MenuParam.AuthRoleMenuSave param) {
         authRoleMenuService.deleteByRoleId(param.getRoleId());
         List<AuthRoleMenu> authRoleMenuList = param.getMenuChildIdList().stream().map(menuChildId -> {
@@ -127,7 +125,7 @@ public class MenuFacadeImpl implements MenuFacade {
         try {
             authRoleMenuService.addList(authRoleMenuList);
         } catch (Exception e) {
-            throw new CommonRuntimeException(ErrorEnum.ROLE_MENU_SAVE_FAIL);
+            throw new OCException(ErrorEnum.ROLE_MENU_SAVE_FAIL);
         }
     }
 
@@ -143,7 +141,7 @@ public class MenuFacadeImpl implements MenuFacade {
 
     @Override
     public List<MenuVO.Menu> queryMyMenu() {
-        return menuPacker.toVOList(SessionUtil.getUsername());
+        return menuPacker.toVOList(SessionHolder.getUsername());
     }
 
 }

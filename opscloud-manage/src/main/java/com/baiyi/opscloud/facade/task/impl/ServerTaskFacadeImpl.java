@@ -2,15 +2,16 @@ package com.baiyi.opscloud.facade.task.impl;
 
 import com.baiyi.opscloud.common.base.ServerTaskStatusEnum;
 import com.baiyi.opscloud.common.datasource.AnsibleConfig;
-import com.baiyi.opscloud.common.exception.common.CommonRuntimeException;
-import com.baiyi.opscloud.common.template.YamlUtil;
+import com.baiyi.opscloud.common.exception.common.OCException;
 import com.baiyi.opscloud.common.util.BeanCopierUtil;
-import com.baiyi.opscloud.core.factory.DsConfigHelper;
+import com.baiyi.opscloud.common.util.NewTimeUtil;
+import com.baiyi.opscloud.common.util.YamlUtil;
+import com.baiyi.opscloud.core.factory.DsConfigManager;
 import com.baiyi.opscloud.core.model.DsInstanceContext;
 import com.baiyi.opscloud.core.provider.base.common.SimpleDsInstanceProvider;
 import com.baiyi.opscloud.core.util.SystemEnvUtil;
-import com.baiyi.opscloud.datasource.ansible.args.AnsibleArgs;
 import com.baiyi.opscloud.datasource.ansible.builder.AnsiblePlaybookArgumentsBuilder;
+import com.baiyi.opscloud.datasource.ansible.builder.args.AnsiblePlaybookArgs;
 import com.baiyi.opscloud.datasource.ansible.recorder.TaskLogStorehouse;
 import com.baiyi.opscloud.datasource.ansible.task.AnsibleServerTask;
 import com.baiyi.opscloud.domain.DataTable;
@@ -29,22 +30,17 @@ import com.baiyi.opscloud.service.task.ServerTaskMemberService;
 import com.baiyi.opscloud.service.task.ServerTaskService;
 import com.baiyi.opscloud.util.PlaybookUtil;
 import com.google.common.collect.Lists;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.exec.CommandLine;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import javax.annotation.Resource;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
-import static com.baiyi.opscloud.common.config.ThreadPoolTaskConfiguration.TaskPools.EXECUTOR;
 
 /**
  * @Author baiyi
@@ -68,24 +64,25 @@ public class ServerTaskFacadeImpl extends SimpleDsInstanceProvider implements Se
     private AnsiblePlaybookService ansiblePlaybookService;
 
     @Resource
-    private DsConfigHelper dsConfigHelper;
+    private DsConfigManager dsConfigManager;
 
     @Resource
     private ServerTaskPacker serverTaskPacker;
 
-    private static final int MAX_EXECUTING = 20;
+    private static final int MAX_EXECUTING = 10;
 
     @Override
     public DataTable<ServerTaskVO.ServerTask> queryServerTaskPage(ServerTaskParam.ServerTaskPageQuery pageQuery) {
         DataTable<ServerTask> table = serverTaskService.queryServerTaskPage(pageQuery);
-        List<ServerTaskVO.ServerTask> data = BeanCopierUtil.copyListProperties(table.getData(), ServerTaskVO.ServerTask.class).stream()
-                .peek(e -> serverTaskPacker.wrap(e, pageQuery)).collect(Collectors.toList());
-        return new DataTable<>(data
-                , table.getTotalNum());
+        List<ServerTaskVO.ServerTask> data = BeanCopierUtil.copyListProperties(table.getData(), ServerTaskVO.ServerTask.class)
+                .stream()
+                .peek(e -> serverTaskPacker.wrap(e, pageQuery))
+                .collect(Collectors.toList());
+        return new DataTable<>(data, table.getTotalNum());
     }
 
-    @Async(value = EXECUTOR)
     @Override
+    @Async
     public void submitServerTask(ServerTaskParam.SubmitServerTask submitServerTask, String username) {
         ServerTask serverTask = ServerTaskBuilder.newBuilder(submitServerTask, username);
         serverTaskService.add(serverTask);
@@ -100,7 +97,9 @@ public class ServerTaskFacadeImpl extends SimpleDsInstanceProvider implements Se
      * @param servers
      */
     private List<ServerTaskMember> record(ServerTask serverTask, List<ServerVO.Server> servers) {
-        if (CollectionUtils.isEmpty(servers)) throw new CommonRuntimeException("服务器列表为空！");
+        if (CollectionUtils.isEmpty(servers)) {
+            throw new OCException("服务器列表为空！");
+        }
         List<ServerTaskMember> members = Lists.newArrayList();
         servers.forEach(server -> {
             ServerTaskMember member = ServerTaskMemberBuilder.newBuilder(serverTask, server);
@@ -116,19 +115,20 @@ public class ServerTaskFacadeImpl extends SimpleDsInstanceProvider implements Se
         // 构建上下文
         DsInstanceContext instanceContext = buildDsInstanceContext(serverTask.getInstanceUuid());
         AnsibleConfig.Ansible ansible =
-                dsConfigHelper.build(instanceContext.getDsConfig(), AnsibleConfig.class).getAnsible();
+                dsConfigManager.build(instanceContext.getDsConfig(), AnsibleConfig.class).getAnsible();
         AnsiblePlaybook ansiblePlaybook = ansiblePlaybookService.getById(serverTask.getAnsiblePlaybookId());
 
-        AnsibleArgs.Playbook args = AnsibleArgs.Playbook.builder()
-                .extraVars(YamlUtil.toVars(serverTask.getVars()).getVars())
+        AnsiblePlaybookArgs args = AnsiblePlaybookArgs.builder()
+                .extraVars(YamlUtil.loadVars(serverTask.getVars()).getVars())
                 .keyFile(SystemEnvUtil.renderEnvHome(ansible.getPrivateKey()))
                 .playbook(PlaybookUtil.toPath(ansiblePlaybook))
                 .inventory(SystemEnvUtil.renderEnvHome(ansible.getInventoryHost()))
                 .build();
 
-        ExecutorService fixedThreadPool = Executors.newFixedThreadPool(MAX_EXECUTING);
+        // ExecutorService fixedThreadPool = Executors.newFixedThreadPool(MAX_EXECUTING);
         // 使用迭代器遍历并执行所有服务器任务
         Iterator<ServerTaskMember> iter = members.iterator();
+
         while (iter.hasNext()) {
             // 查询当前执行中的任务是否达到最大并发
             if (serverTaskMemberService.countByTaskStatus(serverTask.getId(), ServerTaskStatusEnum.EXECUTING.name()) < MAX_EXECUTING) {
@@ -141,15 +141,13 @@ public class ServerTaskFacadeImpl extends SimpleDsInstanceProvider implements Se
                         commandLine,
                         serverTaskMemberService,
                         taskLogStorehouse);
-                fixedThreadPool.execute(ansibleServerTask); // 执行任务
-            } else {
-                try {
-                    TimeUnit.SECONDS.sleep(3L);
-                } catch (InterruptedException ie) {
-                    ie.printStackTrace();
-                }
+                // 执行任务
+                // JDK21 VirtualThreads
+                Thread.ofVirtual().start(ansibleServerTask);
             }
+            NewTimeUtil.sleep(5L);
         }
+
         traceEndOfTask(serverTask);
     }
 
@@ -167,11 +165,7 @@ public class ServerTaskFacadeImpl extends SimpleDsInstanceProvider implements Se
                 // 任务完成
                 return;
             } else {
-                try {
-                    TimeUnit.SECONDS.sleep(1L);
-                } catch (InterruptedException ie) {
-                    ie.printStackTrace();
-                }
+                NewTimeUtil.sleep(1L);
             }
         }
     }

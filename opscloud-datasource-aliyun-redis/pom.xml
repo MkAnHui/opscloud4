@@ -12,8 +12,8 @@
     <artifactId>opscloud-datasource-aliyun-redis</artifactId>
 
     <properties>
-        <maven.compiler.source>8</maven.compiler.source>
-        <maven.compiler.target>8</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
     </properties>
 
     <dependencies>
@@ -31,7 +31,7 @@
         <dependency>
             <groupId>com.aliyun</groupId>
             <artifactId>aliyun-java-sdk-r-kvstore</artifactId>
-            <version>2.20.1</version>
+            <version>2.20.9</version>
         </dependency>
 
     </dependencies>

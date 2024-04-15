@@ -2,16 +2,15 @@ package com.baiyi.opscloud.aspect;
 
 import com.baiyi.opscloud.domain.annotation.InstanceHealth;
 import com.baiyi.opscloud.facade.sys.InstanceFacade;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.Resource;
 
 import static com.baiyi.opscloud.common.base.Global.ENV_PROD;
 
@@ -25,13 +24,14 @@ import static com.baiyi.opscloud.common.base.Global.ENV_PROD;
 @Slf4j
 @Aspect
 @Component
-public class InstanceHealthAspect implements Ordered {
+@RequiredArgsConstructor
+@Order(-65535)
+public class InstanceHealthAspect {
 
     @Value("${spring.profiles.active}")
     private String env;
 
-    @Resource
-    private InstanceFacade instanceFacade;
+    private final InstanceFacade instanceFacade;
 
     @Pointcut(value = "@annotation(com.baiyi.opscloud.domain.annotation.InstanceHealth)")
     public void annotationPoint() {
@@ -41,20 +41,14 @@ public class InstanceHealthAspect implements Ordered {
     public Object around(ProceedingJoinPoint joinPoint, InstanceHealth instanceHealth) throws Throwable {
         if (ENV_PROD.equals(env)) {
             if (instanceFacade.isHealth()) {
-                log.info("InstanceHealthAspect: passed !");
+                log.debug("Opscloud instance health examination: passed !");
                 return joinPoint.proceed();
             } else {
-                // throw new CommonRuntimeException("InstanceHealthAspect: 当前实例不可用！");
-                log.error("InstanceHealthAspect: 当前实例不可用 !");
+                log.debug("Opscloud instance health examination: down !");
                 return joinPoint;
             }
         }
         return joinPoint.proceed();
-    }
-
-    @Override
-    public int getOrder() {
-        return 1;
     }
 
 }

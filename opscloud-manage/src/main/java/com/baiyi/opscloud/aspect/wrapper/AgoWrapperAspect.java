@@ -1,10 +1,10 @@
 package com.baiyi.opscloud.aspect.wrapper;
 
 import com.baiyi.opscloud.common.annotation.AgoWrapper;
-import com.baiyi.opscloud.common.exception.common.CommonRuntimeException;
+import com.baiyi.opscloud.common.exception.common.OCException;
 import com.baiyi.opscloud.common.util.time.AgoUtil;
 import com.baiyi.opscloud.domain.param.IExtend;
-import com.baiyi.opscloud.domain.vo.base.ShowTime;
+import com.baiyi.opscloud.domain.vo.base.ReadableTime;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -14,13 +14,15 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 
 /**
+ * 注入ago字段
+ *
  * @Author baiyi
  * @Date 2022/2/23 11:08 AM
  * @Version 1.0
  */
+@Slf4j
 @Aspect
 @Component
-@Slf4j
 public class AgoWrapperAspect {
 
     @Pointcut(value = "@annotation(com.baiyi.opscloud.common.annotation.AgoWrapper)")
@@ -28,18 +30,20 @@ public class AgoWrapperAspect {
     }
 
     @Around("@annotation(agoWrapper)")
-    public Object around(ProceedingJoinPoint joinPoint, AgoWrapper agoWrapper) throws CommonRuntimeException {
+    public Object around(ProceedingJoinPoint joinPoint, AgoWrapper agoWrapper) throws OCException {
         Object result;
         try {
             result = joinPoint.proceed();
         } catch (Throwable e) {
-            throw new CommonRuntimeException(e.getMessage());
+            throw new OCException(e.getMessage());
         }
         boolean extend = agoWrapper.extend();
-        ShowTime.IAgo targetAgo = null;
+        ReadableTime.IAgo agoTarget = null;
         MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
-        String[] params = methodSignature.getParameterNames();// 获取参数名称
-        Object[] args = joinPoint.getArgs();// 获取参数值
+        // 获取参数名称
+        String[] params = methodSignature.getParameterNames();
+        // 获取参数值
+        Object[] args = joinPoint.getArgs();
         if (params != null && params.length != 0) {
             for (Object arg : args) {
                 if (!extend) {
@@ -48,22 +52,17 @@ public class AgoWrapperAspect {
                         continue;
                     }
                 }
-                if (targetAgo == null) {
-                    if (arg instanceof ShowTime.IAgo) {
-                        targetAgo = (ShowTime.IAgo) arg;
+                if (agoTarget == null) {
+                    if (arg instanceof ReadableTime.IAgo) {
+                        agoTarget = (ReadableTime.IAgo) arg;
                     }
                 }
             }
         }
-        if (extend && targetAgo != null) {
-            wrap(targetAgo);
+        if (extend && agoTarget != null) {
+            AgoUtil.wrap(agoTarget);
         }
         return result;
-    }
-
-    public void wrap(ShowTime.IAgo iAgo) {
-        if (iAgo.getAgoTime() == null) return;
-        iAgo.setAgo(AgoUtil.format(iAgo.getAgoTime()));
     }
 
 }

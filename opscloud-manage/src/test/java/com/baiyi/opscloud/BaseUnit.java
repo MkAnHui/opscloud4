@@ -22,10 +22,14 @@ public class BaseUnit {
 
     public void print(Object t) {
         if (t instanceof String) {
-            System.err.println((String) t);
+            System.out.println((String) t);
         } else {
-            System.err.println(JSONUtil.writeValueAsString(t));
+            System.out.println(JSONUtil.writeValueAsString(t));
         }
+    }
+
+    public void print(Exception e){
+        System.out.println(e.getMessage());
     }
 
 }

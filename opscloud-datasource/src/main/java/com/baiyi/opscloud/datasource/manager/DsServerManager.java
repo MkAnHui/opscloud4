@@ -1,16 +1,16 @@
 package com.baiyi.opscloud.datasource.manager;
 
-import com.baiyi.opscloud.domain.constants.DsInstanceTagConstants;
+import com.baiyi.opscloud.domain.constants.TagConstants;
 import com.baiyi.opscloud.common.constants.enums.DsTypeEnum;
 import com.baiyi.opscloud.datasource.manager.base.BaseManager;
 import com.baiyi.opscloud.datasource.manager.base.IManager;
-import com.baiyi.opscloud.datasource.business.server.factory.ServerProviderFactory;
+import com.baiyi.opscloud.datasource.business.server.factory.ServerHandlerFactory;
 import com.baiyi.opscloud.domain.generator.opscloud.DatasourceInstance;
 import com.baiyi.opscloud.domain.generator.opscloud.Server;
 import com.baiyi.opscloud.domain.generator.opscloud.User;
 import com.baiyi.opscloud.domain.base.BaseBusiness;
-import com.github.xiaoymin.knife4j.core.util.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -36,7 +36,7 @@ public class DsServerManager extends BaseManager implements IManager<Server> {
 
     @Override
     protected String getTag() {
-        return DsInstanceTagConstants.SERVER.getTag();
+        return TagConstants.SERVER.getTag();
     }
 
     @Override
@@ -46,7 +46,7 @@ public class DsServerManager extends BaseManager implements IManager<Server> {
             log.info("{} 数据源服务器管理: 无可用实例", this.getClass().getSimpleName());
             return;
         }
-        instances.forEach(e -> ServerProviderFactory.getIServerByInstanceType(e.getInstanceType()).create(e, server));
+        instances.forEach(e -> ServerHandlerFactory.getByInstanceType(e.getInstanceType()).create(e, server));
     }
 
     @Override
@@ -56,7 +56,7 @@ public class DsServerManager extends BaseManager implements IManager<Server> {
             log.info("{} 数据源服务器管理: 无可用实例", this.getClass().getSimpleName());
             return;
         }
-        instances.forEach(e -> ServerProviderFactory.getIServerByInstanceType(e.getInstanceType()).update(e, server));
+        instances.forEach(e -> ServerHandlerFactory.getByInstanceType(e.getInstanceType()).update(e, server));
     }
 
     @Override
@@ -67,7 +67,7 @@ public class DsServerManager extends BaseManager implements IManager<Server> {
             log.info("{} 数据源服务器管理: 无可用实例", this.getClass().getSimpleName());
             return;
         }
-        instances.forEach(e -> ServerProviderFactory.getIServerByInstanceType(e.getInstanceType()).delete(e, server));
+        instances.forEach(e -> ServerHandlerFactory.getByInstanceType(e.getInstanceType()).delete(e, server));
     }
 
     @Override
@@ -77,4 +77,5 @@ public class DsServerManager extends BaseManager implements IManager<Server> {
     @Override
     public void revoke(User user, BaseBusiness.IBusiness businessResource) {
     }
+
 }

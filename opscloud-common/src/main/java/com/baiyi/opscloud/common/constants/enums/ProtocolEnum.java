@@ -7,13 +7,16 @@ import lombok.Getter;
  * @Date 2021/5/25 1:31 下午
  * @Version 1.0
  */
+@Getter
 public enum ProtocolEnum {
 
+    /**
+     * 协议类型
+     */
     SSH("ssh"),
     VNC("vnc"),
     RDP("rdp");
 
-    @Getter
     private final String type;
 
     ProtocolEnum(String type) {

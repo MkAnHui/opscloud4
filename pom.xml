@@ -18,19 +18,21 @@
         <module>opscloud-datasource-aliyun</module>
         <module>opscloud-datasource-aliyun-core</module>
         <module>opscloud-datasource-aliyun-ecs</module>
+        <module>opscloud-datasource-aliyun-ram</module>
+        <module>opscloud-datasource-aliyun-log</module>
+        <module>opscloud-datasource-aliyun-rds</module>
+        <module>opscloud-datasource-aliyun-ons</module>
+        <module>opscloud-datasource-aliyun-redis</module>
+        <module>opscloud-datasource-aliyun-domain</module>
+        <module>opscloud-datasource-aliyun-devops</module>
         <module>opscloud-datasource-gitlab</module>
         <module>opscloud-datasource-zabbix</module>
         <module>opscloud-datasource-ansible</module>
         <module>opscloud-datasource-kubernetes</module>
         <module>opscloud-datasource-jenkins</module>
-        <module>opscloud-datasource-aliyun-ram</module>
         <module>opscloud-kubernetes-terminal</module>
         <module>opscloud-terminal-audit</module>
         <module>opscloud-event</module>
-        <module>opscloud-datasource-aliyun-log</module>
-        <module>opscloud-datasource-aliyun-rds</module>
-        <module>opscloud-datasource-aliyun-ons</module>
-        <module>opscloud-datasource-aliyun-redis</module>
         <module>opscloud-datasource-tencent-exmail</module>
         <module>opscloud-datasource-nexus</module>
         <module>opscloud-workorder</module>
@@ -43,24 +45,75 @@
         <module>opscloud-datasource-aws-core</module>
         <module>opscloud-datasource-aws-ec2</module>
         <module>opscloud-datasource-aws-iam</module>
+        <module>opscloud-datasource-aws-sqs</module>
+        <module>opscloud-datasource-aws-s3</module>
+        <module>opscloud-datasource-aws-route53</module>
         <module>opscloud-otp</module>
+        <module>opscloud-datasource-huaweicloud-core</module>
+        <module>opscloud-datasource-huaweicloud</module>
+        <module>opscloud-datasource-huaweicloud-ecs</module>
+        <module>opscloud-datasource-aliyun-acr</module>
+        <module>opscloud-datasource-aliyun-cms</module>
+        <module>opscloud-datasource-consul</module>
+        <module>opscloud-datasource-aws-ecr</module>
+        <module>opscloud-datasource-lxhl</module>
+        <module>opscloud-leo</module>
+        <module>opscloud-datasource-google-cloud-core</module>
+        <module>opscloud-datasource-google-cloud-iam</module>
+        <module>opscloud-datasource-google-cloud</module>
+        <module>opscloud-datasource-metersphere</module>
+        <module>opscloud-datasource-apollo</module>
+        <module>opscloud-datasource-aliyun-arms</module>
+        <module>opscloud-datasource-aliyun-eventbridge</module>
+        <module>opscloud-datasource-aws-transfer</module>
     </modules>
+
     <parent>
-        <!--https://spring.io/projects/spring-boot#learn-->
+        <!--  https://spring.io/projects/spring-boot#learn  -->
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.4.13</version>
+        <!-- GA version -->
+        <version>3.2.0</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
+
     <groupId>com.baiyi</groupId>
     <artifactId>opscloud</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>opscloud</name>
-    <description>运维平台</description>
+    <description>Jan's O&amp;M World</description>
 
     <properties>
-        <java.version>1.8</java.version>
+        <!-- Core properties -->
+        <java.version>21</java.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <project.version>0.0.4-SNAPSHOT</project.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Dependency versions -->
+        <springdoc-openapi-starter-webmvc.version>2.2.0</springdoc-openapi-starter-webmvc.version>
+        <jasypt-spring-boot-starter.version>3.0.5</jasypt-spring-boot-starter.version>
+        <gson.version>2.10.1</gson.version>
+        <mysql-connector-j.version>8.2.0</mysql-connector-j.version>
+        <druid-spring-boot-starter.version>1.2.16</druid-spring-boot-starter.version>
+        <commons-text.version>1.10.0</commons-text.version>
+        <oshi-core.version>6.4.0</oshi-core.version>
+        <guava.version>32.0.0-jre</guava.version>
+        <jsch.version>0.2.8</jsch.version>
+
+        <huaweicloud-sdk.version>3.1.61</huaweicloud-sdk.version>
+        <aws-java-sdk.version>1.12.565</aws-java-sdk.version>
+        <spring-shell-starter.version>3.1.3</spring-shell-starter.version>
+
+        <spring-shell-version>3.1.3</spring-shell-version>
+
+        <!--  net.javacrumbs.shedlock-->
+        <shedlock-spring.version>5.9.0</shedlock-spring.version>
+
+        <!-- https://mvnrepository.com/artifact/io.github.openfeign/feign-core -->
+        <github-openfeign.version>12.5</github-openfeign.version>
+
     </properties>
 
     <dependencies>
@@ -76,15 +129,19 @@
         </dependency>
 
         <dependency>
-            <groupId>org.mybatis.spring.boot</groupId>
-            <artifactId>mybatis-spring-boot-starter</artifactId>
-            <version>2.2.1</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
+
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.boot</groupId>-->
+<!--            <artifactId>spring-boot-starter-security</artifactId>-->
+<!--        </dependency>-->
+
+        <!--        <dependency>-->
+        <!--            <groupId>org.springframework.boot</groupId>-->
+        <!--            <artifactId>spring-boot-starter-thymeleaf</artifactId>-->
+        <!--        </dependency>-->
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -95,24 +152,20 @@
             <groupId>org.springframework.retry</groupId>
             <artifactId>spring-retry</artifactId>
         </dependency>
-        
+
+        <!-- https://mvnrepository.com/artifact/com.mysql/mysql-connector-j -->
         <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>8.0.27</version>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <version>${mysql-connector-j.version}</version>
             <scope>runtime</scope>
         </dependency>
-        <!--        <dependency>-->
-        <!--            <groupId>com.alibaba</groupId>-->
-        <!--            <artifactId>druid</artifactId>-->
-        <!--            <version>1.2.5</version>-->
-        <!--        </dependency>-->
 
         <!-- https://mvnrepository.com/artifact/com.alibaba/druid-spring-boot-starter -->
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>druid-spring-boot-starter</artifactId>
-            <version>1.2.8</version>
+            <version>${druid-spring-boot-starter.version}</version>
         </dependency>
 
         <dependency>
@@ -120,6 +173,11 @@
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
         </dependency>
+
+        <!--        <dependency>-->
+        <!--            <groupId>org.springframework.boot</groupId>-->
+        <!--            <artifactId>spring-boot-starter-actuator</artifactId>-->
+        <!--        </dependency>-->
 
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -139,12 +197,6 @@
             </exclusions>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>org.junit.jupiter</groupId>-->
-<!--            <artifactId>junit-jupiter</artifactId>-->
-<!--            <version>5.8.2</version>-->
-<!--        </dependency>-->
-
         <dependency>
             <groupId>com.unboundid</groupId>
             <artifactId>unboundid-ldapsdk</artifactId>
@@ -154,86 +206,76 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-text</artifactId>
-            <version>1.9</version>
+            <version>${commons-text.version}</version>
+        </dependency>
+
+        <!-- https://springdoc.org/v2/ -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>${springdoc-openapi-starter-webmvc.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>com.github.xiaoymin</groupId>
-            <artifactId>knife4j-spring-boot-starter</artifactId>
-            <version>3.0.3</version>
-        </dependency>
-
-        <!--配置加密-->
-        <dependency>
-            <groupId>org.jasypt</groupId>
-            <artifactId>jasypt</artifactId>
-            <version>1.9.3</version>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-api</artifactId>
+            <version>${springdoc-openapi-starter-webmvc.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.github.ulisesbocchio</groupId>
             <artifactId>jasypt-spring-boot-starter</artifactId>
-            <version>3.0.4</version>
+            <version>${jasypt-spring-boot-starter.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
-            <version>2.8.9</version>
+            <version>${gson.version}</version>
         </dependency>
-
-<!--        <dependency>-->
-<!--            <groupId>com.alibaba</groupId>-->
-<!--            <artifactId>fastjson</artifactId>-->
-<!--            <version>1.2.79</version>-->
-<!--        </dependency>-->
 
         <!-- 系统信息 -->
         <dependency>
             <groupId>com.github.oshi</groupId>
             <artifactId>oshi-core</artifactId>
-            <version>3.9.1</version>
+            <version>${oshi-core.version}</version>
         </dependency>
 
-        <!--yaml工具-->
-        <!-- https://mvnrepository.com/artifact/org.yaml/snakeyaml -->
         <dependency>
-            <groupId>org.yaml</groupId>
-            <artifactId>snakeyaml</artifactId>
-            <version>1.29</version>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
         </dependency>
-
-<!--        <dependency>-->
-<!--            <groupId>com.jcraft</groupId>-->
-<!--            <artifactId>jsch</artifactId>-->
-<!--            <version>0.1.55</version>-->
-<!--        </dependency>-->
 
         <dependency>
             <groupId>com.github.mwiede</groupId>
             <artifactId>jsch</artifactId>
-            <version>0.2.0</version>
+            <version>${jsch.version}</version>
         </dependency>
 
     </dependencies>
 
     <dependencyManagement>
         <dependencies>
+
             <dependency>
                 <groupId>com.baiyi</groupId>
                 <artifactId>opscloud-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
+
             <dependency>
                 <groupId>com.baiyi</groupId>
                 <artifactId>opscloud-domain</artifactId>
                 <version>${project.version}</version>
             </dependency>
+
             <dependency>
                 <groupId>com.baiyi</groupId>
                 <artifactId>opscloud-manage</artifactId>
                 <version>${project.version}</version>
             </dependency>
+
             <dependency>
                 <groupId>com.baiyi</groupId>
                 <artifactId>opscloud-service</artifactId>
@@ -326,6 +368,12 @@
 
             <dependency>
                 <groupId>com.baiyi</groupId>
+                <artifactId>opscloud-datasource-aliyun-cms</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.baiyi</groupId>
                 <artifactId>opscloud-datasource-aliyun-log</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -357,6 +405,36 @@
             <dependency>
                 <groupId>com.baiyi</groupId>
                 <artifactId>opscloud-datasource-aliyun-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.baiyi</groupId>
+                <artifactId>opscloud-datasource-aliyun-domain</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.baiyi</groupId>
+                <artifactId>opscloud-datasource-aliyun-acr</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.baiyi</groupId>
+                <artifactId>opscloud-datasource-aliyun-devops</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.baiyi</groupId>
+                <artifactId>opscloud-datasource-aliyun-eventbridge</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.baiyi</groupId>
+                <artifactId>opscloud-datasource-aliyun-arms</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -452,14 +530,112 @@
 
             <dependency>
                 <groupId>com.baiyi</groupId>
+                <artifactId>opscloud-datasource-aws-ecr</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.baiyi</groupId>
+                <artifactId>opscloud-datasource-aws-sqs</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.baiyi</groupId>
+                <artifactId>opscloud-datasource-aws-s3</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.baiyi</groupId>
+                <artifactId>opscloud-datasource-aws-route53</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.baiyi</groupId>
+                <artifactId>opscloud-datasource-aws-transfer</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.baiyi</groupId>
+                <artifactId>opscloud-datasource-huaweicloud</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.baiyi</groupId>
+                <artifactId>opscloud-datasource-google-cloud</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.baiyi</groupId>
+                <artifactId>opscloud-datasource-google-cloud-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.baiyi</groupId>
+                <artifactId>opscloud-datasource-google-cloud-iam</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.baiyi</groupId>
+                <artifactId>opscloud-datasource-consul</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.baiyi</groupId>
+                <artifactId>opscloud-datasource-huaweicloud-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.baiyi</groupId>
+                <artifactId>opscloud-datasource-huaweicloud-ecs</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.baiyi</groupId>
                 <artifactId>opscloud-otp</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.baiyi</groupId>
+                <artifactId>opscloud-datasource-lxhl</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.baiyi</groupId>
+                <artifactId>opscloud-datasource-metersphere</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.baiyi</groupId>
+                <artifactId>opscloud-datasource-apollo</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.baiyi</groupId>
+                <artifactId>opscloud-leo</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
         </dependencies>
     </dependencyManagement>
 
-    <repositories><!-- 代码库 -->
+    <repositories>
+
+        <!-- 代码库 -->
         <repository>
             <id>maven repo</id>
             <url>https://mvnrepository.com/artifact/</url>
@@ -485,27 +661,16 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.0</version>
+                <version>3.11.0</version>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <source>21</source>
+                    <target>21</target>
                     <encoding>UTF-8</encoding>
+                    <release>21</release>
+<!--                    <compilerArgs>&#45;&#45;enable-preview</compilerArgs>-->
                 </configuration>
             </plugin>
         </plugins>
     </build>
-
-    <distributionManagement>
-        <snapshotRepository>
-            <id>nexus-snapshots</id>
-            <name>Internal Snapshot</name>
-            <url>https://nexus.chuanyinet.com/repository/maven-snapshots/</url>
-        </snapshotRepository>
-        <repository>
-            <id>nexus-releases</id>
-            <name>Releases</name>
-            <url>https://nexus.chuanyinet.com/repository/maven-releases/</url>
-        </repository>
-    </distributionManagement>
 
 </project>

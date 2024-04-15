@@ -13,16 +13,15 @@ import java.util.Map;
 @Data
 public class KubernetesSessionContainer {
 
-
     private static Map<String, Map<String, KubernetesSession>> kubernetesSessionMap = new HashedMap<>();
 
     private static Map<String, Boolean> batchMap = new HashedMap<>();
 
-    public static void setBatch(String sessionId, Boolean isBatch) {
+    public static void setBatchFlag(String sessionId, Boolean isBatch) {
         batchMap.put(sessionId, isBatch);
     }
 
-    public static Boolean getBatchBySessionId(String sessionId) {
+    public static Boolean getBatchFlagBySessionId(String sessionId) {
         return batchMap.get(sessionId);
     }
 
@@ -50,8 +49,9 @@ public class KubernetesSessionContainer {
 
     public static void removeSession(String sessionId, String instanceId) {
         Map<String, KubernetesSession> sessionMap = kubernetesSessionMap.get(sessionId);
-        if (sessionMap != null)
+        if (sessionMap != null) {
             sessionMap.remove(instanceId);
+        }
     }
 
     /**
@@ -64,10 +64,12 @@ public class KubernetesSessionContainer {
         KubernetesSession kubernetesSession = KubernetesSessionContainer.getBySessionId(sessionId, instanceId);
         if (kubernetesSession != null) {
             kubernetesSession.getWatchKubernetesTerminalOutputTask().close();
-            if (kubernetesSession.getLogWatch() != null)
+            if (kubernetesSession.getLogWatch() != null) {
                 kubernetesSession.getLogWatch().close();
-            if (kubernetesSession.getExecWatch() != null)
+            }
+            if (kubernetesSession.getExecWatch() != null) {
                 kubernetesSession.getExecWatch().close();
+            }
             kubernetesSession.setInputToChannel(null);
             kubernetesSession.setSessionOutput(null);
             kubernetesSession.setInstanceId(null);
@@ -75,4 +77,5 @@ public class KubernetesSessionContainer {
         removeSession(sessionId, instanceId);
         kubernetesSession = null;
     }
+
 }

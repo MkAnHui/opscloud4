@@ -1,7 +1,7 @@
 package com.baiyi.opscloud.common.datasource;
 
-import com.baiyi.opscloud.common.datasource.base.BaseConfig;
-import io.swagger.annotations.ApiModel;
+import com.baiyi.opscloud.common.datasource.base.BaseDsConfig;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -13,15 +13,15 @@ import java.util.List;
  * @Date 2021/6/24 4:46 下午
  * @Version 1.0
  */
-@EqualsAndHashCode(callSuper = true)
 @Data
-public class KubernetesConfig extends BaseConfig {
+@EqualsAndHashCode(callSuper = true)
+public class KubernetesConfig extends BaseDsConfig {
 
     private Kubernetes kubernetes;
 
     @Data
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class Kubernetes {
 
         private String version;
@@ -29,6 +29,7 @@ public class KubernetesConfig extends BaseConfig {
         private AmazonEks amazonEks;
         private Kubeconfig kubeconfig;
         private Namespace namespace;
+        private Container container;
         private Deployment deployment;
         private Service service;
 
@@ -44,7 +45,7 @@ public class KubernetesConfig extends BaseConfig {
      */
     @Data
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class AmazonEks {
 
         private String region;
@@ -57,21 +58,28 @@ public class KubernetesConfig extends BaseConfig {
 
     @Data
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class Kubeconfig {
         private String path;
     }
 
     @Data
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class Namespace {
         private List<String> ignore;
     }
 
     @Data
     @NoArgsConstructor
-    @ApiModel
+    @Schema
+    public static class Container {
+        private List<String> ignore;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @Schema
     public static class Deployment {
         private Nomenclature nomenclature;
     }
@@ -79,15 +87,16 @@ public class KubernetesConfig extends BaseConfig {
     @EqualsAndHashCode(callSuper = true)
     @Data
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class Service extends Deployment {
     }
 
     @Data
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class Nomenclature {
         private String prefix;
         private String suffix;
     }
+
 }

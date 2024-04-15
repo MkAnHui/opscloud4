@@ -1,6 +1,6 @@
 package com.baiyi.opscloud.event.factory;
 
-import com.baiyi.opscloud.event.IEventProcess;
+import com.baiyi.opscloud.event.IEventHandler;
 import com.baiyi.opscloud.event.enums.EventTypeEnum;
 
 import java.util.Map;
@@ -16,10 +16,10 @@ public class EventFactory {
     private EventFactory() {
     }
 
-    private static final Map<String, IEventProcess> context = new ConcurrentHashMap<>();
+    private static final Map<String, IEventHandler> CONTEXT = new ConcurrentHashMap<>();
 
-    public static IEventProcess getIEventProcessByEventType(EventTypeEnum eventType) {
-        return context.get(eventType.name());
+    public static IEventHandler getByEventType(EventTypeEnum eventType) {
+        return CONTEXT.get(eventType.name());
     }
 
     /**
@@ -27,8 +27,8 @@ public class EventFactory {
      *
      * @param bean
      */
-    public static void register(IEventProcess bean) {
-        context.put(bean.getEventType().name(), bean);
+    public static void register(IEventHandler bean) {
+        CONTEXT.put(bean.getEventType().name(), bean);
     }
 
 }

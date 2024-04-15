@@ -33,7 +33,7 @@ public class TemplateUtil {
     }
 
     /**
-     * 渲染模版
+     * 渲染模板
      *
      * @param propsYml   YAML
      * @param credential
@@ -59,7 +59,9 @@ public class TemplateUtil {
     }
 
     private String decrypt(String str) {
-        if (StringUtils.isEmpty(str)) return null;
+        if (StringUtils.isEmpty(str)) {
+            return null;
+        }
         return stringEncryptor.decrypt(str);
     }
 

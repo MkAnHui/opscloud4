@@ -1,13 +1,14 @@
 package com.baiyi.opscloud.sshcore.handler;
 
 import com.baiyi.opscloud.common.datasource.KubernetesConfig;
+import com.baiyi.opscloud.common.exception.ssh.SshException;
 import com.baiyi.opscloud.datasource.kubernetes.driver.KubernetesPodDriver;
 import com.baiyi.opscloud.domain.generator.opscloud.Credential;
 import com.baiyi.opscloud.sshcore.message.ServerMessage;
 import com.baiyi.opscloud.sshcore.model.*;
 import com.baiyi.opscloud.sshcore.task.kubernetes.WatchKubernetesTerminalOutputTask;
 import com.baiyi.opscloud.sshcore.task.ssh.WatchSshServerOutputTask;
-import com.baiyi.opscloud.sshcore.task.terminal.WatchWebTerminalOutputTask;
+import com.baiyi.opscloud.sshcore.task.terminal.WatchServerTerminalOutputTask;
 import com.baiyi.opscloud.sshcore.util.ChannelShellUtil;
 import com.baiyi.opscloud.sshcore.util.SessionConfigUtil;
 import com.jcraft.jsch.ChannelShell;
@@ -19,9 +20,11 @@ import io.fabric8.kubernetes.client.dsl.LogWatch;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.jline.terminal.Size;
+import org.springframework.stereotype.Component;
 
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 /**
@@ -30,15 +33,12 @@ import java.util.UUID;
  * @Version 1.0
  */
 @Slf4j
+@Component
 public class RemoteInvokeHandler {
 
     private static final int SSH_PORT = 22;
 
     private static final String appId = UUID.randomUUID().toString();
-
-//    private static final int SERVER_ALIVE_INTERVAL = 60 * 1000;
-//    public static final int SESSION_TIMEOUT = 60000;
-//    public static final int CHANNEL_TIMEOUT = 60000;
 
     /**
      * 按类型注入凭据
@@ -52,15 +52,20 @@ public class RemoteInvokeHandler {
         Credential credential = hostSystem.getSshCredential().getCredential();
         // 按凭证类型
         switch (hostSystem.getSshCredential().getCredential().getKind()) {
-            case 1: // password
+            // password
+            case 1:
                 session.setPassword(credential.getCredential());
                 break;
-            case 2: // prvKey
+            // prvKey
+            case 2:
                 jsch.addIdentity(credential.getCredential(), credential.getPassphrase().getBytes());
                 break;
-            case 3: // prvKey + pubKey
+            // prvKey + pubKey
+            case 3:
                 jsch.addIdentity(appId, credential.getCredential().trim().getBytes(), credential.getCredential2().getBytes(), credential.getPassphrase().getBytes());
                 break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + hostSystem.getSshCredential().getCredential().getKind());
         }
     }
 
@@ -76,13 +81,15 @@ public class RemoteInvokeHandler {
 
         hostSystem.setStatusCd(HostSystem.SUCCESS_STATUS);
         hostSystem.setInstanceId(instanceId);
-
         try {
-            if (hostSystem.getSshCredential() == null) return;
+            if (hostSystem.getSshCredential() == null) {
+                return;
+            }
             Session session = jsch.getSession(hostSystem.getSshCredential().getServerAccount().getUsername(), hostSystem.getHost(),
                     hostSystem.getPort() == null ? SSH_PORT : hostSystem.getPort());
             invokeSshCredential(hostSystem, jsch, session);
-            SessionConfigUtil.setDefault(session); // 默认设置
+            // 默认设置
+            SessionConfigUtil.setDefault(session);
             ChannelShell channel = (ChannelShell) session.openChannel("shell");
             ChannelShellUtil.setDefault(channel);
 
@@ -91,9 +98,9 @@ public class RemoteInvokeHandler {
             // new session output
             SessionOutput sessionOutput = new SessionOutput(sessionId, hostSystem);
             // 启动线程处理会话
-            Runnable run = new WatchWebTerminalOutputTask(sessionOutput, channel.getInputStream());
-            Thread thread = new Thread(run);
-            thread.start();
+            Runnable run = new WatchServerTerminalOutputTask(sessionOutput, channel.getInputStream());
+            // JDK21 VirtualThreads
+            Thread.ofVirtual().start(run);
 
             OutputStream inputToChannel = channel.getOutputStream();
 
@@ -110,7 +117,7 @@ public class RemoteInvokeHandler {
 
             channel.connect();
         } catch (Exception e) {
-            log.info(e.toString(), e);
+            log.debug(e.getMessage());
             if (e.getMessage().toLowerCase().contains("userauth fail")) {
                 hostSystem.setStatusCd(HostSystem.PUBLIC_KEY_FAIL_STATUS);
             } else if (e.getMessage().toLowerCase().contains("auth fail") || e.getMessage().toLowerCase().contains("auth cancel")) {
@@ -130,32 +137,35 @@ public class RemoteInvokeHandler {
      * @param sessionId
      * @param hostSystem
      */
-    public static void openSSHServer(String sessionId, HostSystem hostSystem, OutputStream out) {
+    public static void openSSHServer(String sessionId, HostSystem hostSystem, OutputStream out) throws SshException {
         JSch jsch = new JSch();
         hostSystem.setStatusCd(HostSystem.SUCCESS_STATUS);
         try {
-            if (hostSystem.getSshCredential() == null) return;
+            if (hostSystem.getSshCredential() == null) {
+                return;
+            }
             Session session = jsch.getSession(hostSystem.getSshCredential().getServerAccount().getUsername(), hostSystem.getHost(),
-                    hostSystem.getPort() == null ? 22 : hostSystem.getPort());
+                    hostSystem.getPort() == null ? SSH_PORT : hostSystem.getPort());
             invokeSshCredential(hostSystem, jsch, session);
-            SessionConfigUtil.setDefault(session); // 默认设置
+            // 默认设置
+            SessionConfigUtil.setDefault(session);
             ChannelShell channel = (ChannelShell) session.openChannel("shell");
-            // channel.setPtyType("dumb");
+
             ChannelShellUtil.setDefault(channel);
             setChannelPtySize(channel, hostSystem.getTerminalSize());
             // new session output
             SessionOutput sessionOutput = new SessionOutput(sessionId, hostSystem);
             // 启动线程处理会话
             Runnable run = new WatchSshServerOutputTask(sessionOutput, channel.getInputStream(), out);
-            Thread thread = new Thread(run);
-            thread.start();
-            /////////////////////
+            // JDK21 VirtualThreads
+            Thread.ofVirtual().start(run);
+
             OutputStream inputToChannel = channel.getOutputStream();
+
             JSchSession jSchSession = JSchSession.builder()
                     .sessionId(sessionId)
                     .instanceId(hostSystem.getInstanceId())
-                    // StandardCharsets.UTF_8.name()
-                    .commander(new PrintStream(inputToChannel, true))
+                    .commander(new PrintStream(inputToChannel, true, StandardCharsets.UTF_8))
                     .inputToChannel(inputToChannel)
                     .channel(channel)
                     .hostSystem(hostSystem)
@@ -164,7 +174,7 @@ public class RemoteInvokeHandler {
             JSchSessionContainer.addSession(jSchSession);
             channel.connect();
         } catch (Exception e) {
-            log.info(e.toString(), e);
+            log.debug(e.getMessage());
             if (e.getMessage().toLowerCase().contains("userauth fail")) {
                 hostSystem.setStatusCd(HostSystem.PUBLIC_KEY_FAIL_STATUS);
             } else if (e.getMessage().toLowerCase().contains("auth fail") || e.getMessage().toLowerCase().contains("auth cancel")) {
@@ -175,13 +185,14 @@ public class RemoteInvokeHandler {
             } else {
                 hostSystem.setStatusCd(HostSystem.GENERIC_FAIL_STATUS);
             }
+            throw new SshException(e.toString());
         }
     }
 
     public static void openKubernetesLog(String sessionId, String instanceId, KubernetesConfig.Kubernetes kubernetes,
                                          KubernetesResource.Pod pod, KubernetesResource.Container container, Integer lines) {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        LogWatch logWatch = KubernetesPodDriver.getPodLogWatch(kubernetes,
+        LogWatch logWatch = KubernetesPodDriver.getLogWatch(kubernetes,
                 pod.getNamespace(),
                 pod.getName(),
                 container.getName(),
@@ -189,8 +200,8 @@ public class RemoteInvokeHandler {
         SessionOutput sessionOutput = new SessionOutput(sessionId, instanceId);
         // 启动线程处理会话
         WatchKubernetesTerminalOutputTask run = new WatchKubernetesTerminalOutputTask(sessionOutput, out);
-        Thread thread = new Thread(run);
-        thread.start();
+        // JDK21 VirtualThreads
+        Thread.ofVirtual().start(run);
 
         KubernetesSession kubernetesSession = KubernetesSession.builder()
                 .sessionId(sessionId)
@@ -206,7 +217,7 @@ public class RemoteInvokeHandler {
                                               KubernetesResource.Pod pod, KubernetesResource.Container container) {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         KubernetesPodDriver.SimpleListener listener = new KubernetesPodDriver.SimpleListener();
-        ExecWatch execWatch = KubernetesPodDriver.loginPodContainer(
+        ExecWatch execWatch = KubernetesPodDriver.exec(
                 kubernetes,
                 pod.getNamespace(),
                 pod.getName(),
@@ -216,8 +227,8 @@ public class RemoteInvokeHandler {
         SessionOutput sessionOutput = new SessionOutput(sessionId, instanceId);
         // 启动线程处理会话
         WatchKubernetesTerminalOutputTask run = new WatchKubernetesTerminalOutputTask(sessionOutput, out);
-        Thread thread = new Thread(run);
-        thread.start();
+        // JDK21 VirtualThreads
+        Thread.ofVirtual().start(run);
         KubernetesSession kubernetesSession = KubernetesSession.builder()
                 .sessionId(sessionId)
                 .instanceId(instanceId)
@@ -229,12 +240,16 @@ public class RemoteInvokeHandler {
     }
 
     public static void setChannelPtySize(ChannelShell channel, ServerMessage.BaseMessage message) {
-        if (channel == null || channel.isClosed()) return;
+        if (channel == null || channel.isClosed()) {
+            return;
+        }
         channel.setPtySize(message.getCols(), message.getRows(), message.getWidth(), message.getHeight());
     }
 
     public static void setChannelPtySize(ChannelShell channel, Size size) {
-        if (channel == null || channel.isClosed()) return;
+        if (channel == null || channel.isClosed()) {
+            return;
+        }
         channel.setPtySize(size.getColumns(), size.getRows(), size.getColumns() * 7, (int) Math.floor(size.getRows() / 14.4166));
     }
 

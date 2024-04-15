@@ -1,8 +1,10 @@
 package com.baiyi.opscloud.domain.vo.sys;
 
 import com.baiyi.opscloud.domain.vo.base.BaseVO;
-import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
+
+import java.util.Map;
 
 /**
  * @Author baiyi
@@ -15,7 +17,7 @@ public class InstanceVO {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    @ApiModel
+    @Schema
     public static class Health {
         private String status;
         private boolean isHealth;
@@ -29,7 +31,7 @@ public class InstanceVO {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    @ApiModel
+    @Schema
     public static class RegisteredInstance extends BaseVO {
 
         private SystemVO.Info systemInfo; // 系统信息
@@ -68,5 +70,11 @@ public class InstanceVO {
 
         private String license;
 
+        /**
+         * 活动会话
+         */
+        private Map<String,Integer> activeSessionMap;
+
     }
+
 }

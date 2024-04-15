@@ -4,19 +4,19 @@ import com.aliyuncs.exceptions.ClientException;
 import com.baiyi.opscloud.common.annotation.SingleTask;
 import com.baiyi.opscloud.common.constants.enums.DsTypeEnum;
 import com.baiyi.opscloud.common.datasource.AliyunConfig;
+import com.baiyi.opscloud.core.comparer.AssetComparer;
 import com.baiyi.opscloud.core.factory.AssetProviderFactory;
 import com.baiyi.opscloud.core.model.DsInstanceContext;
 import com.baiyi.opscloud.core.provider.annotation.ChildProvider;
 import com.baiyi.opscloud.core.provider.asset.AbstractAssetChildProvider;
-import com.baiyi.opscloud.core.util.AssetUtil;
 import com.baiyi.opscloud.datasource.aliyun.rds.driver.AliyunRdsDatabaseDriver;
 import com.baiyi.opscloud.datasource.aliyun.rds.entity.AliyunRds;
+import com.baiyi.opscloud.domain.constants.DsAssetTypeConstants;
 import com.baiyi.opscloud.domain.generator.opscloud.DatasourceConfig;
 import com.baiyi.opscloud.domain.generator.opscloud.DatasourceInstanceAsset;
-import com.baiyi.opscloud.domain.constants.DsAssetTypeConstants;
+import jakarta.annotation.Resource;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import java.util.Collections;
 import java.util.List;
 
@@ -44,14 +44,12 @@ public class AliyunRdsDatabaseProvider extends AbstractAssetChildProvider<Aliyun
     }
 
     private AliyunConfig.Aliyun buildConfig(DatasourceConfig dsConfig) {
-        return dsConfigHelper.build(dsConfig, AliyunConfig.class).getAliyun();
+        return dsConfigManager.build(dsConfig, AliyunConfig.class).getAliyun();
     }
 
     @Override
-    protected boolean equals(DatasourceInstanceAsset asset, DatasourceInstanceAsset preAsset) {
-        if (!AssetUtil.equals(preAsset.getName(), asset.getName()))
-            return false;
-        return true;
+    protected AssetComparer getAssetComparer() {
+        return AssetComparer.COMPARE_NAME;
     }
 
     @Override

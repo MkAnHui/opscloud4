@@ -3,7 +3,7 @@ package com.baiyi.opscloud.service.task.impl;
 import com.baiyi.opscloud.domain.DataTable;
 import com.baiyi.opscloud.domain.generator.opscloud.ServerTask;
 import com.baiyi.opscloud.domain.param.task.ServerTaskParam;
-import com.baiyi.opscloud.mapper.opscloud.ServerTaskMapper;
+import com.baiyi.opscloud.mapper.ServerTaskMapper;
 import com.baiyi.opscloud.service.task.ServerTaskService;
 import com.baiyi.opscloud.util.SQLUtil;
 import com.github.pagehelper.Page;
@@ -28,7 +28,7 @@ public class ServerTaskServiceImpl implements ServerTaskService {
 
     @Override
     public DataTable<ServerTask> queryServerTaskPage(ServerTaskParam.ServerTaskPageQuery pageQuery) {
-        Page page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
+        Page<?> page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
         Example example = new Example(ServerTask.class);
         Example.Criteria criteria = example.createCriteria();
         if (!StringUtils.isBlank(pageQuery.getQueryName())) {
@@ -55,4 +55,5 @@ public class ServerTaskServiceImpl implements ServerTaskService {
     public void update(ServerTask serverTask) {
         serverTaskMapper.updateByPrimaryKey(serverTask);
     }
+
 }

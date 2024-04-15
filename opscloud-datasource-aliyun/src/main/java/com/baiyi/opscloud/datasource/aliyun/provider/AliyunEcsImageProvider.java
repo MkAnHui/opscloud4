@@ -4,22 +4,22 @@ import com.aliyuncs.ecs.model.v20140526.DescribeImagesResponse;
 import com.baiyi.opscloud.common.annotation.SingleTask;
 import com.baiyi.opscloud.common.constants.enums.DsTypeEnum;
 import com.baiyi.opscloud.common.datasource.AliyunConfig;
+import com.baiyi.opscloud.core.comparer.AssetComparer;
+import com.baiyi.opscloud.core.comparer.AssetComparerBuilder;
 import com.baiyi.opscloud.core.factory.AssetProviderFactory;
 import com.baiyi.opscloud.core.model.DsInstanceContext;
 import com.baiyi.opscloud.core.provider.asset.BaseAssetProvider;
-import com.baiyi.opscloud.core.util.AssetUtil;
-import com.baiyi.opscloud.datasource.aliyun.convertor.ComputeAssetConvertor;
+import com.baiyi.opscloud.datasource.aliyun.converter.ComputeAssetConverter;
 import com.baiyi.opscloud.datasource.aliyun.ecs.driver.AliyunEcsDriver;
 import com.baiyi.opscloud.domain.builder.asset.AssetContainer;
+import com.baiyi.opscloud.domain.constants.DsAssetTypeConstants;
 import com.baiyi.opscloud.domain.generator.opscloud.DatasourceConfig;
 import com.baiyi.opscloud.domain.generator.opscloud.DatasourceInstance;
-import com.baiyi.opscloud.domain.generator.opscloud.DatasourceInstanceAsset;
-import com.baiyi.opscloud.domain.constants.DsAssetTypeConstants;
 import com.google.common.collect.Lists;
+import jakarta.annotation.Resource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import javax.annotation.Resource;
 import java.util.Collections;
 import java.util.List;
 
@@ -47,30 +47,29 @@ public class AliyunEcsImageProvider extends BaseAssetProvider<DescribeImagesResp
     }
 
     private AliyunConfig.Aliyun buildConfig(DatasourceConfig dsConfig) {
-        return dsConfigHelper.build(dsConfig, AliyunConfig.class).getAliyun();
+        return dsConfigManager.build(dsConfig, AliyunConfig.class).getAliyun();
     }
 
     @Override
     protected AssetContainer toAssetContainer(DatasourceInstance dsInstance, DescribeImagesResponse.Image entity) {
-        return ComputeAssetConvertor.toAssetContainer(dsInstance, entity);
+        return ComputeAssetConverter.toAssetContainer(dsInstance, entity);
     }
 
     @Override
-    protected boolean equals(DatasourceInstanceAsset asset, DatasourceInstanceAsset preAsset) {
-        if (!AssetUtil.equals(preAsset.getKind(), asset.getKind()))
-            return false;
-        if (!AssetUtil.equals(preAsset.getDescription(), asset.getDescription()))
-            return false;
-        if (!AssetUtil.equals(preAsset.getExpiredTime(), asset.getExpiredTime()))
-            return false;
-        return true;
+    protected AssetComparer getAssetComparer() {
+        return AssetComparerBuilder.newBuilder()
+                .compareOfKind()
+                .compareOfDescription()
+                .compareOfExpiredTime()
+                .build();
     }
 
     @Override
     protected List<DescribeImagesResponse.Image> listEntities(DsInstanceContext dsInstanceContext) {
         AliyunConfig.Aliyun aliyun = buildConfig(dsInstanceContext.getDsConfig());
-        if (CollectionUtils.isEmpty(aliyun.getRegionIds()))
+        if (CollectionUtils.isEmpty(aliyun.getRegionIds())) {
             return Collections.emptyList();
+        }
         List<DescribeImagesResponse.Image> imageList = Lists.newArrayList();
         aliyun.getRegionIds().forEach(regionId -> imageList.addAll(aliyunEcsDriver.listImages(regionId, aliyun)));
         return imageList;

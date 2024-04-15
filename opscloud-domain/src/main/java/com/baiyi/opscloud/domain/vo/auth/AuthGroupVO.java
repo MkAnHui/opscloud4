@@ -1,8 +1,7 @@
 package com.baiyi.opscloud.domain.vo.auth;
 
 import com.baiyi.opscloud.domain.vo.base.BaseVO;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -25,22 +24,22 @@ public class AuthGroupVO {
     @EqualsAndHashCode(callSuper = true)
     @Data
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class Group extends BaseVO {
 
-        @ApiModelProperty(value = "资源数量")
+        @Schema(description = "资源数量")
         private Integer resourceSize;
 
-        @ApiModelProperty(value = "主键", example = "1")
+        @Schema(description = "主键", example = "1")
         private Integer id;
 
-        @ApiModelProperty(value = "资源组名称")
+        @Schema(description = "资源组名称")
         private String groupName;
 
-        @ApiModelProperty(value = "基本路径")
+        @Schema(description = "基本路径")
         private String basePath;
 
-        @ApiModelProperty(value = "资源描述")
+        @Schema(description = "资源描述")
         private String comment;
 
     }

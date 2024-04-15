@@ -1,26 +1,26 @@
 package com.baiyi.opscloud.domain;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.util.Collections;
 import java.util.List;
 
 
-@ApiModel
+@SuppressWarnings("rawtypes")
+@Schema
 @Data
 public class DataTable<T> {
 
     public final static DataTable EMPTY = new DataTable<>();
 
-    @ApiModelProperty(value = "分页数据")
+    @Schema(description = "分页数据")
     private List<T> data;
 
-    @ApiModelProperty(value = "当前页码")
+    @Schema(description = "当前页码")
     private int nowPage;
 
-    @ApiModelProperty(value = "总记录数")
+    @Schema(description = "总记录数")
     private long totalNum;
 
     public DataTable(List<T> data, long totalNum) {
@@ -29,7 +29,8 @@ public class DataTable<T> {
     }
 
     public DataTable() {
-        this.data = Collections.EMPTY_LIST;
+        this.data = Collections.emptyList();
         this.totalNum = 0;
     }
+
 }

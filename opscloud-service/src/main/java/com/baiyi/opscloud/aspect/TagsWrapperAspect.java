@@ -1,7 +1,7 @@
 package com.baiyi.opscloud.aspect;
 
 import com.baiyi.opscloud.common.annotation.TagsWrapper;
-import com.baiyi.opscloud.common.exception.common.CommonRuntimeException;
+import com.baiyi.opscloud.common.exception.common.OCException;
 import com.baiyi.opscloud.common.util.BeanCopierUtil;
 import com.baiyi.opscloud.domain.constants.BusinessTypeEnum;
 import com.baiyi.opscloud.domain.generator.opscloud.Tag;
@@ -27,10 +27,10 @@ import java.util.stream.Collectors;
  * @Date 2022/2/9 10:56 AM
  * @Version 1.0
  */
+@Slf4j
 @Aspect
 @Component
 @RequiredArgsConstructor
-@Slf4j
 public class TagsWrapperAspect {
 
     private final TagService tagService;
@@ -42,12 +42,12 @@ public class TagsWrapperAspect {
     }
 
     @Around("@annotation(tagsWrapper)")
-    public Object around(ProceedingJoinPoint joinPoint, TagsWrapper tagsWrapper) throws CommonRuntimeException {
+    public Object around(ProceedingJoinPoint joinPoint, TagsWrapper tagsWrapper) throws OCException {
         Object result;
         try {
             result = joinPoint.proceed();
         } catch (Throwable e) {
-            throw new CommonRuntimeException(e.getMessage());
+            throw new OCException(e.getMessage());
         }
         boolean extend = tagsWrapper.extend();
         TagVO.ITags targetTags = null;
@@ -55,8 +55,10 @@ public class TagsWrapperAspect {
             targetTags = (TagVO.ITags) result;
         }
         MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
-        String[] params = methodSignature.getParameterNames();// 获取参数名称
-        Object[] args = joinPoint.getArgs();// 获取参数值
+        // 获取参数名称
+        String[] params = methodSignature.getParameterNames();
+        // 获取参数值
+        Object[] args = joinPoint.getArgs();
         if (params != null && params.length != 0) {
             for (Object arg : args) {
                 if (!extend) {

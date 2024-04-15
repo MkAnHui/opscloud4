@@ -1,6 +1,6 @@
 package com.baiyi.opscloud.datasource.ansible;
 
-import com.baiyi.opscloud.common.config.CachingConfiguration;
+import com.baiyi.opscloud.common.configuration.CachingConfiguration;
 import com.baiyi.opscloud.domain.generator.opscloud.Server;
 import com.baiyi.opscloud.domain.generator.opscloud.ServerGroup;
 import com.baiyi.opscloud.service.server.ServerService;
@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static com.baiyi.opscloud.common.base.Global.DEF_NUM_OF_GROUPS;
+
 /**
  * @Author baiyi
  * @Date 2021/8/16 6:46 下午
@@ -37,12 +39,12 @@ public class GroupingTool {
     /**
      * 清空缓存
      */
-    @CacheEvict(cacheNames = CachingConfiguration.Repositories.CACHE_1WEEK, key = "'grouping_' + #serverGroupId", beforeInvocation = true)
+    @CacheEvict(cacheNames = CachingConfiguration.Repositories.CACHE_FOR_1W, key = "'grouping_' + #serverGroupId", beforeInvocation = true)
     public void evictGrouping1(Integer serverGroupId) {
-        log.info("evictBuild 清除缓存，serverGroupId = {}", serverGroupId);
+        log.info("evictBuild 清除缓存，serverGroupId={}", serverGroupId);
     }
 
-    @Cacheable(cacheNames = CachingConfiguration.Repositories.CACHE_1WEEK, key = "'grouping_' + #serverGroup.id")
+    @Cacheable(cacheNames = CachingConfiguration.Repositories.CACHE_FOR_1W, key = "'grouping_' + #serverGroup.id")
     public Map<String, List<Server>> grouping(ServerGroup serverGroup) {
         return grouping(serverGroup, true);
     }
@@ -57,30 +59,35 @@ public class GroupingTool {
      */
     public Map<String, List<Server>> grouping(ServerGroup serverGroup, boolean isSubgroup) {
         Map<String, List<Server>> serverMap = groupingByEnv(serverGroup);
-        if (isSubgroup)
+        if (isSubgroup) {
             groupingSubgroup(serverMap, getSubgroup(serverGroup));
+        }
         return serverMap;
     }
 
     private int getSubgroup(ServerGroup serverGroup) {
-        return 2;
+        return DEF_NUM_OF_GROUPS;
     }
 
     private void groupingSubgroup(Map<String, List<Server>> serverMap, int subgroup) {
-        if (serverMap.isEmpty()) return;
+        if (serverMap.isEmpty()) {
+            return;
+        }
         Set<String> keySet = Sets.newHashSet(serverMap.keySet());
         keySet.forEach(k -> {
             List<Server> servers = serverMap.get(k);
-            if (servers.size() >= 2)
+            if (servers.size() >= 2) {
                 groupingSubgroup(serverMap, servers, k, subgroup);
+            }
         });
     }
 
     private void groupingSubgroup(Map<String, List<Server>> serverMap, List<Server> servers, String groupingName, int subgroup) {
         List<Server> preServers = Lists.newArrayList(servers);
         // 服务器数量少于分组数量也只分2组
-        if (subgroup > preServers.size())
+        if (subgroup > preServers.size()) {
             subgroup = 2;
+        }
         // 每组平均服务器数量
         int size = preServers.size() / subgroup;
         int compensate = preServers.size() % subgroup;
@@ -124,7 +131,9 @@ public class GroupingTool {
 
     protected Map<String, List<Server>> groupingByEnv(ServerGroup ocServerGroup, List<Server> servers) {
         Map<String, List<Server>> map = Maps.newHashMap();
-        if (CollectionUtils.isEmpty(servers)) return map;
+        if (CollectionUtils.isEmpty(servers)) {
+            return map;
+        }
         servers.forEach(e -> {
             String groupingName = toSubgroupName(ocServerGroup, e.getEnvType());
             if (map.containsKey(groupingName)) {

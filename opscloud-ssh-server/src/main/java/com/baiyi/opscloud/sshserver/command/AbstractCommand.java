@@ -16,28 +16,25 @@
 
 package com.baiyi.opscloud.sshserver.command;
 
-import com.baiyi.opscloud.sshserver.SshShellCommandFactory;
 import com.baiyi.opscloud.sshserver.SshShellHelper;
 import com.baiyi.opscloud.sshserver.SshShellProperties;
 import com.baiyi.opscloud.sshserver.auth.SshAuthentication;
-import com.baiyi.opscloud.sshserver.command.properties.CommandProperties;
+import com.baiyi.opscloud.sshserver.SshShellCommandFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.shell.Availability;
+import org.springframework.shell.standard.AbstractShellComponent;
 
-import javax.annotation.Resource;
 import java.util.List;
 
 /**
  * Abstract command with availability
  */
 @Slf4j
-public class AbstractCommand {
+public class AbstractCommand extends AbstractShellComponent {
 
-    @Resource
-    private SshShellHelper helper;
+    protected final SshShellHelper helper;
 
-    @Resource
-    private SshShellProperties properties;
+    protected final SshShellProperties properties;
 
     protected final CommandProperties commandProperties;
 
@@ -47,6 +44,13 @@ public class AbstractCommand {
         this.commandProperties = commandProperties;
     }
 
+    /**
+     * Compute availability depending on command group and name
+     *
+     * @param commandGroup command group
+     * @param commandName  command name
+     * @return command availability
+     */
     protected Availability availability(String commandGroup, String commandName) {
         try {
             preAvailability();
@@ -88,7 +92,6 @@ public class AbstractCommand {
         // nothing by default
     }
 
-
     /**
      * Extends this to add behavior after the one in abstract
      *
@@ -97,4 +100,5 @@ public class AbstractCommand {
     protected void postAvailability() throws AvailabilityException {
         // nothing by default
     }
+
 }

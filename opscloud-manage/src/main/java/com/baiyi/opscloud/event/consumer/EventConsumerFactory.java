@@ -1,6 +1,5 @@
 package com.baiyi.opscloud.event.consumer;
 
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -8,19 +7,20 @@ import java.util.concurrent.ConcurrentHashMap;
  * @Date 2021/8/17 6:55 下午
  * @Version 1.0
  */
+@SuppressWarnings("rawtypes")
 public class EventConsumerFactory {
 
     private EventConsumerFactory() {
     }
 
-    static private final Map<String, IEventConsumer> context = new ConcurrentHashMap<>();
+    private final static ConcurrentHashMap<String, IEventConsumer> CONTEXT = new ConcurrentHashMap<>();
 
     public static IEventConsumer getConsumer(String eventType) {
-        return context.get(eventType);
+        return CONTEXT.get(eventType);
     }
 
     public static void register(IEventConsumer bean) {
-        context.put(bean.getEventType(), bean);
+        CONTEXT.put(bean.getEventType(), bean);
     }
 
 }

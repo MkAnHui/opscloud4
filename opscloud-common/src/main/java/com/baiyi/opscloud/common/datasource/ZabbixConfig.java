@@ -1,7 +1,7 @@
 package com.baiyi.opscloud.common.datasource;
 
-import com.baiyi.opscloud.common.datasource.base.BaseConfig;
-import io.swagger.annotations.ApiModel;
+import com.baiyi.opscloud.common.datasource.base.BaseDsConfig;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -13,15 +13,15 @@ import java.util.List;
  * @Date 2021/6/22 1:38 下午
  * @Version 1.0
  */
-@EqualsAndHashCode(callSuper = true)
 @Data
-public class ZabbixConfig extends BaseConfig {
+@EqualsAndHashCode(callSuper = true)
+public class ZabbixConfig extends BaseDsConfig {
 
     private Zabbix zabbix;
 
     @Data
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class Zabbix {
         private String version;
         private String url;
@@ -30,15 +30,26 @@ public class ZabbixConfig extends BaseConfig {
         private String zone;
         private Operation operation;
         private List<String> severityTypes;
+        // IP段范围
+        private List<String> regions;
+        private Notice notice;
     }
 
     @Data
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class Operation {
         private String subject;
         private String message;
     }
 
-}
+    @Data
+    @NoArgsConstructor
+    @Schema
+    public static class Notice {
+        private String media;
+        private Integer priority;
+        private String token;
+    }
 
+}

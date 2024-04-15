@@ -1,7 +1,7 @@
 package com.baiyi.opscloud.aspect.wrapper;
 
 import com.baiyi.opscloud.common.annotation.EnvWrapper;
-import com.baiyi.opscloud.common.exception.common.CommonRuntimeException;
+import com.baiyi.opscloud.common.exception.common.OCException;
 import com.baiyi.opscloud.common.util.BeanCopierUtil;
 import com.baiyi.opscloud.domain.generator.opscloud.Env;
 import com.baiyi.opscloud.domain.param.IExtend;
@@ -23,10 +23,10 @@ import org.springframework.stereotype.Component;
  * @Date 2022/2/9 9:14 AM
  * @Version 1.0
  */
+@Slf4j
 @Aspect
 @Component
 @RequiredArgsConstructor
-@Slf4j
 public class EnvWrapperAspect {
 
     private final EnvService envService;
@@ -36,12 +36,12 @@ public class EnvWrapperAspect {
     }
 
     @Around("@annotation(envWrapper)")
-    public Object around(ProceedingJoinPoint joinPoint, EnvWrapper envWrapper) throws CommonRuntimeException {
+    public Object around(ProceedingJoinPoint joinPoint, EnvWrapper envWrapper) throws OCException {
         Object result;
         try {
             result = joinPoint.proceed();
         } catch (Throwable e) {
-            throw new CommonRuntimeException(e.getMessage());
+            throw new OCException(e.getMessage());
         }
         boolean extend = envWrapper.extend();
         EnvVO.IEnv targetEnv = null;
@@ -49,8 +49,10 @@ public class EnvWrapperAspect {
             targetEnv = (EnvVO.IEnv) result;
         }
         MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
-        String[] params = methodSignature.getParameterNames();// 获取参数名称
-        Object[] args = joinPoint.getArgs();// 获取参数值
+        // 获取参数名称
+        String[] params = methodSignature.getParameterNames();
+        // 获取参数值
+        Object[] args = joinPoint.getArgs();
         if (params != null && params.length != 0) {
             for (Object arg : args) {
                 if (!extend) {

@@ -8,16 +8,22 @@ import lombok.Getter;
  * @Date 2022/1/7 1:33 PM
  * @Version 1.0
  */
+@Getter
 public enum ProcessStatusConstants {
 
+    /**
+     * 处理状态
+     */
     DEFAULT(0),
-    SUCCESSFUL(1), // 执行成功
-    FAILED(-1);  // 执行失败
+    // 执行成功
+    SUCCESSFUL(1),
+    // 执行失败
+    FAILED(-1);
 
     ProcessStatusConstants(int status) {
         this.status = status;
     }
 
-    @Getter
     private final int status;
+
 }

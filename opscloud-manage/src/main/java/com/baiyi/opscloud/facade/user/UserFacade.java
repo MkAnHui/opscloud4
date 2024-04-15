@@ -3,11 +3,12 @@ package com.baiyi.opscloud.facade.user;
 import com.baiyi.opscloud.domain.DataTable;
 import com.baiyi.opscloud.domain.param.server.ServerGroupParam;
 import com.baiyi.opscloud.domain.param.server.ServerParam;
+import com.baiyi.opscloud.domain.param.user.AccessTokenParam;
 import com.baiyi.opscloud.domain.param.user.UserBusinessPermissionParam;
 import com.baiyi.opscloud.domain.param.user.UserParam;
 import com.baiyi.opscloud.domain.vo.server.ServerTreeVO;
 import com.baiyi.opscloud.domain.vo.server.ServerVO;
-import com.baiyi.opscloud.domain.vo.user.AMVO;
+import com.baiyi.opscloud.domain.vo.user.AccessManagementVO;
 import com.baiyi.opscloud.domain.vo.user.AccessTokenVO;
 import com.baiyi.opscloud.domain.vo.user.UserVO;
 import org.apache.commons.lang3.StringUtils;
@@ -36,9 +37,9 @@ public interface UserFacade {
      */
     void syncUserPermissionGroupForAsset();
 
-    UserVO.User addUser(UserVO.User user);
+    UserVO.User addUser(UserParam.CreateUser createUser);
 
-    void updateUser(UserVO.User user);
+    void updateUser(UserParam.UpdateUser updateUser);
 
     void setUserActive(String username);
 
@@ -56,7 +57,7 @@ public interface UserFacade {
      * @param accessToken
      * @return
      */
-    AccessTokenVO.AccessToken grantUserAccessToken(AccessTokenVO.AccessToken accessToken);
+    AccessTokenVO.AccessToken grantUserAccessToken(AccessTokenParam.ApplicationAccessToken applicationAccessToken);
 
     /**
      * 撤销用户AccessToken
@@ -65,20 +66,24 @@ public interface UserFacade {
 
     DataTable<UserVO.User> queryBusinessPermissionUserPage(UserBusinessPermissionParam.BusinessPermissionUserPageQuery pageQuery);
 
-    List<AMVO.XAM> queryAmsUser(String username, String amType);
+    List<AccessManagementVO.XAccessManagement> queryAmsUser(String username, String amType);
 
     /**
      * 用户查询MFA
+     *
      * @return
      */
     UserVO.UserMFA getUserMFA();
 
     /**
      * 用户重置MFA
+     *
      * @return
      */
     UserVO.UserMFA resetUserMFA();
 
     UserVO.UserMFA bindUserMFA(String otp);
+
+    UserVO.UserIAMMFA getUserIAMMFA();
 
 }

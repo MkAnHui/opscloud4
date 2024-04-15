@@ -1,11 +1,12 @@
 package com.baiyi.opscloud.common.aspect;
 
 import com.baiyi.opscloud.common.annotation.SingleTask;
-import com.baiyi.opscloud.common.exception.common.CommonRuntimeException;
+import com.baiyi.opscloud.common.exception.common.OCException;
 import com.baiyi.opscloud.common.redis.RedisUtil;
-import com.baiyi.opscloud.common.util.InstantUtil;
+import com.baiyi.opscloud.common.util.StringFormatter;
 import com.baiyi.opscloud.common.util.StringToDurationUtil;
 import com.baiyi.opscloud.domain.ErrorEnum;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -13,30 +14,30 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
-import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StopWatch;
 
-import javax.annotation.Resource;
 import java.time.Duration;
-import java.time.Instant;
 
 /**
  * @Author baiyi
  * @Date 2021/6/10 3:50 下午
  * @Version 1.0
  */
+@Slf4j
 @Aspect
 @Component
-@Slf4j
-public class SingleTaskAspect  implements Ordered {
+@RequiredArgsConstructor
+@Order(1)
+public class SingleTaskAspect {
 
     private static final int RUNNING = 1;
 
-    @Resource
-    private RedisUtil redisUtil;
+    private final RedisUtil redisUtil;
 
     private String buildKey(String taskName) {
-        return String.format("Opscloud.V4.SingleTask.%s", taskName);
+        return StringFormatter.format("opscloud.v4.singleTask#taskName={}", taskName);
     }
 
     @Pointcut(value = "@annotation(com.baiyi.opscloud.common.annotation.SingleTask)")
@@ -44,30 +45,34 @@ public class SingleTaskAspect  implements Ordered {
     }
 
     @Before("annotationPoint()")
-    public void doBefore(JoinPoint joinPoint) throws Throwable {
+    public void doBefore(JoinPoint joinPoint) {
     }
 
     @Around("@annotation(singleTask)")
     public Object around(ProceedingJoinPoint joinPoint, SingleTask singleTask) throws Throwable {
-        String key = buildKey(singleTask.name());
+        String taskName = singleTask.name();
+        String key = buildKey(taskName);
         try {
-            if (!isLocked(key)) {
-                log.info("同步任务开始，taskKey = {}", key);
-                Instant instant = Instant.now();
-                lock(key, singleTask.lockTime());
-                Object result = joinPoint.proceed();
-                unlocking(key);
-                log.info("同步任务结束，taskKey = {}, 消耗时间 = {}s", key, InstantUtil.timerSeconds(instant));
-                return result;
+            if (isLocked(key)) {
+                log.warn("Execute {} task repeat", taskName);
+                return new OCException(ErrorEnum.SINGLE_TASK_RUNNING);
             } else {
-                log.info("任务重复执行: taskKey = {} !", key);
-                return new CommonRuntimeException(ErrorEnum.SINGLE_TASK_RUNNING);
+                // 加锁
+                lock(key, singleTask.lockTime());
+                log.info("Execute {} task start", taskName);
+                StopWatch stopWatch = new StopWatch();
+                stopWatch.start("Execute asset sync task");
+                Object result = joinPoint.proceed();
+                unlock(key);
+                stopWatch.stop();
+                log.info("Execute {} task end, runtime={}/s", taskName, stopWatch.getTotalTimeSeconds());
+                return result;
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            unlocking(key);
+            log.warn("Execute {} task error: {}", taskName, e.getMessage());
         } finally {
-            unlocking(key);
+            // 解锁
+            unlock(key);
         }
         return new Throwable();
     }
@@ -77,17 +82,12 @@ public class SingleTaskAspect  implements Ordered {
         redisUtil.set(lockKey, RUNNING, duration.getSeconds());
     }
 
-    private void unlocking(String lockKey) {
+    private void unlock(String lockKey) {
         redisUtil.del(lockKey);
     }
 
     private boolean isLocked(String lockKey) {
         return redisUtil.get(lockKey) != null;
-    }
-
-    @Override
-    public int getOrder() {
-        return 1;
     }
 
 }

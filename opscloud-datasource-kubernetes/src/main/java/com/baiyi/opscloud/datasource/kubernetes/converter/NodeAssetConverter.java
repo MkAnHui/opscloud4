@@ -9,9 +9,11 @@ import com.baiyi.opscloud.domain.generator.opscloud.DatasourceInstanceAsset;
 import com.baiyi.opscloud.domain.constants.DsAssetTypeConstants;
 import io.fabric8.kubernetes.api.model.Node;
 import io.fabric8.kubernetes.api.model.NodeAddress;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 
 import java.util.Date;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -21,8 +23,8 @@ import java.util.stream.Collectors;
  */
 public class NodeAssetConverter {
 
-    public static Date toGmtDate(String time) {
-        return TimeUtil.toGmtDate(time, TimeZoneEnum.UTC);
+    public static Date toUtcDate(String time) {
+        return TimeUtil.toDate(time, TimeZoneEnum.UTC);
     }
 
     public static AssetContainer toAssetContainer(DatasourceInstance dsInstance, Node entity) {
@@ -31,20 +33,28 @@ public class NodeAssetConverter {
 
         DatasourceInstanceAsset asset = DatasourceInstanceAsset.builder()
                 .instanceUuid(dsInstance.getUuid())
-                .assetId(entity.getMetadata().getUid()) // 资产id
+                // 资产id
+                .assetId(entity.getMetadata().getUid())
                 .name(entity.getMetadata().getName())
                 .assetKey(addressMap.containsKey("InternalIP") ? addressMap.get("InternalIP").getAddress() : entity.getMetadata().getName())
                 .assetKey2(addressMap.containsKey("Hostname") ? addressMap.get("Hostname").getAddress() : null)
                 .kind(entity.getKind())
                 .assetType(DsAssetTypeConstants.KUBERNETES_NODE.name())
-                .createdTime(toGmtDate(entity.getMetadata().getCreationTimestamp()))
+                .createdTime(toUtcDate(entity.getMetadata().getCreationTimestamp()))
                 .build();
-        return AssetContainerBuilder.newBuilder()
+
+        AssetContainerBuilder assetContainerBuilder = AssetContainerBuilder.newBuilder()
                 .paramAsset(asset)
                 .paramProperty("cpu", entity.getStatus().getCapacity().get("cpu"))
                 .paramProperty("memory", entity.getStatus().getCapacity().get("memory"))
-                .paramProperty("pods", entity.getStatus().getCapacity().get("pods"))
-                .build();
+                .paramProperty("pods", entity.getStatus().getCapacity().get("pods"));
+        // 标签录入
+        Optional.of(entity)
+                .map(Node::getMetadata)
+                .map(ObjectMeta::getLabels)
+                .ifPresent(stringStringMap -> stringStringMap.forEach((k, v) -> assetContainerBuilder.paramProperty("labels:" + k, v)));
+
+        return assetContainerBuilder.build();
     }
 
 }

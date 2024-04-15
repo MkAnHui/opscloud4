@@ -14,6 +14,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
@@ -57,6 +58,7 @@ public class ZabbixHost {
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Host implements IToAsset, Serializable {
 
+        @Serial
         private static final long serialVersionUID = -1757845550833408363L;
         private String hostid;
 
@@ -108,7 +110,7 @@ public class ZabbixHost {
                     .instanceUuid(dsInstance.getUuid())
                     .assetId(this.hostid)
                     .name(this.name)
-                    .assetKey(this.interfaces.get(0).getIp())
+                    .assetKey(this.interfaces.getFirst().getIp())
                     //.assetKey2()
                     .kind(String.valueOf(this.flags))
                     .isActive(0 == this.status)
@@ -121,11 +123,10 @@ public class ZabbixHost {
         }
     }
 
-
     @Data
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class HostTag implements Serializable {
-
+        @Serial
         private static final long serialVersionUID = -4463100077254316308L;
         private String tag;
         private String value;
@@ -135,7 +136,7 @@ public class ZabbixHost {
     @Data
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class HostInterface implements Serializable {
-
+        @Serial
         private static final long serialVersionUID = 7124524815535488636L;
         // @JsonProperty("interfaceid")
         private String interfaceid;
@@ -156,7 +157,6 @@ public class ZabbixHost {
 
         private String port;
 
-
         /**
          * 接口类型。
          * 1 - agent；
@@ -176,6 +176,5 @@ public class ZabbixHost {
          */
         private Integer useip;
     }
-
 
 }

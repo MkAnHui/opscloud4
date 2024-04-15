@@ -3,7 +3,7 @@ package com.baiyi.opscloud.service.datasource.impl;
 import com.baiyi.opscloud.domain.DataTable;
 import com.baiyi.opscloud.domain.generator.opscloud.AliyunLogMember;
 import com.baiyi.opscloud.domain.param.datasource.AliyunLogMemberParam;
-import com.baiyi.opscloud.mapper.opscloud.AliyunLogMemberMapper;
+import com.baiyi.opscloud.mapper.AliyunLogMemberMapper;
 import com.baiyi.opscloud.service.datasource.AliyunLogMemberService;
 import com.baiyi.opscloud.util.SQLUtil;
 import com.github.pagehelper.Page;
@@ -28,7 +28,7 @@ public class AliyunLogMemberServiceImpl implements AliyunLogMemberService {
 
     @Override
     public DataTable<AliyunLogMember> queryAliyunLogMemberByParam(AliyunLogMemberParam.LogMemberPageQuery pageQuery) {
-        Page page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
+        Page<?> page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
         Example example = new Example(AliyunLogMember.class);
         Example.Criteria criteria = example.createCriteria();
         criteria.andEqualTo("aliyunLogId", pageQuery.getAliyunLogId());
@@ -88,4 +88,5 @@ public class AliyunLogMemberServiceImpl implements AliyunLogMemberService {
     public void add(AliyunLogMember aliyunLogMember) {
         aliyunLogMemberMapper.insert(aliyunLogMember);
     }
+
 }

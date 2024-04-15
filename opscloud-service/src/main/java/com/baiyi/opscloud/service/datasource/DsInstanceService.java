@@ -16,13 +16,18 @@ public interface DsInstanceService {
 
     DatasourceInstance getByUuid(String uuid);
 
+    DatasourceInstance getByInstanceName(String name);
+
     List<DatasourceInstance> queryByParam(DsInstanceParam.DsInstanceQuery query);
 
     List<DatasourceInstance> listByInstanceType(String instanceType);
+
+    DatasourceInstance getByConfigId(Integer configId);
 
     void add(DatasourceInstance datasourceInstance);
 
     void update(DatasourceInstance datasourceInstance);
 
     int countByConfigId(Integer configId);
+
 }

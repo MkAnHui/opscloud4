@@ -1,7 +1,7 @@
 package com.baiyi.opscloud.service.datasource.impl;
 
 import com.baiyi.opscloud.domain.generator.opscloud.DatasourceInstanceAssetRelation;
-import com.baiyi.opscloud.mapper.opscloud.DatasourceInstanceAssetRelationMapper;
+import com.baiyi.opscloud.mapper.DatasourceInstanceAssetRelationMapper;
 import com.baiyi.opscloud.service.datasource.DsInstanceAssetRelationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -56,6 +56,14 @@ public class DsInstanceAssetRelationServiceImpl implements DsInstanceAssetRelati
     }
 
     @Override
+    public List<DatasourceInstanceAssetRelation> queryTargetAsset(Integer sourceAssetId) {
+        Example example = new Example(DatasourceInstanceAssetRelation.class);
+        Example.Criteria criteria = example.createCriteria();
+        criteria.andEqualTo("sourceAssetId", sourceAssetId);
+        return dsInstanceAssetRelationMapper.selectByExample(example);
+    }
+
+    @Override
     public List<DatasourceInstanceAssetRelation> queryByAssetId(Integer assetId) {
         Example example = new Example(DatasourceInstanceAssetRelation.class);
         Example.Criteria criteria = example.createCriteria();
@@ -63,4 +71,5 @@ public class DsInstanceAssetRelationServiceImpl implements DsInstanceAssetRelati
                 .orEqualTo("targetAssetId", assetId);
         return dsInstanceAssetRelationMapper.selectByExample(example);
     }
+
 }

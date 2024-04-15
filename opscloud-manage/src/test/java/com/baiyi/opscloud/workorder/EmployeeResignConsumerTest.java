@@ -8,7 +8,7 @@ import com.baiyi.opscloud.service.business.BusinessAssetRelationService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * @Author baiyi
@@ -33,8 +33,15 @@ public class EmployeeResignConsumerTest extends BaseUnit {
                 .assetType(DsAssetTypeConstants.DINGTALK_USER.name())
                 .build();
         bizAssetRelationService.add(relation);
-        log.info("BusinessAssetRelation: id = {}", relation.getId());
+        log.info("BusinessAssetRelation: id={}", relation.getId());
         bizAssetRelationService.delete(relation);
+    }
+
+    @Test
+    void consumerTest2() {
+//        BusinessAssetRelation relation = bizAssetRelationService.getById(140);
+//        log.info("BusinessAssetRelation: id = {}", relation.getId());
+//        bizAssetRelationService.delete(relation);
     }
 
 

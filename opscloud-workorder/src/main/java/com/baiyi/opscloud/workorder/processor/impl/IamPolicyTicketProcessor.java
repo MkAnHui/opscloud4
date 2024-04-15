@@ -6,6 +6,7 @@ import com.baiyi.opscloud.domain.generator.opscloud.DatasourceInstanceAsset;
 import com.baiyi.opscloud.domain.generator.opscloud.User;
 import com.baiyi.opscloud.domain.generator.opscloud.WorkOrderTicketEntry;
 import com.baiyi.opscloud.domain.param.user.UserAmParam;
+import com.baiyi.opscloud.domain.param.workorder.WorkOrderTicketEntryParam;
 import com.baiyi.opscloud.workorder.constants.WorkOrderKeyConstants;
 import com.baiyi.opscloud.workorder.exception.TicketProcessException;
 import com.baiyi.opscloud.workorder.exception.TicketVerifyException;
@@ -13,7 +14,7 @@ import com.baiyi.opscloud.workorder.processor.impl.extended.AbstractDsAssetPermi
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * @Author baiyi
@@ -30,7 +31,11 @@ public class IamPolicyTicketProcessor extends AbstractDsAssetPermissionExtendedB
     @Override
     protected void process(WorkOrderTicketEntry ticketEntry, DatasourceInstanceAsset entry) throws TicketProcessException {
         User createUser = queryCreateUser(ticketEntry);
-        preProcess(ticketEntry, createUser);
+        try {
+            preProcess(ticketEntry, createUser);
+        } catch (Exception e) {
+            throw new TicketProcessException("工单创建IAM账户错误: {}", e.getMessage());
+        }
         UserAmParam.Policy policy = UserAmParam.Policy.builder()
                 .policyName(entry.getAssetId())
                 .policyType(entry.getAssetKey())
@@ -44,7 +49,7 @@ public class IamPolicyTicketProcessor extends AbstractDsAssetPermissionExtendedB
         try {
             userAmFacade.grantPolicy(grantPolicy);
         } catch (Exception e) {
-            throw new TicketProcessException("工单授权策略失败: " + e.getMessage());
+            throw new TicketProcessException("工单授权策略失败: {}", e.getMessage());
         }
     }
 
@@ -63,7 +68,7 @@ public class IamPolicyTicketProcessor extends AbstractDsAssetPermissionExtendedB
     }
 
     @Override
-    public void verifyHandle(WorkOrderTicketEntry ticketEntry) throws TicketVerifyException {
+    public void handleVerify(WorkOrderTicketEntryParam.TicketEntry ticketEntry) throws TicketVerifyException {
         DatasourceInstanceAsset entry = this.toEntry(ticketEntry.getContent());
         DatasourceInstanceAsset asset = getAsset(entry);
         verifyEntry(asset);
@@ -80,4 +85,3 @@ public class IamPolicyTicketProcessor extends AbstractDsAssetPermissionExtendedB
     }
 
 }
-

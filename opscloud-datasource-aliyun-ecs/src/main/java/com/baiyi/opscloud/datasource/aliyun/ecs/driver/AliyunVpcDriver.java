@@ -7,9 +7,9 @@ import com.aliyuncs.ecs.model.v20140526.DescribeVpcsResponse;
 import com.aliyuncs.exceptions.ClientException;
 import com.baiyi.opscloud.common.datasource.AliyunConfig;
 import com.baiyi.opscloud.datasource.aliyun.core.AliyunClient;
-import com.baiyi.opscloud.domain.generator.opscloud.DatasourceInstanceAsset;
 import com.google.common.collect.Lists;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -21,6 +21,7 @@ import static com.baiyi.opscloud.datasource.aliyun.core.SimpleAliyunClient.Query
  * @Date 2021/6/23 1:22 下午
  * @Since 1.0
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class AliyunVpcDriver {
@@ -43,18 +44,18 @@ public class AliyunVpcDriver {
                 pageNumber++;
             }
         } catch (ClientException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
         return vpcs;
     }
 
-    public List<DescribeVSwitchesResponse.VSwitch> listVSwitches(String regionId, AliyunConfig.Aliyun aliyun, DatasourceInstanceAsset asset) {
+    public List<DescribeVSwitchesResponse.VSwitch> listVSwitches(String regionId, AliyunConfig.Aliyun aliyun, String vpcId) {
         List<DescribeVSwitchesResponse.VSwitch> vSwitches = Lists.newArrayList();
         try {
             DescribeVSwitchesRequest describe = new DescribeVSwitchesRequest();
             describe.setSysRegionId(regionId);
             describe.setPageSize(PAGE_SIZE);
-            describe.setVpcId(asset.getAssetId());
+            describe.setVpcId(vpcId);
             int size = PAGE_SIZE;
             int pageNumber = 1;
             while (PAGE_SIZE <= size) {
@@ -65,7 +66,7 @@ public class AliyunVpcDriver {
                 pageNumber++;
             }
         } catch (ClientException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
         return vSwitches;
     }

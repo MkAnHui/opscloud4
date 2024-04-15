@@ -40,20 +40,20 @@ public class OtpTest extends BaseUnit {
             final int macLengthInBytes = Mac.getInstance(totp.getAlgorithm()).getMacLength();
 
 
-            print("macLengthInBytes =" + macLengthInBytes * 8);
+            print("macLengthInBytes=" + macLengthInBytes * 8);
             keyGenerator.init(macLengthInBytes * 8);
             // LACYXBI6WBQ4O5WW273USF5S7QMVMYBT
             key = keyGenerator.generateKey();
 
-
-            log.info("Algorithm = {} , Encoded = {} , Format = {}", key.getAlgorithm(), Base32StringUtil.encode(key.getEncoded()), key.getFormat());
+            log.info("Algorithm={}, Encoded={}, Format={}", key.getAlgorithm(), Base32StringUtil.encode(key.getEncoded()), key.getFormat());
 
 //            print("getAlgorithm() = " ,  key.getAlgorithm(),key.getEncoded(),key.getFormat());
 //            print("Encoded = " + key.getEncoded());
 //            print("Format = " + key.getFormat());
-            final Instant now = Instant.now();
-            final Instant later = now.plus(totp.getTimeStep());
 
+            final Instant now = Instant.now();
+            final Instant before = now.plus(totp.getTimeStep());
+            final Instant later = now.plus(totp.getTimeStep());
             System.out.println("Current password: " + totp.generateOneTimePasswordString(key, now));
             System.out.println("Future password:  " + totp.generateOneTimePasswordString(key, later));
         } catch (NoSuchAlgorithmException e) {
@@ -69,7 +69,21 @@ public class OtpTest extends BaseUnit {
     @Test
     void test2() {
         try {
-            Key sk =  OtpUtil.generateOtpSK();
+            Key sk = OtpUtil.generateOtpSK();
+            print(Base32StringUtil.encode(sk.getEncoded()));
+            while (true) {
+                // SecretKey sk = OtpUtil.toKey("LACYXBI6WBQ4O5WW273USF5S7QMVMYBT");
+                log.info(OtpUtil.generateOtp(sk));
+                Thread.sleep(2000);
+            }
+        } catch (Exception e) {
+        }
+    }
+
+    @Test
+    void test3() {
+        try {
+            Key sk = OtpUtil.toKey("");
             print(Base32StringUtil.encode(sk.getEncoded()));
             while (true) {
                 // SecretKey sk = OtpUtil.toKey("LACYXBI6WBQ4O5WW273USF5S7QMVMYBT");

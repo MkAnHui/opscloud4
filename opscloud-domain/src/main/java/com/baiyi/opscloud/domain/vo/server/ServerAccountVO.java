@@ -2,12 +2,12 @@ package com.baiyi.opscloud.domain.vo.server;
 
 import com.baiyi.opscloud.domain.vo.base.BaseVO;
 import com.baiyi.opscloud.domain.vo.sys.CredentialVO;
-import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.NotNull;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
@@ -29,9 +29,10 @@ public class ServerAccountVO {
     @EqualsAndHashCode(callSuper = true)
     @Data
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class Account extends BaseVO implements CredentialVO.ICredential, Serializable {
 
+        @Serial
         private static final long serialVersionUID = 1815467621572374314L;
 
         private CredentialVO.Credential credential;
@@ -44,16 +45,16 @@ public class ServerAccountVO {
 
         private String displayName;
 
-        @NotNull(message = "凭据不能为空")
         private Integer credentialId;
 
-        @NotNull(message = "账户类型不能为空")
         private Integer accountType;
 
-        @NotNull(message = "协议不能为空")
         private String protocol;
 
         private Boolean isActive;
 
+        private String comment;
+
     }
+
 }

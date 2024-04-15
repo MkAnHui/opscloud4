@@ -16,7 +16,7 @@ import com.baiyi.opscloud.workorder.processor.factory.WorkOrderTicketProcessorFa
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,10 +45,10 @@ public class AgreeApproveTicket extends AbstractApproveTicket {
         // 尝试移动审批节点指针
         WorkOrderTicketNode nextNode = ticketNodeService.getByUniqueKey(ticket.getId(), ticketNode.getId());
         if (nextNode == null) {
-            log.info("工单审批结束开始自动执行: ticketId = {} , createUser = {}", ticket.getId(), ticket.getCreateTime());
+            log.info("执行工单: ticketId={}, createUser={}", ticket.getId(), ticket.getUsername());
             ticket.setTicketPhase(OrderTicketPhaseCodeConstants.PROCESSING.name());
             updateTicket(ticket, false);
-            processing(ticket); // 开始执行
+            processing(ticket);
             statisticalResults(ticket);
         } else {
             // 移动审批节点指针
@@ -74,14 +74,14 @@ public class AgreeApproveTicket extends AbstractApproveTicket {
 
     private void processing(WorkOrderTicket ticket) {
         WorkOrder workOrder = workOrderService.getById(ticket.getWorkOrderId());
-        ITicketProcessor iTicketProcessor = WorkOrderTicketProcessorFactory.getByKey(workOrder.getWorkOrderKey());
+        ITicketProcessor<?> iTicketProcessor = WorkOrderTicketProcessorFactory.getByKey(workOrder.getWorkOrderKey());
         List<WorkOrderTicketEntry> entries = queryTicketEntries(ticket);
-        entries.forEach(iTicketProcessor::process); // 执行所有工单条目
+        // 执行所有工单条目
+        entries.forEach(iTicketProcessor::process);
     }
 
     private List<WorkOrderTicketEntry> queryTicketEntries(WorkOrderTicket ticket) {
         return ticketEntryService.queryByWorkOrderTicketId(ticket.getId());
     }
-
 
 }

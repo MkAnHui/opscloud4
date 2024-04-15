@@ -1,16 +1,21 @@
 package com.baiyi.opscloud.datasource.ansible.exception;
 
+import java.io.Serial;
+
 /**
  * @Author baiyi
  * @Date 2020/4/17 7:47 下午
  * @Version 1.0
  */
-public class TaskTimeoutException extends RuntimeException{
+public class TaskTimeoutException extends RuntimeException {
 
-    private final static String message = "Task timeout";
+    @Serial
     private static final long serialVersionUID = 5132629163560589207L;
 
-    public TaskTimeoutException(){	//构造方法
-        super(message);		//父类构造方法
+    private final static String MESSAGE = "Task timeout";
+
+    public TaskTimeoutException() {
+        super(MESSAGE);
     }
+
 }

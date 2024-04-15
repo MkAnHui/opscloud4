@@ -5,9 +5,8 @@ import com.baiyi.opscloud.domain.generator.opscloud.WorkOrderTicket;
 import com.baiyi.opscloud.domain.vo.workorder.WorkOrderTicketVO;
 import com.baiyi.opscloud.packer.workorder.TicketPacker;
 import com.baiyi.opscloud.service.workorder.WorkOrderTicketService;
+import jakarta.annotation.Resource;
 import org.junit.jupiter.api.Test;
-
-import javax.annotation.Resource;
 
 /**
  * @Author baiyi

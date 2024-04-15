@@ -1,6 +1,5 @@
 package com.baiyi.opscloud.datasource.facade.impl;
 
-import com.baiyi.opscloud.common.config.ThreadPoolTaskConfiguration;
 import com.baiyi.opscloud.common.util.BeanCopierUtil;
 import com.baiyi.opscloud.core.factory.AssetProviderFactory;
 import com.baiyi.opscloud.core.factory.SetDsInstanceConfigFactory;
@@ -38,21 +37,22 @@ public class DsInstanceFacadeImpl<T> implements DsInstanceFacade<T> {
     private final DsInstancePacker dsInstancePacker;
 
     @Override
-    @Async(value = ThreadPoolTaskConfiguration.TaskPools.CORE)
+    @Async
     public void pullAsset(DsAssetParam.PullAsset pullAsset) {
-        List<SimpleAssetProvider> providers = getProviders(pullAsset.getInstanceId(), pullAsset.getAssetType());
+        List<SimpleAssetProvider<T>> providers = getProviders(pullAsset.getInstanceId(), pullAsset.getAssetType());
         assert providers != null;
         providers.forEach(x -> x.pullAsset(pullAsset.getInstanceId()));
     }
 
     @Override
+    @Async
     public void pushAsset(DsAssetParam.PushAsset pushAsset) {
-        List<SimpleAssetProvider> providers = getProviders(pushAsset.getInstanceId(), pushAsset.getAssetType());
+        List<SimpleAssetProvider<T>> providers = getProviders(pushAsset.getInstanceId(), pushAsset.getAssetType());
         assert providers != null;
         providers.forEach(x -> x.pushAsset(pushAsset.getInstanceId()));
     }
 
-    private List<SimpleAssetProvider> getProviders(Integer instanceId, String assetType) {
+    private List<SimpleAssetProvider<T>> getProviders(Integer instanceId, String assetType) {
         DatasourceInstance dsInstance = dsInstanceService.getById(instanceId);
         DsInstanceVO.Instance instance = BeanCopierUtil.copyProperties(dsInstance, DsInstanceVO.Instance.class);
         dsInstancePacker.wrap(instance, SimpleExtend.EXTEND);
@@ -64,15 +64,15 @@ public class DsInstanceFacadeImpl<T> implements DsInstanceFacade<T> {
         DatasourceInstance dsInstance = dsInstanceService.getByUuid(instanceUuid);
         DsInstanceVO.Instance instance = BeanCopierUtil.copyProperties(dsInstance, DsInstanceVO.Instance.class);
         dsInstancePacker.wrap(instance, SimpleExtend.EXTEND);
-        List<SimpleAssetProvider> providers = AssetProviderFactory.getProviders(instance.getInstanceType(), assetType);
+        List<SimpleAssetProvider<T>> providers = AssetProviderFactory.getProviders(instance.getInstanceType(), assetType);
         assert providers != null;
-        return providers.stream().map(e -> e.pullAsset(instance.getId(), entity)).collect(Collectors.toList())
+        return providers.stream().map(e -> e.pullAsset(instance.getId(), entity)).toList()
                 .stream().filter(e -> e.getAssetType().equals(assetType)).collect(Collectors.toList());
     }
 
     @Override
     public void setDsInstanceConfig(DsAssetParam.SetDsInstanceConfig setDsInstanceConfig) {
-        AbstractSetDsInstanceConfigProvider setDsInstanceConfigProvider = SetDsInstanceConfigFactory.getProvider(setDsInstanceConfig.getInstanceType());
+        AbstractSetDsInstanceConfigProvider<?> setDsInstanceConfigProvider = SetDsInstanceConfigFactory.getProvider(setDsInstanceConfig.getInstanceType());
         assert setDsInstanceConfigProvider != null;
         setDsInstanceConfigProvider.setConfig(setDsInstanceConfig.getInstanceId());
     }
@@ -82,9 +82,9 @@ public class DsInstanceFacadeImpl<T> implements DsInstanceFacade<T> {
         DatasourceInstance dsInstance = dsInstanceService.getById(scanAssetBusiness.getInstanceId());
         DsInstanceVO.Instance instance = BeanCopierUtil.copyProperties(dsInstance, DsInstanceVO.Instance.class);
         dsInstancePacker.wrap(instance, SimpleExtend.EXTEND);
-        List<SimpleAssetProvider> providers = AssetProviderFactory.getProviders(instance.getInstanceType(), scanAssetBusiness.getAssetType());
+        List<SimpleAssetProvider<T>> providers = AssetProviderFactory.getProviders(instance.getInstanceType(), scanAssetBusiness.getAssetType());
         assert providers != null;
-        for (SimpleAssetProvider provider : providers) {
+        for (SimpleAssetProvider<T> provider : providers) {
             if (provider instanceof IAssetBusinessRelation) {
                 ((IAssetBusinessRelation) provider).scan(scanAssetBusiness.getInstanceId());
             }

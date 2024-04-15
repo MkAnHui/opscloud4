@@ -3,7 +3,7 @@ package com.baiyi.opscloud.service.datasource.impl;
 import com.baiyi.opscloud.domain.DataTable;
 import com.baiyi.opscloud.domain.generator.opscloud.DatasourceInstanceAssetSubscription;
 import com.baiyi.opscloud.domain.param.datasource.DsAssetSubscriptionParam;
-import com.baiyi.opscloud.mapper.opscloud.DatasourceInstanceAssetSubscriptionMapper;
+import com.baiyi.opscloud.mapper.DatasourceInstanceAssetSubscriptionMapper;
 import com.baiyi.opscloud.service.datasource.DsInstanceAssetSubscriptionService;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -70,26 +70,5 @@ public class DsInstanceAssetSubscriptionServiceImpl implements DsInstanceAssetSu
         List<DatasourceInstanceAssetSubscription> data = dsInstanceAssetSubscriptionMapper.selectByExample(example);
         return new DataTable<>(data, page.getTotal());
     }
-
-
-//    public List<DatasourceInstanceAssetSubscription> queryBy(int id){
-//        Example example = new Example(DatasourceInstanceAssetSubscription.class);
-//        Example.Criteria criteria = example.createCriteria();
-//        criteria.andEqualTo("instanceUuid", asset.getInstanceUuid())
-//                .andEqualTo("assetType", asset.getAssetType())
-//                .andEqualTo("name", asset.getName())
-//                .andEqualTo("isActive", true);
-//        if (!StringUtils.isEmpty(asset.getInstanceUuid()))
-//            criteria.andEqualTo("instanceUuid", asset.getInstanceUuid());
-//        if (!StringUtils.isEmpty(asset.getName()))
-//            criteria.andEqualTo("name", asset.getName());
-//        if (!StringUtils.isEmpty(asset.getAssetKey()))
-//            criteria.andLike("assetKey", SQLUtil.toLike(asset.getAssetKey()));
-//        if (!StringUtils.isEmpty(asset.getAssetKey2()))
-//            criteria.andEqualTo("assetKey2", asset.getAssetKey2());
-//        example.setOrderByClause("create_time");
-//        return dsInstanceAssetMapper.selectByExample(example);
-//
-//    }
 
 }

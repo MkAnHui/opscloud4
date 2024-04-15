@@ -1,7 +1,8 @@
 package com.baiyi.opscloud.core.provider.asset;
 
 import com.baiyi.opscloud.core.asset.IToAsset;
-import com.baiyi.opscloud.core.factory.DsConfigHelper;
+import com.baiyi.opscloud.core.comparer.AssetComparer;
+import com.baiyi.opscloud.core.factory.DsConfigManager;
 import com.baiyi.opscloud.core.model.DsInstanceContext;
 import com.baiyi.opscloud.core.provider.base.asset.SimpleAssetProvider;
 import com.baiyi.opscloud.core.provider.base.common.SimpleDsInstanceProvider;
@@ -14,9 +15,11 @@ import com.baiyi.opscloud.service.datasource.DsInstanceAssetPropertyService;
 import com.baiyi.opscloud.service.datasource.DsInstanceAssetService;
 import com.baiyi.opscloud.service.sys.CredentialService;
 import com.google.common.collect.Sets;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 
-import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,6 +29,7 @@ import java.util.Set;
  * @Date 2021/6/19 4:22 下午
  * @Version 1.0
  */
+@Slf4j
 public abstract class BaseAssetProvider<T> extends SimpleDsInstanceProvider implements SimpleAssetProvider<T>, InitializingBean {
 
     @Resource
@@ -41,17 +45,25 @@ public abstract class BaseAssetProvider<T> extends SimpleDsInstanceProvider impl
     private CredentialService credentialService;
 
     @Resource
-    protected DsConfigHelper dsConfigHelper;
+    protected DsConfigManager dsConfigManager;
 
     public interface Model {
-        boolean INCREMENT = false; // 增量模式: 不删除旧数据
-        boolean SYNC = true;       // 同步模式: 删除旧数据
+        @Schema(description = "增量模式: 不删除旧数据")
+        boolean INCREMENT = false;
+        @Schema(description = "同步模式: 删除旧数据")
+        boolean SYNC = true;
     }
 
     protected boolean executeMode() {
         return Model.SYNC;
     }
 
+    /**
+     * 查询【资产】实体
+     *
+     * @param dsInstanceContext
+     * @return
+     */
     protected abstract List<T> listEntities(DsInstanceContext dsInstanceContext);
 
     private void enterAssets(DsInstanceContext dsInstanceContext, List<T> entities) {
@@ -93,9 +105,18 @@ public abstract class BaseAssetProvider<T> extends SimpleDsInstanceProvider impl
         return enterAsset(toAssetContainer(dsInstanceContext.getDsInstance(), entity));
     }
 
+    /**
+     * 录入资产后处理逻辑
+     *
+     * @param asset
+     */
+    protected void postEnterEntity(DatasourceInstanceAsset asset) {
+    }
+
     protected DatasourceInstanceAsset enterAsset(AssetContainer assetContainer) {
         DatasourceInstanceAsset asset = enterAsset(assetContainer.getAsset());
         enterAssetProperties(assetContainer.getAsset().getId(), assetContainer.getProperties());
+        postEnterEntity(asset);
         return asset;
     }
 
@@ -115,11 +136,10 @@ public abstract class BaseAssetProvider<T> extends SimpleDsInstanceProvider impl
             try {
                 dsInstanceAssetService.add(preAsset);
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("Enter asset err: {}", e.getMessage());
             }
         } else {
             preAsset.setId(asset.getId());
-//            preAsset.setIsActive(asset.getIsActive());
             if (!equals(asset, preAsset)) {
                 dsInstanceAssetService.update(preAsset);
             }
@@ -130,11 +150,17 @@ public abstract class BaseAssetProvider<T> extends SimpleDsInstanceProvider impl
     /**
      * 判断资产是否更新
      *
-     * @param asset
-     * @param preAsset
+     * @param a1
+     * @param a2
      * @return
      */
-    protected abstract boolean equals(DatasourceInstanceAsset asset, DatasourceInstanceAsset preAsset);
+    protected boolean equals(DatasourceInstanceAsset a1, DatasourceInstanceAsset a2) {
+        return getAssetComparer().compare(a1,a2);
+    }
+
+    protected AssetComparer getAssetComparer() {
+        return AssetComparer.NOT_COMPARED;
+    }
 
     protected AssetContainer toAssetContainer(DatasourceInstance dsInstance, T entity) {
         if (entity instanceof IToAsset) {
@@ -166,7 +192,9 @@ public abstract class BaseAssetProvider<T> extends SimpleDsInstanceProvider impl
     public void pushAsset(int dsInstanceId) {
     }
 
+    @Override
     protected Credential getCredential(int credentialId) {
         return credentialService.getById(credentialId);
     }
+
 }

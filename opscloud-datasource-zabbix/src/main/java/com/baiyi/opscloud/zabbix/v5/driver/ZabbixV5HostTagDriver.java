@@ -1,9 +1,9 @@
 package com.baiyi.opscloud.zabbix.v5.driver;
 
-import com.baiyi.opscloud.common.config.CachingConfiguration;
+import com.baiyi.opscloud.common.configuration.CachingConfiguration;
 import com.baiyi.opscloud.common.datasource.ZabbixConfig;
 import com.baiyi.opscloud.zabbix.v5.param.ZabbixHostParam;
-import com.baiyi.opscloud.zabbix.v5.driver.base.SimpleZabbixV5HostDrive;
+import com.baiyi.opscloud.zabbix.v5.driver.base.SimpleZabbixV5HostDriver;
 import com.baiyi.opscloud.zabbix.v5.entity.ZabbixHost;
 import com.baiyi.opscloud.zabbix.v5.request.ZabbixRequest;
 import com.baiyi.opscloud.zabbix.v5.request.builder.ZabbixRequestBuilder;
@@ -22,35 +22,38 @@ import java.util.List;
  */
 @Slf4j
 @Component
-public class ZabbixV5HostTagDriver extends SimpleZabbixV5HostDrive {
+public class ZabbixV5HostTagDriver extends SimpleZabbixV5HostDriver {
 
-    @CacheEvict(cacheNames = CachingConfiguration.Repositories.CACHE_1DAY, key = "#config.url + '_v5_host_tag_hostid' + #host.hostid")
+    @CacheEvict(cacheNames = CachingConfiguration.Repositories.CACHE_FOR_1D, key = "#config.url + '_v5_host_tag_hostid' + #host.hostid")
     public void evictHostTag(ZabbixConfig.Zabbix config, ZabbixHost.Host host) {
-        log.info("清除ZabbixHostTag缓存 : hostid = {}", host.getHostid());
+        log.info("Evict cache Zabbix Host Tag: hostid={}", host.getHostid());
     }
 
-    @Cacheable(cacheNames = CachingConfiguration.Repositories.CACHE_1DAY, key = "#config.url + '_v5_host_tag_hostid' + #host.hostid", unless = "#result == null")
-    public ZabbixHost.Host getHostTag(ZabbixConfig.Zabbix config, ZabbixHost.Host  host) {
+    @Cacheable(cacheNames = CachingConfiguration.Repositories.CACHE_FOR_1D, key = "#config.url + '_v5_host_tag_hostid' + #host.hostid", unless = "#result == null")
+    public ZabbixHost.Host getHostTag(ZabbixConfig.Zabbix config, ZabbixHost.Host host) {
         ZabbixRequest.DefaultRequest request = ZabbixRequestBuilder.builder()
                 .putParam("output", new String[]{"name"})
                 .putParam("hostids", host.getHostid())
                 .putParam("selectTags", new String[]{"tag", "value"})
                 .build();
         ZabbixHost.QueryHostResponse response = queryHandle(config, request);
-        if (CollectionUtils.isEmpty(response.getResult()))
+        if (CollectionUtils.isEmpty(response.getResult())) {
             return null;
-         return response.getResult().get(0);
+        }
+        return response.getResult().getFirst();
     }
 
     public void updateHostTags(ZabbixConfig.Zabbix config, ZabbixHost.Host host, List<ZabbixHostParam.Tag> tags) {
-        if (CollectionUtils.isEmpty(tags)) return;
+        if (CollectionUtils.isEmpty(tags)) {
+            return;
+        }
         ZabbixRequest.DefaultRequest request = ZabbixRequestBuilder.builder()
                 .putParam("hostid", host.getHostid())
                 .putParam("tags", tags)
                 .build();
         ZabbixHost.UpdateHostResponse response = updateHandle(config, request);
         if (CollectionUtils.isEmpty(response.getResult().getHostids())) {
-            log.error("更新ZabbixHost主机标签失败: hostid = {}", host.getHostid());
+            log.error("Update Zabbix Host Tag error: hostid={}", host.getHostid());
         }
     }
 

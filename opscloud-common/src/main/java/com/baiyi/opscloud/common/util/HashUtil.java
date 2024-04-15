@@ -16,19 +16,24 @@
 package com.baiyi.opscloud.common.util;
 
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 /**
  * Utility to encrypt, decrypt, and hash
+ *
+ * @author liangjian
  */
+@Slf4j
 public class HashUtil {
 
     private HashUtil() {
     }
 
-    public static String MD5(String input) {
-        if (input == null || input.length() == 0) {
+    public static String md5(String input) {
+        if (input == null || input.isEmpty()) {
             return null;
         }
         try {
@@ -46,7 +51,7 @@ public class HashUtil {
             }
             return new String(charArray);
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            log.debug(e.getMessage());
         }
         return null;
     }

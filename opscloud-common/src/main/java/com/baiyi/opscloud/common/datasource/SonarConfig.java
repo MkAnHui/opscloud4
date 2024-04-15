@@ -1,7 +1,7 @@
 package com.baiyi.opscloud.common.datasource;
 
-import com.baiyi.opscloud.common.datasource.base.BaseConfig;
-import io.swagger.annotations.ApiModel;
+import com.baiyi.opscloud.common.datasource.base.BaseDsConfig;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -11,15 +11,15 @@ import lombok.NoArgsConstructor;
  * @Date 2021/10/22 1:45 下午
  * @Version 1.0
  */
-@EqualsAndHashCode(callSuper = true)
 @Data
-public class SonarConfig extends BaseConfig {
+@EqualsAndHashCode(callSuper = true)
+public class SonarConfig extends BaseDsConfig {
 
     private Sonar sonar;
 
     @Data
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class Sonar {
 
         private String url;

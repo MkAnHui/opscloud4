@@ -7,5 +7,10 @@ package com.baiyi.opscloud.domain.model.message;
  */
 public interface IState {
 
+    /**
+     * 状态
+     * @return
+     */
     String getState();
+
 }

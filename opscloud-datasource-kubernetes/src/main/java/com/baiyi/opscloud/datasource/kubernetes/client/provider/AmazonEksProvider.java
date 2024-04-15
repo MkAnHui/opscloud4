@@ -1,65 +1,83 @@
 package com.baiyi.opscloud.datasource.kubernetes.client.provider;
 
-import com.amazonaws.DefaultRequest;
-import com.amazonaws.auth.*;
-import com.amazonaws.auth.presign.PresignerFacade;
-import com.amazonaws.auth.presign.PresignerParams;
-import com.amazonaws.http.HttpMethodName;
-import com.amazonaws.internal.auth.DefaultSignerProvider;
-import com.amazonaws.internal.auth.SignerProvider;
-import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
-import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
-import com.amazonaws.services.securitytoken.model.GetCallerIdentityRequest;
 import com.baiyi.opscloud.common.datasource.KubernetesConfig;
-import com.google.common.base.Joiner;
+import com.baiyi.opscloud.datasource.kubernetes.client.MyKubernetesClientBuilder;
+import com.baiyi.opscloud.datasource.kubernetes.client.provider.eks.AmazonEksGenerator;
+import io.fabric8.kubernetes.client.ConfigBuilder;
+import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.Base64;
-import java.util.Date;
 
 /**
  * @Author baiyi
- * @Date 2022/3/3 2:22 PM
+ * @Date 2022/9/14 09:37
  * @Version 1.0
  */
 @Slf4j
+@Component
 public class AmazonEksProvider {
 
+    private static AmazonEksGenerator amazonEksGenerator;
+
+    public static final String KUBERNETES_REQUEST_TIMEOUT_SYSTEM_PROPERTY = "kubernetes.request.timeout";
+    public static final String KUBERNETES_WEBSOCKET_TIMEOUT_SYSTEM_PROPERTY = "kubernetes.websocket.timeout";
+    public static final String KUBERNETES_CONNECTION_TIMEOUT_SYSTEM_PROPERTY = "kubernetes.connection.timeout";
+
+    @Autowired
+    public void setAmazonEksHelper(AmazonEksGenerator amazonEksGenerator) {
+        AmazonEksProvider.amazonEksGenerator = amazonEksGenerator;
+    }
+
     /**
-     * https://medium.com/@rschoening/eks-client-authentication-f17f39228dc
-     * STS签名Token
+     * 按供应商构建 client
      *
-     * @param amazonEks
+     * @param kubernetes
      * @return
-     * @throws URISyntaxException
      */
-    public static String generateEksToken(KubernetesConfig.AmazonEks amazonEks) throws URISyntaxException {
-        DefaultRequest defaultRequest = new DefaultRequest<>(new GetCallerIdentityRequest(), "sts");
-        URI uri = new URI("https", "sts.amazonaws.com", null, null);
-        defaultRequest.setResourcePath("/");
-        defaultRequest.setEndpoint(uri);
-        defaultRequest.setHttpMethod(HttpMethodName.GET);
-        defaultRequest.addParameter("Action", "GetCallerIdentity");
-        defaultRequest.addParameter("Version", "2011-06-15");
-        defaultRequest.addHeader("x-k8s-aws-id", amazonEks.getClusterName());
-        BasicAWSCredentials basicCredentials = new BasicAWSCredentials(amazonEks.getAccessKeyId(), amazonEks.getSecretKey());
-        AWSStaticCredentialsProvider credentials = new AWSStaticCredentialsProvider(basicCredentials);
-        Signer signer = SignerFactory.createSigner(SignerFactory.VERSION_FOUR_SIGNER, new SignerParams("sts", amazonEks.getRegion()));
-        AWSSecurityTokenServiceClient stsClient = (AWSSecurityTokenServiceClient) AWSSecurityTokenServiceClientBuilder
-                .standard()
-                .withRegion(amazonEks.getRegion())
-                .withCredentials(credentials)
+    public static KubernetesClient buildClientWithProvider(KubernetesConfig.Kubernetes kubernetes) throws URISyntaxException {
+        String token = amazonEksGenerator.generateEksToken(kubernetes.getAmazonEks());
+        preSet(kubernetes);
+        return build(kubernetes.getAmazonEks().getUrl(), token);
+    }
+
+    /**
+     * 5.x
+     * return new DefaultKubernetesClient(config);
+     * <p>
+     * 6.x 写法
+     * return new KubernetesClientBuilder().withConfig(config).build();
+     *
+     * @param url
+     * @param token
+     * @return
+     */
+    private static KubernetesClient build(String url, String token) {
+        io.fabric8.kubernetes.client.Config config = new ConfigBuilder()
+                .withMasterUrl(url)
+                .withOauthToken(token)
+                .withTrustCerts(true)
+                .withWatchReconnectInterval(60000)
                 .build();
-        SignerProvider signerProvider = new DefaultSignerProvider(stsClient, signer);
-        PresignerParams presignerParams = new PresignerParams(uri, credentials, signerProvider, SdkClock.STANDARD);
-        PresignerFacade presignerFacade = new PresignerFacade(presignerParams);
-        URL url = presignerFacade.presign(defaultRequest, new Date(System.currentTimeMillis() + 60000));
-        String encodedUrl = Base64.getUrlEncoder().withoutPadding().encodeToString(url.toString().getBytes());
-        log.info("Generate EKS Token : clusterName = {}", amazonEks.getClusterName());
-        return Joiner.on(".").join("k8s-aws-v1", encodedUrl);
+
+        return new KubernetesClientBuilder().withConfig(config).build();
+    }
+
+    /**
+     * 注入配置
+     *
+     * @param kubernetes
+     */
+    private static void preSet(KubernetesConfig.Kubernetes kubernetes) {
+        System.setProperty(KUBERNETES_REQUEST_TIMEOUT_SYSTEM_PROPERTY,
+                String.valueOf(MyKubernetesClientBuilder.Values.REQUEST_TIMEOUT));
+        System.setProperty(KUBERNETES_WEBSOCKET_TIMEOUT_SYSTEM_PROPERTY,
+                String.valueOf(MyKubernetesClientBuilder.Values.WEBSOCKET_TIMEOUT));
+        System.setProperty(KUBERNETES_CONNECTION_TIMEOUT_SYSTEM_PROPERTY,
+                String.valueOf(MyKubernetesClientBuilder.Values.CONNECTION_TIMEOUT));
     }
 
 }

@@ -1,5 +1,6 @@
 package com.baiyi.opscloud.common.util;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 
 import java.util.Collections;
@@ -14,10 +15,25 @@ import java.util.Random;
 public class PasswordUtil {
 
     private static final String PW_STR = "01234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    private static final String NUM_CHAR = "23456789"; // 8
-    private static final String UPPER_CHAR = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";  // 26
+    private static final String NUM_CHAR = "23456789";
+    private static final String UPPER_CHAR = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     private static final String LOWER_CHAR = "abcdefghijklmnopqrstuvwxyz";
-    private static final String SYBL_CHAR = "!@#$%^&*()_+-="; //14
+    private static final String SYBL_CHAR = "!@#$%^&*()_+-=";
+
+
+    /**
+     * 生成密码
+     *
+     * @param length 密码长度
+     * @param safe   安全 包含至少1个大写，1个小写，1个数字，1个特殊字符（长度必须大于8）
+     * @return
+     */
+    public static String generatorPassword(int length, boolean safe) {
+        if (safe) {
+            return generatorSafePW(length);
+        }
+        return generatorPW(length);
+    }
 
     /**
      * 生成随机密码
@@ -25,14 +41,15 @@ public class PasswordUtil {
      * @param length 密码长度
      * @return
      */
-    public static String getRandomPW(int length) {
-        if (length == 0) length = 20;
-        String str = PW_STR;
+    public static String generatorPW(int length) {
+        if (length == 0) {
+            length = 20;
+        }
         Random random = new Random();
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (int i = 0; i < length; i++) {
             int number = random.nextInt(62);
-            sb.append(str.charAt(number));
+            sb.append(PW_STR.charAt(number));
         }
         return sb.toString();
     }
@@ -43,25 +60,26 @@ public class PasswordUtil {
      * @param length 长度>=8
      * @return
      */
-    public static String getPW(int length) {
-        if (length < 8) length = 8;
-        StringBuilder resultStr = new StringBuilder()
-                .append(getChar(NUM_CHAR, 1))
-                .append(getChar(UPPER_CHAR, 1))
-                .append(getChar(LOWER_CHAR, 1))
-                .append(getChar(SYBL_CHAR, 1))
-                .append(getChar(NUM_CHAR + UPPER_CHAR + LOWER_CHAR + SYBL_CHAR, length - 4));
-        return shuffleForSortingString(resultStr.toString());
+    private static String generatorSafePW(int length) {
+        if (length < 8) {
+            length = 8;
+        }
+        String pwStr = getChar(NUM_CHAR, 1) +
+                getChar(UPPER_CHAR, 1) +
+                getChar(LOWER_CHAR, 1) +
+                getChar(SYBL_CHAR, 1) +
+                getChar(NUM_CHAR + UPPER_CHAR + LOWER_CHAR + SYBL_CHAR, length - 4);
+        return shuffleForSortingString(pwStr);
     }
 
-    public static String shuffleForSortingString(String s) {
+    private static String shuffleForSortingString(String s) {
         char[] c = s.toCharArray();
         List<Character> lst = Lists.newArrayList();
-        for (char value : c) lst.add(value);
+        for (char value : c) {
+            lst.add(value);
+        }
         Collections.shuffle(lst);
-        StringBuilder resultStr = new StringBuilder();
-        for (Character character : lst) resultStr.append(character);
-        return resultStr.toString();
+        return Joiner.on("").join(lst);
     }
 
     /**

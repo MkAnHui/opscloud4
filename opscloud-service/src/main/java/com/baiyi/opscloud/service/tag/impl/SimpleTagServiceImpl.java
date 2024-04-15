@@ -21,19 +21,37 @@ public class SimpleTagServiceImpl implements SimpleTagService {
 
     private final BusinessTagService businessTagService;
 
-    // 检查业务是否有标签
     @Override
     public boolean hasBusinessTag(String tagKey, Integer businessType, Integer businessId, boolean isConstraint) {
         Tag tag = tagService.getByTagKey(tagKey);
-        if (tag == null) return false;
-        if (isConstraint && (!tag.getBusinessType().equals(businessType)))
+        if (tag == null) {
             return false;
+        }
+        if (isConstraint && (!tag.getBusinessType().equals(businessType))) {
+            return false;
+        }
         BusinessTag businessTag = BusinessTag.builder()
                 .businessId(businessId)
                 .businessType(businessType)
                 .tagId(tag.getId())
                 .build();
         return businessTagService.countByBusinessTag(businessTag) > 0;
+    }
+
+    public void labeling(String tagKey, Integer businessType, Integer businessId) {
+        Tag tag = tagService.getByTagKey(tagKey);
+        if (tag == null) {
+            return;
+        }
+        BusinessTag businessTag = BusinessTag.builder()
+                .businessId(businessId)
+                .businessType(businessType)
+                .tagId(tag.getId())
+                .build();
+        if (businessTagService.countByBusinessTag(businessTag) == 0) {
+            businessTagService.add(businessTag);
+        }
+
     }
 
 }

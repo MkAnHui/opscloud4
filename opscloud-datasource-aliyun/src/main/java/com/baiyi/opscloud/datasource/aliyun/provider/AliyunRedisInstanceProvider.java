@@ -4,20 +4,19 @@ import com.aliyuncs.exceptions.ClientException;
 import com.baiyi.opscloud.common.annotation.SingleTask;
 import com.baiyi.opscloud.common.constants.enums.DsTypeEnum;
 import com.baiyi.opscloud.common.datasource.AliyunConfig;
+import com.baiyi.opscloud.core.comparer.AssetComparer;
 import com.baiyi.opscloud.core.factory.AssetProviderFactory;
 import com.baiyi.opscloud.core.model.DsInstanceContext;
 import com.baiyi.opscloud.core.provider.asset.BaseAssetProvider;
-import com.baiyi.opscloud.core.util.AssetUtil;
 import com.baiyi.opscloud.datasource.aliyun.redis.driver.AliyunRedisInstanceDriver;
 import com.baiyi.opscloud.datasource.aliyun.redis.entity.AliyunRedis;
-import com.baiyi.opscloud.domain.generator.opscloud.DatasourceConfig;
-import com.baiyi.opscloud.domain.generator.opscloud.DatasourceInstanceAsset;
 import com.baiyi.opscloud.domain.constants.DsAssetTypeConstants;
+import com.baiyi.opscloud.domain.generator.opscloud.DatasourceConfig;
 import com.google.common.collect.Lists;
+import jakarta.annotation.Resource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import javax.annotation.Resource;
 import java.util.Collections;
 import java.util.List;
 
@@ -35,7 +34,7 @@ public class AliyunRedisInstanceProvider extends BaseAssetProvider<AliyunRedis.K
     private AliyunRedisInstanceDriver aliyunRedisInstanceDriver;
 
     @Resource
-    private AliyunRedisInstanceProvider aliunRedisInstanceProvider;
+    private AliyunRedisInstanceProvider aliyunRedisInstanceProvider;
 
     @Override
     @SingleTask(name = PULL_ALIYUN_REDIS_INSTANCE, lockTime = "2m")
@@ -44,26 +43,25 @@ public class AliyunRedisInstanceProvider extends BaseAssetProvider<AliyunRedis.K
     }
 
     private AliyunConfig.Aliyun buildConfig(DatasourceConfig dsConfig) {
-        return dsConfigHelper.build(dsConfig, AliyunConfig.class).getAliyun();
+        return dsConfigManager.build(dsConfig, AliyunConfig.class).getAliyun();
     }
 
     @Override
-    protected boolean equals(DatasourceInstanceAsset asset, DatasourceInstanceAsset preAsset) {
-        if (!AssetUtil.equals(preAsset.getName(), asset.getName()))
-            return false;
-        return true;
+    protected AssetComparer getAssetComparer() {
+        return AssetComparer.COMPARE_NAME;
     }
 
     @Override
     protected List<AliyunRedis.KVStoreInstance> listEntities(DsInstanceContext dsInstanceContext) {
         AliyunConfig.Aliyun aliyun = buildConfig(dsInstanceContext.getDsConfig());
-        if (CollectionUtils.isEmpty(aliyun.getRegionIds()))
+        if (CollectionUtils.isEmpty(aliyun.getRegionIds())) {
             return Collections.emptyList();
+        }
         List<AliyunRedis.KVStoreInstance> entities = Lists.newArrayList();
         aliyun.getRegionIds().forEach(regionId -> {
             try {
                 entities.addAll(aliyunRedisInstanceDriver.listInstance(regionId, aliyun));
-            } catch (ClientException e) {
+            } catch (ClientException ignored) {
             }
         });
         return entities;
@@ -81,8 +79,7 @@ public class AliyunRedisInstanceProvider extends BaseAssetProvider<AliyunRedis.K
 
     @Override
     public void afterPropertiesSet() {
-        AssetProviderFactory.register(aliunRedisInstanceProvider);
+        AssetProviderFactory.register(aliyunRedisInstanceProvider);
     }
 
 }
-

@@ -10,6 +10,9 @@ import lombok.Getter;
 @Getter
 public enum DsAssetTypeConstants {
 
+    /**
+     * 资产类型
+     */
     GROUP,
     USER,
 
@@ -17,6 +20,15 @@ public enum DsAssetTypeConstants {
     RAM_USER,
     RAM_POLICY,
     RAM_ACCESS_KEY,
+    ACR_INSTANCE,
+    ACR_REPOSITORY,
+    ACR_NAMESPACE,
+
+    ALIYUN_DEVOPS_PROJECT,
+    ALIYUN_DEVOPS_SPRINT,
+    ALIYUN_DEVOPS_WORKITEM,
+
+    ALIYUN_ARMS_TRACE_APP,
 
     RDS_INSTANCE,
     RDS_DATABASE,
@@ -28,10 +40,19 @@ public enum DsAssetTypeConstants {
     ONS_ROCKETMQ_TOPIC,
     ONS_ROCKETMQ_GROUP,
 
+    ONS5_INSTANCE,
+    ONS5_TOPIC,
+    ONS5_GROUP,
+
     EC2,
     IAM_POLICY,
     IAM_USER,
     IAM_ACCESS_KEY,
+    SQS,
+    SNS_TOPIC,
+    SNS_SUBSCRIPTION,
+    AMAZON_DOMAIN,
+    ECR_REPOSITORY,
 
     GITLAB_USER,
     GITLAB_GROUP,
@@ -42,17 +63,24 @@ public enum DsAssetTypeConstants {
     V_SWITCH,
     ECS_IMAGE,
     ECS_SG,
+    ALIYUN_DOMAIN,
 
     KUBERNETES_NAMESPACE,
     KUBERNETES_NODE,
     KUBERNETES_POD,
     KUBERNETES_DEPLOYMENT,
     KUBERNETES_SERVICE,
+    KUBERNETES_INGRESS,
+    KUBERNETES_CUSTOM_RESOURCE,
+    ISTIO_VIRTUAL_SERVICE,
+    ISTIO_DESTINATION_RULE,
 
     ZABBIX_USER,
     ZABBIX_USER_GROUP,
 
     JENKINS_COMPUTER,
+    JENKINS_TEMPLATE,
+    JENKINS_JOB,
 
     ZABBIX_HOST,
     ZABBIX_HOST_GROUP,
@@ -74,15 +102,20 @@ public enum DsAssetTypeConstants {
     NACOS_ROLE,
 
     DINGTALK_USER,
-    DINGTALK_DEPARTMENT;
+    DINGTALK_DEPARTMENT,
 
-//    private final String type;
-//
-//    DsAssetTypeEnum(String type) {
-//        this.type = type;
-//    }
-//
-//    public String getType() {
-//        return this.type;
-//    }
+    CONSUL_SERVICE,
+
+    HUAWEICLOUD_ECS,
+
+    METER_SPHERE_BUILD_HOOK,
+    METER_SPHERE_DEPLOY_HOOK,
+
+    APOLLO_APP,
+    APOLLO_CLUSTER,
+    APOLLO_NAMESPACE,
+    APOLLO_INTERCEPT_RELEASE,
+
+    EVENT_BRIDGE_DEPLOY_EVENT
+
 }

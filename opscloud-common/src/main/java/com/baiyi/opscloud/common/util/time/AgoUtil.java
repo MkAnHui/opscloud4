@@ -1,6 +1,6 @@
 package com.baiyi.opscloud.common.util.time;
 
-import com.baiyi.opscloud.domain.vo.base.ShowTime;
+import com.baiyi.opscloud.domain.vo.base.ReadableTime;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -15,17 +15,18 @@ public class AgoUtil {
     private AgoUtil() {
     }
 
-    private static final long ONE_MINUTE = 60000L;
-    private static final long ONE_HOUR = 3600000L;
-    private static final long ONE_DAY = 86400000L;
-    private static final long ONE_WEEK = 604800000L;
+    private static final long ONE_MINUTE = 60 * 1000L;
+    private static final long ONE_HOUR = ONE_MINUTE * 60;
+    private static final long ONE_DAY = ONE_HOUR * 24;
+    private static final long ONE_WEEK = ONE_DAY * 7;
 
     private static final String ONE_SECOND_AGO = "秒前";
     private static final String ONE_MINUTE_AGO = "分钟前";
     private static final String ONE_HOUR_AGO = "小时前";
     private static final String ONE_DAY_AGO = "天前";
-    private static final String ONE_MONTH_AGO = "月前";
+    private static final String ONE_MONTH_AGO = "个月前";
     private static final String ONE_YEAR_AGO = "年前";
+    private static final String YESTERDAY = "昨天";
 
     public static String format(String gmtDate) {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:m:s");
@@ -37,18 +38,15 @@ public class AgoUtil {
         }
     }
 
-    /**
-     * 废弃:改用@AgoWrapper
-     * @param iAgo
-     */
-    @Deprecated
-    public static void wrap(ShowTime.IAgo iAgo) {
-        if (iAgo.getAgoTime() == null) return;
+    public static void wrap(ReadableTime.IAgo iAgo) {
+        if (iAgo.getAgoTime() == null) {
+            return;
+        }
         iAgo.setAgo(format(iAgo.getAgoTime()));
     }
 
     public static String format(Date date) {
-        long delta = new Date().getTime() - date.getTime();
+        long delta = System.currentTimeMillis() - date.getTime();
         if (delta < ONE_MINUTE) {
             long seconds = toSeconds(delta);
             return (seconds <= 0 ? 1 : seconds) + ONE_SECOND_AGO;
@@ -62,7 +60,7 @@ public class AgoUtil {
             return (hours <= 0 ? 1 : hours) + ONE_HOUR_AGO;
         }
         if (delta < 48L * ONE_HOUR) {
-            return "昨天";
+            return YESTERDAY;
         }
         if (delta < 30L * ONE_DAY) {
             long days = toDays(delta);

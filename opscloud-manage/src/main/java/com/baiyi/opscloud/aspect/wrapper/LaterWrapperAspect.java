@@ -1,10 +1,10 @@
 package com.baiyi.opscloud.aspect.wrapper;
 
 import com.baiyi.opscloud.common.annotation.LaterWrapper;
-import com.baiyi.opscloud.common.exception.common.CommonRuntimeException;
+import com.baiyi.opscloud.common.exception.common.OCException;
 import com.baiyi.opscloud.common.util.time.LaterUtil;
 import com.baiyi.opscloud.domain.param.IExtend;
-import com.baiyi.opscloud.domain.vo.base.ShowTime;
+import com.baiyi.opscloud.domain.vo.base.ReadableTime;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -14,13 +14,14 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 
 /**
+ * 注入later字段
  * @Author baiyi
  * @Date 2022/2/23 11:33 AM
  * @Version 1.0
  */
+@Slf4j
 @Aspect
 @Component
-@Slf4j
 public class LaterWrapperAspect {
 
     @Pointcut(value = "@annotation(com.baiyi.opscloud.common.annotation.LaterWrapper)")
@@ -28,18 +29,20 @@ public class LaterWrapperAspect {
     }
 
     @Around("@annotation(laterWrapper)")
-    public Object around(ProceedingJoinPoint joinPoint, LaterWrapper laterWrapper) throws CommonRuntimeException {
+    public Object around(ProceedingJoinPoint joinPoint, LaterWrapper laterWrapper) throws OCException {
         Object result;
         try {
             result = joinPoint.proceed();
         } catch (Throwable e) {
-            throw new CommonRuntimeException(e.getMessage());
+            throw new OCException(e.getMessage());
         }
         boolean extend = laterWrapper.extend();
-        ShowTime.ILater targetLater = null;
+        ReadableTime.ILater laterTarget = null;
         MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
-        String[] params = methodSignature.getParameterNames();// 获取参数名称
-        Object[] args = joinPoint.getArgs();// 获取参数值
+        // 获取参数名称
+        String[] params = methodSignature.getParameterNames();
+        // 获取参数值
+        Object[] args = joinPoint.getArgs();
         if (params != null && params.length != 0) {
             for (Object arg : args) {
                 if (!extend) {
@@ -48,22 +51,17 @@ public class LaterWrapperAspect {
                         continue;
                     }
                 }
-                if (targetLater == null) {
-                    if (arg instanceof ShowTime.ILater) {
-                        targetLater = (ShowTime.ILater) arg;
+                if (laterTarget == null) {
+                    if (arg instanceof ReadableTime.ILater) {
+                        laterTarget = (ReadableTime.ILater) arg;
                     }
                 }
             }
         }
-        if (extend && targetLater != null) {
-            wrap(targetLater);
+        if (extend && laterTarget != null) {
+            LaterUtil.wrap(laterTarget);
         }
         return result;
-    }
-
-    public void wrap(ShowTime.ILater iLater) {
-        if (iLater.getExpiredTime() == null) return;
-        iLater.setLater(LaterUtil.format(iLater.getExpiredTime()));
     }
 
 }

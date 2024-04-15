@@ -1,11 +1,13 @@
 package com.baiyi.opscloud.common.util;
 
+import com.baiyi.opscloud.common.exception.common.OCException;
+import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
-import java.util.TimeZone;
 
 /**
  * @Author baiyi
@@ -13,45 +15,8 @@ import java.util.TimeZone;
  * @Version 1.0
  */
 @Slf4j
+@Deprecated
 public class TimeUtil {
-
-    /**
-     * 天时间戳
-     */
-    public static long dayTime = 24 * 60 * 60 * 1000;
-
-    /**
-     * 小时时间戳
-     */
-    public static long hourTime = 3600000;
-
-    /**
-     * 分钟时间戳
-     */
-    public static long minuteTime = 60000L;
-
-    /**
-     * 秒时间戳
-     */
-    public static long secondTime = 1000;
-
-    public static final String ISO8601 = "yyyy-MM-dd'T'HH:mm.SSS'Z'";
-
-    /**
-     * 字符串时间格式
-     */
-    public static String timeFormat = "yyyy-MM-dd HH:mm:ss";
-
-    /**
-     * 判断是否超时
-     *
-     * @param startTime
-     * @return
-     */
-    public static boolean checkTimeout(Long startTime, Long timeout) {
-        return (new Date().getTime() - startTime) >= timeout;
-    }
-
 
     /**
      * 计算2个日期时间差
@@ -63,20 +28,20 @@ public class TimeUtil {
     public static String calculateDateDifference(Date fromDate, Date toDate) {
         long subTime = toDate.getTime() - fromDate.getTime();
         if (subTime < 0) {
-            throw new RuntimeException("计算时间有误!");
+            throw new OCException("计算时间有误!");
         }
-        StringBuffer buffer = new StringBuffer();
-        long day = subTime / dayTime;
+        StringBuilder buffer = new StringBuilder();
+        long day = subTime / NewTimeUtil.DAY_TIME;
         if (day != 0) {
             buffer.append(day);
             buffer.append("天");
         }
-        long hour = subTime % dayTime / hourTime;
+        long hour = subTime % NewTimeUtil.DAY_TIME / NewTimeUtil.HOUR_TIME;
         if (hour != 0) {
             buffer.append(hour);
             buffer.append("小时");
         }
-        long minute = subTime % dayTime % hourTime / minuteTime;
+        long minute = subTime % NewTimeUtil.DAY_TIME % NewTimeUtil.HOUR_TIME / NewTimeUtil.MINUTE_TIME;
         if (minute != 0) {
             buffer.append(minute);
             buffer.append("分钟");
@@ -101,7 +66,7 @@ public class TimeUtil {
             throw new RuntimeException("计算时间有误!");
         }
 
-        Long diff = subTime / dayTime;
+        Long diff = subTime / NewTimeUtil.DAY_TIME;
         return diff.intValue();
     }
 
@@ -112,11 +77,11 @@ public class TimeUtil {
      * @return
      */
     public static int calculateDateAgoMinute(Date date) {
-        long subTime = new Date().getTime() - date.getTime();
+        long subTime = System.currentTimeMillis() - date.getTime();
         if (subTime < 0) {
             throw new RuntimeException("计算时间有误!");
         }
-        Long diff = subTime / minuteTime;
+        Long diff = subTime / NewTimeUtil.MINUTE_TIME;
         return diff.intValue();
     }
 
@@ -150,10 +115,11 @@ public class TimeUtil {
      */
     public static int calculateDateDiff4Day(String fromDate) {
         try {
-            long subTime = new Date().getTime() - dateToStamp(fromDate);
-            if (subTime < 0)
+            long subTime = System.currentTimeMillis() - dateToStamp(fromDate);
+            if (subTime < 0) {
                 return 0;
-            Long diff = subTime / dayTime;
+            }
+            Long diff = subTime / NewTimeUtil.DAY_TIME;
             return diff.intValue();
         } catch (Exception e) {
             return 0;
@@ -168,7 +134,7 @@ public class TimeUtil {
      */
     public static boolean calculateDateExpired(String expired) {
         try {
-            long subTime = dateToStamp(expired) - new Date().getTime();
+            long subTime = dateToStamp(expired) - System.currentTimeMillis();
             return subTime <= 0;
         } catch (Exception e) {
             return true;
@@ -177,7 +143,7 @@ public class TimeUtil {
 
     public static boolean calculateDateExpired(Date date) {
         try {
-            long subTime = date.getTime() - new Date().getTime();
+            long subTime = date.getTime() - System.currentTimeMillis();
             return subTime <= 0;
         } catch (Exception e) {
             return true;
@@ -199,24 +165,12 @@ public class TimeUtil {
         return date.getTime();
     }
 
-    /**
-     * 获取当前时间
-     *
-     * @return
-     */
-    public static String nowDate() {
-        SimpleDateFormat formatter;
-        formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        String now = formatter.format(new Date());
-        return now;
-    }
 
     public static String gmtNowDate() {
-        long time = new Date().getTime();
+        long time = System.currentTimeMillis();
         SimpleDateFormat formatter;
         formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        String now = formatter.format(time - TimeUtil.hourTime * 8);
-        return now;
+        return formatter.format(time - NewTimeUtil.HOUR_TIME * 8);
     }
 
     /**
@@ -227,10 +181,8 @@ public class TimeUtil {
     public static String nowDateName() {
         SimpleDateFormat formatter;
         formatter = new SimpleDateFormat("yyyyMMdd_HHmmss");
-        String now = formatter.format(new Date());
-        return now;
+        return formatter.format(new Date());
     }
-
 
     /**
      * 判断时间是否过了stamp
@@ -241,19 +193,10 @@ public class TimeUtil {
      * @throws ParseException
      */
     public static boolean timeLapse(String d, long stamp) throws ParseException {
-        SimpleDateFormat sdf = new SimpleDateFormat(TimeUtil.timeFormat);
+        SimpleDateFormat sdf = new SimpleDateFormat(NewTimeUtil.TIME_FORMAT);
         Date date = sdf.parse(d);
-        long subTime = new Date().getTime() - date.getTime();
-        if (subTime >= stamp) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public static String toGmtDate(Date date){
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        return simpleDateFormat.format(date);
+        long subTime = System.currentTimeMillis() - date.getTime();
+        return subTime >= stamp;
     }
 
     /**
@@ -262,7 +205,7 @@ public class TimeUtil {
     public static String stampSecToDate(String s) {
         String res;
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        long lt = (new Long(s)) * 1000;
+        long lt = (Long.parseLong(s)) * 1000;
         Date date = new Date(lt);
         res = simpleDateFormat.format(date);
         return res;
@@ -274,7 +217,8 @@ public class TimeUtil {
     public static String stampToDate(String s) {
         String res;
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        long lt = new Long(s);
+        long lt = Long.parseLong(s);
+
         Date date = new Date(lt);
         res = simpleDateFormat.format(date);
         return res;
@@ -288,7 +232,7 @@ public class TimeUtil {
      */
     public static String stampToDateMin(String s) {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-        long lt = new Long(s);
+        long lt = Long.parseLong(s);
         Date date = new Date(lt);
         return simpleDateFormat.format(date);
     }
@@ -303,7 +247,7 @@ public class TimeUtil {
         try {
             long et = dateToStamp(expiredTime);
             Date d = new Date();
-            return (et - d.getTime()) / TimeUtil.dayTime;
+            return (et - d.getTime()) / NewTimeUtil.DAY_TIME;
         } catch (Exception e) {
             return -1;
         }
@@ -316,16 +260,16 @@ public class TimeUtil {
      * @return "yyyy-MM-dd HH:mm:ss"
      */
     public static String futureTime(int day) {
-        long now = new Date().getTime();
-        now = now + dayTime * day;
+        long now = System.currentTimeMillis();
+        now = now + NewTimeUtil.DAY_TIME * day;
         SimpleDateFormat formatter;
         formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         return formatter.format(now);
     }
 
     public static long futureTimeStamp(int day) {
-        long now = new Date().getTime();
-        now += dayTime * day;
+        long now = System.currentTimeMillis();
+        now += NewTimeUtil.DAY_TIME * day;
         return now;
     }
 
@@ -340,23 +284,10 @@ public class TimeUtil {
             long stamp = dateToStamp(date);
             Date date1 = new Date(stamp);
             SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd");
-            if (fmt.format(date).toString().equals(fmt.format(new Date()).toString())) { //格式化为相同格式
-                return true;
-            } else {
-                return false;
-            }
+            //格式化为相同格式
+            return fmt.format(date).equals(fmt.format(new Date()));
         } catch (Exception e) {
             return false;
-        }
-
-    }
-
-    public static Date gmtToDate(String time) {
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        try {
-            return format.parse(time);
-        } catch (ParseException e) {
-            return new Date();
         }
     }
 
@@ -369,7 +300,7 @@ public class TimeUtil {
         }
     }
 
-    public static Date convertTime(String time,String timeFormat){
+    public static Date convertTime(String time, String timeFormat) {
         SimpleDateFormat format = new SimpleDateFormat(timeFormat);
         try {
             return format.parse(time);
@@ -378,7 +309,12 @@ public class TimeUtil {
         }
     }
 
-    //转换时间
+    /**
+     * 转换时间
+     *
+     * @param time
+     * @return
+     */
     public static String acqGmtTime(String time) {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
         try {
@@ -391,7 +327,12 @@ public class TimeUtil {
         }
     }
 
-    //转换时间 2016-11-19T02:36:13Z
+    /**
+     * 转换时间 2016-11-19T02:36:13Z
+     *
+     * @param time
+     * @return
+     */
     public static String acqGmtTimePlus(String time) {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
         try {
@@ -404,11 +345,6 @@ public class TimeUtil {
         }
     }
 
-    public static String dateToStr(Date date) {
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        return formatter.format(date);
-    }
-
     public static Date acqJenkinsDate(String time) {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
         try {
@@ -418,9 +354,14 @@ public class TimeUtil {
         }
     }
 
-    public static String acqBuildTime(long time) {
-        SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss");
-        formatter.setTimeZone(TimeZone.getTimeZone("GMT+0:00"));
-        return formatter.format(time);
+    public static String whatWeek(Date date) {
+        Calendar calendar = Calendar.getInstance();
+        //设置中国周
+        calendar.setFirstDayOfWeek(Calendar.MONDAY);
+        calendar.setTime(date);
+        int week = calendar.get(Calendar.WEEK_OF_YEAR);
+        int year = calendar.get(Calendar.YEAR);
+        return Joiner.on(" ").join(year, "年", week, "周");
     }
+
 }

@@ -2,11 +2,12 @@ package com.baiyi.opscloud.domain.vo.business;
 
 import com.baiyi.opscloud.domain.base.BaseBusiness;
 import com.baiyi.opscloud.domain.vo.base.BaseVO;
-import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
@@ -32,9 +33,10 @@ public class BusinessRelationVO {
     @EqualsAndHashCode(callSuper = true)
     @Data
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class Relation extends BaseVO implements Serializable {
 
+        @Serial
         private static final long serialVersionUID = -7796721327490285102L;
         private Integer id;
 
@@ -48,4 +50,5 @@ public class BusinessRelationVO {
 
         private String relationType;
     }
+
 }

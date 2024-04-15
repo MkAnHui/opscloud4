@@ -4,12 +4,13 @@ import com.baiyi.opscloud.domain.DataTable;
 import com.baiyi.opscloud.domain.generator.opscloud.WorkOrderTicket;
 import com.baiyi.opscloud.domain.param.workorder.WorkOrderTicketParam;
 import com.baiyi.opscloud.domain.vo.workorder.WorkOrderReportVO;
-import com.baiyi.opscloud.mapper.opscloud.WorkOrderTicketMapper;
+import com.baiyi.opscloud.mapper.WorkOrderTicketMapper;
 import com.baiyi.opscloud.service.workorder.WorkOrderTicketService;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import tk.mybatis.mapper.entity.Example;
 
 import java.util.List;
 
@@ -26,7 +27,7 @@ public class WorkOrderTicketServiceImpl implements WorkOrderTicketService {
 
     @Override
     public DataTable<WorkOrderTicket> queryPageByParam(WorkOrderTicketParam.TicketPageQuery pageQuery) {
-        Page page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
+        Page<?> page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
         List<WorkOrderTicket> data = workOrderTicketMapper.queryPageByParam(pageQuery);
         return new DataTable<>(data, page.getTotal());
     }
@@ -37,7 +38,7 @@ public class WorkOrderTicketServiceImpl implements WorkOrderTicketService {
     }
 
     @Override
-    public List<WorkOrderReportVO.Report> queryReportByMonth(Integer workOrderId) {
+    public List<WorkOrderReportVO.Report> statByMonth(Integer workOrderId) {
         return workOrderTicketMapper.queryReportByMonth(workOrderId);
     }
 
@@ -49,6 +50,12 @@ public class WorkOrderTicketServiceImpl implements WorkOrderTicketService {
     @Override
     public void update(WorkOrderTicket workOrderTicket) {
         workOrderTicketMapper.updateByPrimaryKey(workOrderTicket);
+    }
+
+
+    @Override
+    public void updateByPrimaryKeySelective(WorkOrderTicket workOrderTicket) {
+        workOrderTicketMapper.updateByPrimaryKeySelective(workOrderTicket);
     }
 
     @Override
@@ -64,6 +71,15 @@ public class WorkOrderTicketServiceImpl implements WorkOrderTicketService {
     @Override
     public void deleteById(int id) {
         workOrderTicketMapper.deleteByPrimaryKey(id);
+    }
+
+    @Override
+    public List<WorkOrderTicket> queryByParam(int workOrderId, String phase) {
+        Example example = new Example(WorkOrderTicket.class);
+        Example.Criteria criteria = example.createCriteria();
+        criteria.andEqualTo("workOrderId", workOrderId)
+                .andEqualTo("ticketPhase", phase);
+        return workOrderTicketMapper.selectByExample(example);
     }
 
 }

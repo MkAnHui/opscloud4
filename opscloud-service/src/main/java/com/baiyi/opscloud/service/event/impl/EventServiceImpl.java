@@ -3,7 +3,7 @@ package com.baiyi.opscloud.service.event.impl;
 import com.baiyi.opscloud.domain.DataTable;
 import com.baiyi.opscloud.domain.generator.opscloud.Event;
 import com.baiyi.opscloud.domain.param.event.EventParam;
-import com.baiyi.opscloud.mapper.opscloud.EventMapper;
+import com.baiyi.opscloud.mapper.EventMapper;
 import com.baiyi.opscloud.service.event.EventService;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -35,6 +35,11 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    public void updateByExampleSelective(Event event) {
+        eventMapper.updateByPrimaryKeySelective(event);
+    }
+
+    @Override
     public List<Event> queryEventByInstance(String instanceUuid) {
         Example example = new Example(Event.class);
         Example.Criteria criteria = example.createCriteria();
@@ -54,15 +59,16 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public DataTable<Event> queryUserPermissionEventByParam(EventParam.UserPermissionEventPageQuery pageQuery) {
-        Page page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
+        Page<?> page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
         List<Event> data = eventMapper.queryUserPermissionEventPageByParam(pageQuery);
         return new DataTable<>(data, page.getTotal());
     }
 
     @Override
     public DataTable<Event> queryUserPermissionServerEventByParam(EventParam.UserPermissionEventPageQuery pageQuery) {
-        Page page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
+        Page<?> page = PageHelper.startPage(pageQuery.getPage(), pageQuery.getLength());
         List<Event> data = eventMapper.queryUserPermissionServerEventPageByParam(pageQuery);
         return new DataTable<>(data, page.getTotal());
     }
+
 }

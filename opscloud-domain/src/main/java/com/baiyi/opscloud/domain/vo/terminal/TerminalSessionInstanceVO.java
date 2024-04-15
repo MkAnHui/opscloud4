@@ -2,8 +2,7 @@ package com.baiyi.opscloud.domain.vo.terminal;
 
 import com.baiyi.opscloud.domain.vo.base.BaseVO;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
 import java.util.Date;
@@ -26,9 +25,9 @@ public class TerminalSessionInstanceVO {
     @Builder
     @AllArgsConstructor
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class SessionInstance extends BaseVO {
-        @ApiModelProperty(value = "会话时长")
+        @Schema(description = "会话时长")
         private Integer sessionDuration;
 
         private Integer id;
@@ -36,16 +35,19 @@ public class TerminalSessionInstanceVO {
         private String instanceId;
         private String duplicateInstanceId;
         private String instanceSessionType;
-        @ApiModelProperty(value = "会话账户")
+        @Schema(description = "会话账户")
         private String loginUser;
         private String hostIp;
-        @ApiModelProperty(value = "会话日志大小")
+        @Schema(description = "会话日志大小")
         private Long outputSize;
+        @Schema(description = "是否关闭")
         private Boolean instanceClosed;
-        @ApiModelProperty(value = "会话实例开启时间")
+        @Schema(description = "命令数量")
+        private Integer commandSize;
+        @Schema(description = "会话实例开启时间")
         @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
         private Date openTime;
-        @ApiModelProperty(value = "会话实例关闭时间")
+        @Schema(description = "会话实例关闭时间")
         @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
         private Date closeTime;
     }

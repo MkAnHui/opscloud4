@@ -1,7 +1,7 @@
 package com.baiyi.opscloud.datasource.tencent;
 import com.baiyi.opscloud.BaseUnit;
 import com.baiyi.opscloud.common.datasource.TencentExmailConfig;
-import com.baiyi.opscloud.core.factory.DsConfigHelper;
+import com.baiyi.opscloud.core.factory.DsConfigManager;
 import com.baiyi.opscloud.domain.generator.opscloud.DatasourceConfig;
 import com.baiyi.opscloud.service.datasource.DsConfigService;
 import com.baiyi.opscloud.tencent.exmail.entity.ExmailToken;
@@ -10,7 +10,7 @@ import com.baiyi.opscloud.tencent.exmail.driver.TencentExmailTokenDriver;
 import com.baiyi.opscloud.tencent.exmail.driver.TencentExmailUserDriver;
 import org.junit.jupiter.api.Test;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.List;
 
 /**
@@ -24,7 +24,7 @@ public class ExmailTest extends BaseUnit {
     private DsConfigService dsConfigService;
 
     @Resource
-    private DsConfigHelper dsFactory;
+    private DsConfigManager dsFactory;
 
     @Resource
     private TencentExmailUserDriver tencentExmailUserHandler;

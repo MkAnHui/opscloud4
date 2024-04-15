@@ -1,6 +1,6 @@
 package com.baiyi.opscloud.domain.vo.auth;
 
-import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -13,10 +13,9 @@ import java.util.Date;
  */
 public class AuthMenuVO {
 
-
     @Data
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class Menu {
 
         private String roleName;
@@ -30,4 +29,5 @@ public class AuthMenuVO {
         private String menu;
 
     }
+
 }

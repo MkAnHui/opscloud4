@@ -3,6 +3,8 @@ package com.baiyi.opscloud.datasource.aliyun.provider;
 import com.baiyi.opscloud.common.annotation.SingleTask;
 import com.baiyi.opscloud.common.constants.enums.DsTypeEnum;
 import com.baiyi.opscloud.common.datasource.AliyunConfig;
+import com.baiyi.opscloud.core.comparer.AssetComparer;
+import com.baiyi.opscloud.core.comparer.AssetComparerBuilder;
 import com.baiyi.opscloud.core.factory.AssetProviderFactory;
 import com.baiyi.opscloud.core.model.DsInstanceContext;
 import com.baiyi.opscloud.core.provider.annotation.ChildProvider;
@@ -16,7 +18,7 @@ import com.google.common.collect.Lists;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.Collections;
 import java.util.List;
 
@@ -27,7 +29,6 @@ import static com.baiyi.opscloud.common.constants.SingleTaskConstants.PULL_ALIYU
  * @Date 2021/7/8 2:46 下午
  * @Since 1.0
  */
-
 @Component
 @ChildProvider(parentType = DsAssetTypeConstants.RAM_USER)
 public class AliyunRamAccessKeyProvider extends AbstractAssetChildProvider<AccessKey.Key> {
@@ -45,19 +46,22 @@ public class AliyunRamAccessKeyProvider extends AbstractAssetChildProvider<Acces
     }
 
     private AliyunConfig.Aliyun buildConfig(DatasourceConfig dsConfig) {
-        return dsConfigHelper.build(dsConfig, AliyunConfig.class).getAliyun();
+        return dsConfigManager.build(dsConfig, AliyunConfig.class).getAliyun();
     }
 
     @Override
-    protected boolean equals(DatasourceInstanceAsset asset, DatasourceInstanceAsset preAsset) {
-        return preAsset.getIsActive().equals(asset.getIsActive());
+    protected AssetComparer getAssetComparer() {
+        return AssetComparerBuilder.newBuilder()
+                .compareOfActive()
+                .build();
     }
 
     @Override
     protected List<AccessKey.Key> listEntities(DsInstanceContext dsInstanceContext, DatasourceInstanceAsset asset) {
         AliyunConfig.Aliyun aliyun = buildConfig(dsInstanceContext.getDsConfig());
-        if (CollectionUtils.isEmpty(aliyun.getRegionIds()))
+        if (CollectionUtils.isEmpty(aliyun.getRegionIds())) {
             return Collections.emptyList();
+        }
         List<AccessKey.Key> entities = Lists.newArrayList();
         aliyun.getRegionIds().forEach(regionId -> entities.addAll(aliyunRamAccessKeyDriver.listAccessKeys(regionId, aliyun, asset.getAssetKey())));
         return entities;
@@ -77,4 +81,5 @@ public class AliyunRamAccessKeyProvider extends AbstractAssetChildProvider<Acces
     public void afterPropertiesSet() {
         AssetProviderFactory.register(aliyunRamAccessKeyProvider);
     }
+
 }

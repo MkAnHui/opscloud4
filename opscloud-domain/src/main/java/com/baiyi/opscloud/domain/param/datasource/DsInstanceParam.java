@@ -1,14 +1,12 @@
 package com.baiyi.opscloud.domain.param.datasource;
 
 import com.baiyi.opscloud.domain.param.IExtend;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import javax.validation.Valid;
 
 /**
  * @Author baiyi
@@ -18,16 +16,53 @@ import javax.validation.Valid;
 public class DsInstanceParam {
 
     @Data
+    @NoArgsConstructor
+    @Schema
+    public static class AddDsConfig  {
+
+        private Integer id;
+        private String name;
+        private Integer dsType;
+        private String version;
+        private String kind;
+        private Boolean isActive;
+        private Integer credentialId;
+        private String dsUrl;
+        private String propsYml;
+        private String comment;
+
+    }
+
+    @Data
+    @NoArgsConstructor
+    @Schema
+    public static class UpdateDsConfig  {
+
+        private Integer id;
+        private String name;
+        private String uuid;
+        private Integer dsType;
+        private String version;
+        private String kind;
+        private Boolean isActive;
+        private Integer credentialId;
+        private String dsUrl;
+        private String propsYml;
+        private String comment;
+
+    }
+
+    @Data
     @Builder
     @AllArgsConstructor
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class DsInstanceQuery implements IExtend {
 
-        @ApiModelProperty(value = "数据源类型")
+        @Schema(description = "数据源类型")
         private String instanceType;
 
-        @ApiModelProperty(value = "有效")
+        @Schema(description = "有效")
         @Builder.Default
         private Boolean isActive = true;
 
@@ -37,37 +72,39 @@ public class DsInstanceParam {
 
     @Data
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     public static class RegisterDsInstance {
 
         private Integer id;
 
-        @ApiModelProperty(value = "数据源实例名称")
+        @Schema(description = "数据源实例名称")
         @Valid
         private String instanceName;
 
         private String uuid;
 
-        @ApiModelProperty(value = "数据源实例分类")
+        @Schema(description = "数据源实例分类")
         private String kind;
 
-        @ApiModelProperty(value = "数据源实例类型")
+        @Schema(description = "数据源实例类型")
         @Valid
         private String instanceType;
 
-        @ApiModelProperty(value = "数据源配置id", example = "1")
+        @Schema(description = "数据源实例版本")
+        private String version;
+
+        @Schema(description = "数据源配置ID", example = "1")
         private Integer configId;
 
-        @ApiModelProperty(value = "父实例id", example = "1")
+        @Schema(description = "父实例ID", example = "1")
         private Integer parentId;
 
-        @ApiModelProperty(value = "有效")
+        @Schema(description = "有效")
         private Boolean isActive;
 
-        @ApiModelProperty(value = "描述")
+        @Schema(description = "描述")
         private String comment;
 
     }
-
 
 }

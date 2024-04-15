@@ -19,10 +19,6 @@ public interface ZabbixActionFeign {
     @Headers({CONTENT_TYPE})
     ZabbixAction.QueryActionResponse query(ZabbixRequest.DefaultRequest request);
 
-//    @RequestLine(REQUEST_API)
-//    @Headers({CONTENT_TYPE})
-//    ZabbixAction.UpdateActionResponse update(ZabbixRequest.DefaultRequest request);
-
     @RequestLine(REQUEST_API)
     @Headers({CONTENT_TYPE})
     ZabbixAction.CreateActionResponse create(ZabbixRequest.DefaultRequest request);
@@ -31,4 +27,5 @@ public interface ZabbixActionFeign {
     @RequestLine(REQUEST_API)
     @Headers({CONTENT_TYPE})
     ZabbixAction.DeleteActionResponse delete(ZabbixRequest.DeleteRequest request);
+
 }

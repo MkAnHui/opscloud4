@@ -2,11 +2,12 @@ package com.baiyi.opscloud.service.datasource.impl;
 
 import com.baiyi.opscloud.domain.generator.opscloud.DatasourceInstance;
 import com.baiyi.opscloud.domain.param.datasource.DsInstanceParam;
-import com.baiyi.opscloud.mapper.opscloud.DatasourceInstanceMapper;
+import com.baiyi.opscloud.mapper.DatasourceInstanceMapper;
 import com.baiyi.opscloud.service.datasource.DsInstanceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.apache.commons.lang3.StringUtils;import tk.mybatis.mapper.entity.Example;
+import org.apache.commons.lang3.StringUtils;
+import tk.mybatis.mapper.entity.Example;
 
 import java.util.List;
 
@@ -35,6 +36,14 @@ public class DsInstanceServiceImpl implements DsInstanceService {
     }
 
     @Override
+    public DatasourceInstance getByInstanceName(String name) {
+        Example example = new Example(DatasourceInstance.class);
+        Example.Criteria criteria = example.createCriteria();
+        criteria.andEqualTo("instanceName", name);
+        return dsInstanceMapper.selectOneByExample(example);
+    }
+
+    @Override
     public List<DatasourceInstance> queryByParam(DsInstanceParam.DsInstanceQuery query) {
         Example example = new Example(DatasourceInstance.class);
         Example.Criteria criteria = example.createCriteria();
@@ -54,6 +63,14 @@ public class DsInstanceServiceImpl implements DsInstanceService {
         Example.Criteria criteria = example.createCriteria();
         criteria.andEqualTo("instanceType", instanceType);
         return dsInstanceMapper.selectByExample(example);
+    }
+
+    @Override
+    public DatasourceInstance getByConfigId(Integer configId) {
+        Example example = new Example(DatasourceInstance.class);
+        Example.Criteria criteria = example.createCriteria();
+        criteria.andEqualTo("configId", configId);
+        return dsInstanceMapper.selectOneByExample(example);
     }
 
     @Override

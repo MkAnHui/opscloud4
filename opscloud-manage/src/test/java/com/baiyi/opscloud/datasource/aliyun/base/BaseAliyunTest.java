@@ -3,9 +3,9 @@ package com.baiyi.opscloud.datasource.aliyun.base;
 import com.baiyi.opscloud.BaseUnit;
 import com.baiyi.opscloud.common.constants.enums.DsTypeEnum;
 import com.baiyi.opscloud.common.datasource.AliyunConfig;
-import com.baiyi.opscloud.core.factory.DsConfigHelper;
+import com.baiyi.opscloud.core.factory.DsConfigManager;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * @Author baiyi
@@ -15,10 +15,14 @@ import javax.annotation.Resource;
 public class BaseAliyunTest extends BaseUnit {
 
     @Resource
-    private DsConfigHelper dsConfigHelper;
+    private DsConfigManager dsConfigManager;
 
     protected AliyunConfig getConfig() {
-        return dsConfigHelper.build(dsConfigHelper.getConfigByDsType(DsTypeEnum.ALIYUN.getType()), AliyunConfig.class);
+        return dsConfigManager.build(dsConfigManager.getConfigByDsType(DsTypeEnum.ALIYUN.getType()), AliyunConfig.class);
+    }
+
+    protected AliyunConfig getConfigById(int id) {
+        return dsConfigManager.build(dsConfigManager.getConfigById(id), AliyunConfig.class);
     }
 
 }

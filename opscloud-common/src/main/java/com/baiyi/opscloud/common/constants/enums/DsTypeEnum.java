@@ -15,6 +15,9 @@ import java.util.stream.Collectors;
 @Getter
 public enum DsTypeEnum {
 
+    /**
+     * 数据源类型
+     */
     LOCAL(0, "LOCAL"),
     LDAP(1, "LDAP"),
     JENKINS(2, "JENKINS"),
@@ -28,10 +31,32 @@ public enum DsTypeEnum {
     NEXUS(10, "NEXUS"),
     TENCENT_EXMAIL(11, "TENCENT_EXMAIL"),
     NACOS(12, "NACOS"),
-    DINGTALK(13, "DINGTALK"),
+    DINGTALK_ROBOT(13, "DINGTALK_ROBOT"),
     DINGTALK_APP(14, "DINGTALK_APP"),
+    CONSUL(15, "CONSUL"),
+    /**
+     * 阿里云
+     */
     ALIYUN(50, "ALIYUN"),
-    AWS(51, "AWS");
+    AWS(51, "AWS"),
+    /**
+     * 华为云
+     */
+    HUAWEICLOUD(52, "HUAWEICLOUD"),
+    /**
+     * 领先互联
+     */
+    LXHL(53, "LXHL"),
+    ALIYUN_DEVOPS(54, "ALIYUN_DEVOPS"),
+    METER_SPHERE(55, "METER_SPHERE"),
+    APOLLO(56, "APOLLO"),
+    SER_DEPLOY(57, "SER_DEPLOY"),
+    ALIYUN_ARMS(58,"ALIYUN_ARMS"),
+    /**
+     * 阿里云事件总线
+     */
+    ALIYUN_EVENTBRIDGE(59,"ALIYUN_EVENTBRIDGE")
+    ;
 
     private final int type;
 

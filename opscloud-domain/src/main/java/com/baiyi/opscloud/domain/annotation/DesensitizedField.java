@@ -9,13 +9,11 @@ import java.lang.annotation.*;
  * @Date 2021/6/11 10:53 上午
  * @Since 1.0
  */
-
-
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface DesensitizedField {
 
     SensitiveTypeEnum type();
-}
 
+}

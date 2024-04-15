@@ -11,11 +11,13 @@ import java.util.List;
  */
 public interface ApplicationResourceService {
 
+    ApplicationResource getById(Integer id);
+
     void add(ApplicationResource applicationResource);
 
     void update(ApplicationResource applicationResource);
 
-    void delete(Integer id);
+    void deleteById(Integer id);
 
     List<ApplicationResource> queryByApplication(Integer applicationId);
 
@@ -26,5 +28,7 @@ public interface ApplicationResourceService {
     ApplicationResource getByUniqueKey(Integer applicationId, Integer businessType, Integer businessId);
 
     List<ApplicationResource> queryByBusiness(Integer businessType, Integer businessId);
+
+    List<ApplicationResource> queryByResource(String name,String resourceType);
 
 }

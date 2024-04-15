@@ -1,14 +1,9 @@
 package com.baiyi.opscloud.domain.param.auth;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
-import io.swagger.annotations.ApiParam;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import lombok.*;
 import org.apache.commons.lang3.StringUtils;
-import javax.validation.Valid;
 
 
 public class LoginParam {
@@ -16,20 +11,18 @@ public class LoginParam {
     @Builder
     @Data
     @NoArgsConstructor
-    @ApiModel
+    @Schema
     @AllArgsConstructor
     public static class Login {
 
-        @Valid
-        @ApiParam(required = true)
-        @ApiModelProperty(value = "用户名")
+        @NotBlank(message = "用户名不能为空")
+        @Schema(description = "用户名")
         private String username;
 
-        @ApiParam(required = true)
-        @ApiModelProperty(value = "密码")
+        @Schema(description = "密码")
         private String password;
 
-        @ApiModelProperty(value = "一次性密码(OTP)")
+        @Schema(description = "一次性密码(OTP)")
         private String otp;
 
         public boolean isEmptyPassword() {
@@ -38,17 +31,35 @@ public class LoginParam {
     }
 
     @Data
+    @EqualsAndHashCode(callSuper = true)
     @NoArgsConstructor
-    @ApiModel
+    @Schema
+    @AllArgsConstructor
+    public static class PlatformLogin extends Login implements IAuthPlatform {
+
+        @NotBlank(message = "平台名称不能为空")
+        @Schema(description = "平台名称(用于审计)")
+        public String platform;
+
+        @NotBlank(message = "平台令牌不能为空")
+        @Schema(description = "平台令牌用于鉴权")
+        public String platformToken;
+
+    }
+
+    @Data
+    @NoArgsConstructor
+    @Schema
     public static class Logout {
 
-        @Valid
-        @ApiParam(required = true)
-        @ApiModelProperty(value = "用户名")
+        @NotBlank(message = "用户名不能为空")
+        @Schema(description = "用户名")
         private String username;
 
-        @Valid
-        @ApiModelProperty(value = "令牌")
+        @NotBlank(message = "令牌不能为空")
+        @Schema(description = "令牌")
         private String token;
+
     }
+
 }

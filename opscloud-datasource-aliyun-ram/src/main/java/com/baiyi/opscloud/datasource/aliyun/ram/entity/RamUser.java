@@ -12,6 +12,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Date;
 
@@ -22,8 +23,8 @@ import java.util.Date;
  */
 public class RamUser {
 
-    public static Date toGmtDate(String time) {
-        return TimeUtil.toGmtDate(time, TimeZoneEnum.UTC);
+    public static Date toUtcDate(String time) {
+        return TimeUtil.toDate(time, TimeZoneEnum.UTC);
     }
 
     @Builder
@@ -42,6 +43,10 @@ public class RamUser {
 
         private String attachDate; // ListEntitiesForPolicy
 
+        public boolean needUpdate() {
+            return StringUtils.isNotBlank(this.displayName) || StringUtils.isNotBlank(this.email);
+        }
+
         @Override
         public AssetContainer toAssetContainer(DatasourceInstance dsInstance) {
             DatasourceInstanceAsset asset = DatasourceInstanceAsset.builder()
@@ -53,7 +58,7 @@ public class RamUser {
                     .kind("ramUser")
                     .assetType(DsAssetTypeConstants.RAM_USER.name())
                     .description(this.comments)
-                    .createdTime(toGmtDate(this.createDate))
+                    .createdTime(toUtcDate(this.createDate))
                     .build();
 
             return AssetContainerBuilder.newBuilder()
